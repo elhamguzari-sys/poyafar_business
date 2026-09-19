@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}جزئیات موجودی{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+                <i class="fas fa-info-circle me-2"></i>
+                جزئیات موجودی
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'inventory_list' %}" class="text-decoration-none text-muted">موجودی‌ها</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98;">جزئیات</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'inventory_list' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <i class="fas fa-arrow-right me-2"></i>
+            بازگشت به لیست
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Product Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <h5 class="mb-0 fw-bold fs-4">
+                <i class="fas fa-box me-2"></i>
+                معلومات کالا
+            </h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center mb-3 mb-md-0">
+                    {% if inventory.product.image %}
+                        <img src="{{ inventory.product.image.url }}" alt="{{ inventory.product.name }}" 
+                             class="rounded shadow-sm" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <div class="p-5 rounded shadow-sm mx-auto" style="background: rgba(149, 80, 252, 0.1); width: 150px; height: 150px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-box fa-4x" style="color: #9550fc;"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-9">
+                    <h3 class="fw-bold mb-3">{{ inventory.product.name }}</h3>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-4">
+                            <small class="text-muted d-block">کد کالا</small>
+                            <span class="fw-bold">{{ inventory.product.sku }}</span>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <small class="text-muted d-block">دسته‌بندی</small>
+                            <span class="fw-bold">{{ inventory.product.category.name|default:"-" }}</span>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <small class="text-muted d-block">واحد</small>
+                            <span class="fw-bold">{{ inventory.product.get_unit_display }}</span>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <small class="text-muted d-block">قیمت خرید</small>
+                            <span class="fw-bold">{{ inventory.product.purchase_price }}</span>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <small class="text-muted d-block">قیمت عمده</small>
+                            <span class="fw-bold">{{ inventory.product.wholesale_price }}</span>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <small class="text-muted d-block">قیمت فروش</small>
+                            <span class="fw-bold">{{ inventory.product.sale_price }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Info Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
+                    <h4 class="fw-bold mb-1">{{ inventory.location.name }}</h4>
+                    <small>{{ inventory.location.get_type_display }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-cubes fa-2x mb-2"></i>
+                    <h4 class="fw-bold mb-1">{{ inventory.quantity }}</h4>
+                    <small>موجودی فعلی</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h6 class="fw-bold mb-1">{{ inventory.updated_at|date:"Y/m/d" }}</h6>
+                    <small>آخرین ویرایش</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Form (read-only) -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <h5 class="mb-0 fw-bold fs-4">
+                <i class="fas fa-list-alt me-2"></i>
+                معلومات موجودی
+            </h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">کالا</label>
+                    <input type="text" class="form-control" value="{{ inventory.product.name }}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">موقعیت</label>
+                    <input type="text" class="form-control" value="{{ inventory.location.name }}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">موجودی</label>
+                    <input type="text" class="form-control" value="{{ inventory.quantity }}" readonly>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">آخرین ویرایش</label>
+                    <input type="text" class="form-control" value="{{ inventory.updated_at|date:'Y/m/d H:i' }}" readonly>
+                </div>
+                {% if inventory.note %}
+                <div class="col-12 mb-3">
+                    <label class="form-label fw-bold">یادداشت</label>
+                    <textarea class="form-control" rows="3" readonly>{{ inventory.note }}</textarea>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Info note -->
+    <div class="text-center mt-4 text-muted fs-6">
+        <i class="fas fa-info-circle me-1"></i>
+        تغییر موجودی از این صفحه انجام نمی‌شود. برای تغییر، از بخش حرکات کالا استفاده کنید.
+    </div>
+
+</div>
+
+{% endblock %}

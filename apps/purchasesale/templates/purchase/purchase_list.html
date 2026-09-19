@@ -1,0 +1,716 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load math_filters %}
+
+{% block title %}لیست خریدها{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+                <i class="fas fa-shopping-cart me-2"></i>
+                لیست خریدها
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98">خریدها</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'create_purchase' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white"
+           style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <i class="fas fa-plus-circle me-2"></i>
+            خرید جدید
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message|linebreaksbr }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100"
+                 style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_purchases }}</h3>
+                    <small>کل خریدها</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100"
+                 style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_amount|floatformat:0 }}</h3>
+                    <small>مجموع (افغانی)</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100"
+                 style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_paid|floatformat:0 }}</h3>
+                    <small>مجموع پرداختی</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100"
+                 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_remaining|floatformat:0 }}</h3>
+                    <small>باقی‌مانده</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4 rounded-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-12 col-lg-4 col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search" style="color: #450C98;"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0"
+                               placeholder="جستجو (شماره خرید، تأمین‌کننده، شماره خریدار، یادداشت)..."
+                               value="{{ request.GET.search }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-2 col-md-6">
+                    <input type="text" name="supplier" class="form-control"
+                           placeholder="نام تأمین‌کننده"
+                           value="{{ supplier_filter }}">
+                </div>
+
+                <div class="col-12 col-lg-2 col-md-6">
+                    <input type="text" name="supplier_number" class="form-control"
+                           placeholder="شماره خریدار"
+                           value="{{ supplier_number_filter }}">
+                </div>
+
+                <div class="col-12 col-lg-2 col-md-6">
+                    <select name="payment_status" class="form-select">
+                        <option value="">همه وضعیت‌ها</option>
+                        <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>پرداخت کامل</option>
+                        <option value="partial" {% if payment_status == 'partial' %}selected{% endif %}>پرداخت جزئی</option>
+                        <option value="unpaid" {% if payment_status == 'unpaid' %}selected{% endif %}>پرداخت نشده</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-lg-2 col-md-6">
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+
+                <div class="col-12 col-lg-2 col-md-6">
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+
+                <div class="col-12 col-lg-2 col-md-6">
+                    <input type="number" name="min_amount" class="form-control"
+                           placeholder="حداقل مبلغ" step="0.01" value="{{ min_amount }}">
+                </div>
+
+                <div class="col-12 col-lg-2 col-md-6">
+                    <input type="number" name="max_amount" class="form-control"
+                           placeholder="حداکثر مبلغ" step="0.01" value="{{ max_amount }}">
+                </div>
+
+                <div class="col-12 col-lg-2 col-md-6">
+                    <button type="submit" class="btn w-100 text-white"
+                            style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <i class="fas fa-filter me-1"></i>
+                    </button>
+                </div>
+            </form>
+
+            {% if request.GET.search or request.GET.supplier or request.GET.supplier_number or request.GET.payment_status or request.GET.date_from or request.GET.date_to or request.GET.min_amount or request.GET.max_amount %}
+            <div class="mt-2">
+                <a href="{{ request.path }}" class="btn btn-dark btn-sm" style="font-size: 0.85rem;">
+                    <i class="fas fa-times-circle me-1"></i> حذف جستجو
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <tr class="text-white">
+                            <th class="text-center" style="width: 50px;">#</th>
+                            <th>شماره خرید</th>
+                            <th class="d-none d-md-table-cell">تاریخ</th>
+                            <th>تأمین‌کننده</th>
+                            <th class="d-none d-lg-table-cell text-center">اقلام</th>
+                            <th>مجموع</th>
+                            <th class="text-center">پرداختی</th>
+                            <th class="text-center">باقی‌مانده</th>
+                            <th class="text-center">وضعیت</th>
+                            <th class="text-center" style="width: 130px;">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for purchase in purchases %}
+                        <tr class="border-bottom" id="purchase-row-{{ purchase.id }}">
+                            <td class="text-center">
+                                <span class="badge rounded-pill text-white"
+                                      style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                    {{ forloop.counter }}
+                                </span>
+                            </td>
+                            <td class="notranslate">
+                                <code class="text-muted">{{ purchase.purchase_number|default:'---' }}</code>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <small class="text-muted" style="font-size: 22px;">{{ purchase.purchase_date|date:"Y/m/d" }}</small>
+                            </td>
+                            <td>
+                                <span class="fw-bold">{{ purchase.supplier_name }}</span>
+                                {% if purchase.supplier_number %}
+                                    <br><small class="text-muted"><i class="fas fa-phone me-1"></i>{{ purchase.supplier_number }}</small>
+                                {% endif %}
+                            </td>
+                            <td class="d-none d-lg-table-cell text-center">
+                                <span class="badge rounded-pill px-3 py-2"
+                                      style="background: rgba(79, 172, 254, 0.1); color: #4facfe; font-size: 1rem; font-weight: 600;">
+                                    {{ purchase.items|length }} قلم
+                                </span>
+                            </td>
+
+                            <!-- ✅ ستون مجموع -->
+                            <td>
+                                
+                                <div style="border-top: 1px dashed #ccc; padding-top: 3px; font-size: 0.75rem; color: #450C98;">
+                                    <i class="fas fa-calculator me-1"></i>
+                                    <strong>{{ purchase.total_amount|floatformat:0 }} اف</strong>
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                <span class="badge rounded-pill px-3 py-2"
+                                      style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1.05rem; font-weight: 600;">
+                                    {{ purchase.paid_amount|floatformat:2 }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if purchase.remaining_amount > 0 %}
+                                    <span class="badge rounded-pill px-3 py-2"
+                                          style="background: rgba(220, 53, 69, 0.1); color: #dc3545; font-size: 1.05rem; font-weight: 600;">
+                                        {{ purchase.remaining_amount|floatformat:2 }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2"
+                                          style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1.05rem; font-weight: 600;">
+                                        0
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if purchase.is_fully_paid %}
+                                    <span class="badge rounded-pill px-3 py-2"
+                                          style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1rem;">
+                                        <i class="fas fa-check-circle me-1"></i>پرداخت کامل
+                                    </span>
+                                {% elif purchase.is_partially_paid %}
+                                    <span class="badge rounded-pill px-3 py-2"
+                                          style="background: rgba(255, 193, 7, 0.1); color: #ffc107; font-size: 1rem;">
+                                        <i class="fas fa-clock me-1"></i>پرداخت جزئی
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2"
+                                          style="background: rgba(220, 53, 69, 0.1); color: #dc3545; font-size: 1rem;">
+                                        <i class="fas fa-times-circle me-1"></i>پرداخت نشده
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary border-0" title="فاکتور"
+                                            onclick="showInvoiceModal('{{ purchase.id }}')">
+                                        <i class="fas fa-file-invoice"></i>
+                                    </button>
+                                    <a href="{% url 'update_purchase' purchase.id %}"
+                                       class="btn btn-outline-warning border-0" title="ویرایش">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger border-0" title="حذف"
+                                            onclick="event.preventDefault(); showDeleteModal('{{ purchase.id }}','{{ purchase.purchase_number }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Hidden Delete Form -->
+                        <form id="deleteForm-{{ purchase.id }}"
+                              method="POST"
+                              action="{% url 'delete_purchase' purchase.id %}"
+                              style="display:none;">
+                            {% csrf_token %}
+                        </form>
+
+                        <!-- ==================== INVOICE MODAL ==================== -->
+                        <div class="modal fade" id="invoiceModal{{ purchase.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header" style="background: #5a189a; color: white; padding: 10px 15px;">
+                                        <h5 class="modal-title" style="font-size: 1rem;">
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            <i class="fas fa-file-invoice me-2 notranslate"></i> بل خرید #{{ purchase.purchase_number|default:purchase.id }}
+                                        </h5>
+                                    </div>
+
+                                    <div style="display: flex; justify-content: center; margin: 10px 0;">
+                                        <button onclick="downloadPurchasePDF('{{ purchase.id }}')" style="
+                                            background: linear-gradient(135deg, #5a189a, #9d4edd);
+                                            color: white;
+                                            border: none;
+                                            padding: 8px 20px;
+                                            border-radius: 30px;
+                                            font-size: 0.85rem;
+                                            font-weight: 600;
+                                            cursor: pointer;
+                                            display: inline-flex;
+                                            align-items: center;
+                                            gap: 5px;
+                                            box-shadow: 0 5px 15px rgba(90, 24, 154, 0.3);
+                                            transition: all 0.3s ease;
+                                        ">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                                <polyline points="7 10 12 15 17 10"/>
+                                                <line x1="12" y1="15" x2="12" y2="3"/>
+                                            </svg>
+                                            📥 دانلود PDF
+                                        </button>
+                                    </div>
+
+                                    <div class="modal-body" id="purchase-invoice-{{ purchase.id }}" style="padding: 8px;">
+                                        <!-- Header -->
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                            <div style="width: 40px; height: 40px; background: #f8fafd; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(90, 24, 154, 0.2);">
+                                                <i class="fas fa-shopping-cart" style="color: #5a189a; font-size: 1.2rem;"></i>
+                                            </div>
+                                            <h4>شرکت نرم افزاری پویافر</h4>
+                                            <div style="text-align: right;">
+                                                <div style="background: linear-gradient(135deg, #5a189a, #9d4edd); padding: 2px 8px; border-radius: 15px; margin-bottom: 3px; display: inline-block;">
+                                                    <span style="color: white; font-weight: 600; font-size: 0.65rem;">#{{ purchase.id }}</span>
+                                                </div>
+                                                <div style="background: #f1f5f9; padding: 2px 8px; border-radius: 15px;">
+                                                    <span style="color: #1e293b; font-weight: 500; font-size: 0.6rem;">{{ purchase.purchase_date|date:"Y/m/d" }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Order Info -->
+                                        <div style="background: #f8fafd; border-radius: 8px; padding: 6px; margin-bottom: 8px; border: 1px solid rgba(90, 24, 154, 0.1);">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;">
+                                                <div>
+                                                    <span style="color: #64748b; font-size: 0.55rem;">شماره خرید</span>
+                                                    <div style="margin: 0; color: #0f172a; font-size: 0.7rem; font-weight: 600;" class="notranslate">{{ purchase.purchase_number|default:'---' }}</div>
+                                                </div>
+                                                <div>
+                                                    <span style="color: #64748b; font-size: 0.55rem;">تأمین‌کننده</span>
+                                                    <div style="margin: 0; color: #0f172a; font-size: 0.7rem; font-weight: 600;">{{ purchase.supplier_name }}</div>
+                                                </div>
+                                                <div>
+                                                    <span style="color: #64748b; font-size: 0.55rem;">شماره خریدار</span>
+                                                    <div style="margin: 0; color: #0f172a; font-size: 0.7rem; font-weight: 600;">{{ purchase.supplier_number|default:'---' }}</div>
+                                                </div>
+                                                {% if purchase.dollar_rate > 0 %}
+                                                <div>
+                                                    <span style="color: #64748b; font-size: 0.55rem;">نرخ دالر</span>
+                                                    <div style="margin: 0; color: #f59e0b; font-size: 0.7rem; font-weight: 700;">{{ purchase.dollar_rate|floatformat:2 }}</div>
+                                                </div>
+                                                {% endif %}
+                                                <div>
+                                                    <span style="color: #64748b; font-size: 0.55rem;">تعداد قلم</span>
+                                                    <div style="margin: 0; color: #0f172a; font-size: 0.7rem; font-weight: 600;">{{ purchase.items|length }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Items Cards -->
+                                        <div style="margin-bottom: 8px;">
+                                            <div style="background: #f8fafd; border-radius: 8px; padding: 6px; border: 1px solid rgba(90, 24, 154, 0.1);">
+                                                {% for item in purchase.items %}
+                                                <div style="margin-bottom: 5px; padding: 5px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                                    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 4px;">
+                                                        <div style="width: 18px; height: 18px; background: linear-gradient(135deg, #5a189a, #9d4edd); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.55rem;">
+                                                            {{ forloop.counter }}
+                                                        </div>
+                                                        <div style="flex: 1; min-width: 80px;">
+                                                            <span style="font-size: 0.7rem; color: #64748b; display: block;">اسم جنس</span>
+                                                            <span style="font-weight: 600; color: #0f172a; font-size: 0.8rem;">
+                                                                {% if item.product_name %}
+                                                                    {{ item.product_name }}
+                                                                {% else %}
+                                                                    {{ products_dict|get_item:item.product_id }}
+                                                                {% endif %}                                                            
+                                                            </span>
+                                                        </div>
+                                                        <div style="flex: 0.8; min-width: 40px;">
+                                                            <span style="font-size: 0.7rem; color: #64748b; display: block;">تعداد</span>
+                                                            <span style="font-weight: 600; color: #0f172a; background: rgba(90, 24, 154, 0.08); padding: 1px 4px; border-radius: 8px; font-size: 0.9rem;">
+                                                                {{ item.quantity }}
+                                                            </span>
+                                                        </div>
+                                                        <div style="flex: 0.8; min-width: 45px;">
+                                                            <span style="font-size: 0.7rem; color: #64748b; display: block;">قیمت</span>
+                                                            <span style="font-weight: 600; color: #0f172a; font-size: 0.9rem;">
+                                                                {{ item.purchase_price|floatformat:2 }}
+                                                                {% if item.currency == 'USD' %}$ {% endif %}
+                                                            </span>
+                                                        </div>
+                                                        <div style="flex: 1; min-width: 60px;">
+                                                            <span style="font-size: 0.7rem; color: #64748b; display: block;">موقعیت</span>
+                                                            <span style="background: #e3f2fd; color: #1976d2; padding: 1px 6px; border-radius: 8px; font-size: 0.65rem; font-weight: 600;">
+                                                                {{ item.location_name|default:'---' }}
+                                                            </span>
+                                                        </div>
+                                                        <div style="background: #f8fafd; padding: 2px 6px; border-radius: 10px; border: 1px solid rgba(90, 24, 154, 0.2); min-width: 100px;">
+                                                            <span style="font-size: 0.7rem; color: #64748b; display: block;">مجموع</span>
+                                                            {% if item.currency == 'USD' %}
+                                                                <span style="font-weight: 700; color: #f59e0b; font-size: 0.8rem; display: block;">
+                                                                    {{ item.quantity|multiply:item.purchase_price|floatformat:0 }} $
+                                                                </span>
+                                                                <span style="font-weight: 700; color: #5a189a; font-size: 0.8rem; display: block;">
+                                                                    {{ item.quantity|multiply:item.purchase_price|multiply:purchase.dollar_rate|floatformat:0 }} اف
+                                                                </span>
+                                                            {% else %}
+                                                                <span style="font-weight: 700; color: #16a34a; font-size: 0.85rem;">
+                                                                    {{ item.quantity|multiply:item.purchase_price|floatformat:0 }} اف
+                                                                </span>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% empty %}
+                                                <div style="text-align: center; padding: 15px; color: #94a3b8;">
+                                                    <i class="fas fa-box-open fa-1x mb-1" style="color: #cbd5e1;"></i>
+                                                    <h6 style="color: #64748b; font-size: 0.6rem;">هیچ قلمی وجود ندارد</h6>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+
+                                        <!-- ==================== Totals ==================== -->
+                                        <div style="background: #f8fafd; border-radius: 8px; padding: 8px; margin-bottom: 8px; border: 1px solid rgba(90, 24, 154, 0.1);">
+
+                                            {% if purchase.total_dollar_amount > 0 %}
+                                            <div style="background: #fff8e1; border-right: 3px solid #f59e0b; padding: 6px 8px; border-radius: 5px; margin-bottom: 5px;">
+                                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                    <span style="font-size: 0.75rem; color: #f59e0b; font-weight: 700;">
+                                                        <i class="fas fa-dollar-sign me-1"></i>
+                                                        مجموع دالری:
+                                                    </span>
+                                                    <span style="font-size: 0.8rem; font-weight: 700; color: #f59e0b;">
+                                                        {{ purchase.total_dollar_amount|floatformat:2 }} دالر
+                                                    </span>
+                                                </div>
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 3px;">
+                                                    <span style="font-size: 0.68rem; color: #78350f;">
+                                                        معادل افغانی ({{ purchase.total_dollar_amount|floatformat:0 }} × {{ purchase.dollar_rate|floatformat:0 }}):
+                                                    </span>
+                                                    <span style="font-size: 0.8rem; font-weight: 700; color: #f59e0b;">
+                                                        {{ purchase.total_dollar_amount|multiply:purchase.dollar_rate|floatformat:2 }} افغانی
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+
+                                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: white; border: 2px solid #5a189a; border-radius: 5px; margin-top: 5px;">
+                                                <span style="font-size: 0.85rem; font-weight: 800; color: #5a189a;">
+                                                    <i class="fas fa-calculator me-1"></i>
+                                                    مجموع کل خرید:
+                                                </span>
+                                                <span style="font-size: 0.9rem; font-weight: 800; color: #5a189a;">
+                                                    {{ purchase.total_amount|floatformat:2 }} افغانی
+                                                </span>
+                                            </div>
+
+                                            <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #ddd; margin-top: 8px;">
+                                                <span style="font-size: 0.72rem; color: #64748b;">پرداخت شده</span>
+                                                <span style="font-size: 0.75rem; font-weight: 600; color: #16a34a;">{{ purchase.paid_amount|floatformat:2 }} افغانی</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; padding: 5px 8px; background: white; border: 1.5px solid #dc2626; border-radius: 5px; margin-top: 3px;">
+                                                <span style="font-size: 0.72rem; font-weight: 700; color: #dc2626;">باقی‌مانده</span>
+                                                <span style="font-size: 0.75rem; font-weight: 800; color: #dc2626;">{{ purchase.remaining_amount|floatformat:2 }} افغانی</span>
+                                            </div>
+                                        </div>
+
+                                        {% if purchase.note %}
+                                        <div style="padding: 5px 8px; background: #f8fafd; border-right: 3px solid #5a189a; margin-bottom: 8px; border-radius: 3px;">
+                                            <small style="color: #64748b; font-size: 0.7rem;">یادداشت: {{ purchase.note }}</small>
+                                        </div>
+                                        {% endif %}
+                                        <br>
+
+                                        <!-- Signatures -->
+                                        <div style="display: flex; justify-content: space-between; margin: 15px 0 8px 0; padding: 0 20px;">
+                                            <div style="text-align: center;">
+                                                <div style="border-top: 1px solid #cbd5e1; width: 110px; margin-bottom: 3px;"></div>
+                                                <small style="color: #64748b; font-size: 0.65rem;">امضای تأمین‌کننده</small>
+                                            </div>
+                                            <div style="text-align: center;">
+                                                <div style="border-top: 1px solid #cbd5e1; width: 110px; margin-bottom: 3px;"></div>
+                                                <small style="color: #64748b; font-size: 0.65rem;">امضای خریدار</small>
+                                            </div>
+                                        </div>
+                                        <br>
+
+                                        <!-- Footer -->
+                                        <div style="background: #f8fafc; border-radius: 8px; padding: 5px; border: 1px solid #e2e8f0;">
+                                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                                <div style="display: flex; align-items: center; gap: 5px;">
+                                                    <i class="fas fa-envelope" style="color: #4361ee; font-size: 0.5rem;"></i>
+                                                    <span style="font-size: 0.5rem;">poyafar@yahoo.com</span>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 5px;">
+                                                    <i class="fas fa-phone" style="color: #10b981; font-size: 0.5rem;"></i>
+                                                    <span style="font-size: 0.5rem;">+93794483138</span>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 5px;">
+                                                    <i class="fas fa-map-marker-alt" style="color: #f97316; font-size: 0.5rem;"></i>
+                                                    <span style="font-size: 0.5rem;">کابل، افغانستان</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer" style="padding: 8px;">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="font-size: 0.8rem; padding: 5px 15px;">بستن</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ==================== END INVOICE MODAL ==================== -->
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-5">
+                                <i class="fas fa-shopping-cart fa-3x mb-3" style="color: #9550fc;"></i>
+                                <h5 class="text-muted">هیچ خریدی یافت نشد</h5>
+                                <p class="text-muted">اولین خرید خود را ثبت کنید</p>
+                                <a href="{% url 'create_purchase' %}" class="btn rounded-pill px-4 text-white"
+                                   style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                    <i class="fas fa-plus me-1"></i> ثبت خرید
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if purchases.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if purchases.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ purchases.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if supplier_filter %}&supplier={{ supplier_filter }}{% endif %}{% if supplier_number_filter %}&supplier_number={{ supplier_number_filter }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if min_amount %}&min_amount={{ min_amount }}{% endif %}{% if max_amount %}&max_amount={{ max_amount }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                    </li>
+                {% endif %}
+
+                {% for num in purchases.paginator.page_range %}
+                    {% if purchases.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); border-color: #450C98;">{{ num }}</span>
+                        </li>
+                    {% elif num > purchases.number|add:'-3' and num < purchases.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if supplier_filter %}&supplier={{ supplier_filter }}{% endif %}{% if supplier_number_filter %}&supplier_number={{ supplier_number_filter }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if min_amount %}&min_amount={{ min_amount }}{% endif %}{% if max_amount %}&max_amount={{ max_amount }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if purchases.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ purchases.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if supplier_filter %}&supplier={{ supplier_filter }}{% endif %}{% if supplier_number_filter %}&supplier_number={{ supplier_number_filter }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if min_amount %}&min_amount={{ min_amount }}{% endif %}{% if max_amount %}&max_amount={{ max_amount }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <div class="text-center mt-2">
+        <small class="text-muted">
+            نمایش {{ purchases.start_index }} تا {{ purchases.end_index }} از {{ paginator.count }} خرید
+        </small>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-trash-alt me-2"></i>حذف خرید
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+                </div>
+                <h5 class="mb-3">آیا مطمئن هستید؟</h5>
+                <p class="text-muted mb-2">خرید با شماره "<strong id="deletePurchaseName"></strong>" حذف خواهد شد.</p>
+                <p class="text-danger small">موجودی کالا به حالت قبل برمی‌گردد!</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">انصراف</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4" id="confirmDeleteBtn">بله، حذف کن</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    let deletePurchaseId = null;
+
+    function showDeleteModal(purchaseId, purchaseNumber) {
+        deletePurchaseId = purchaseId;
+        document.getElementById('deletePurchaseName').textContent = purchaseNumber;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+        if (deletePurchaseId) {
+            const form = document.getElementById('deleteForm-' + deletePurchaseId);
+            if (form) form.submit();
+        }
+    });
+
+    function showInvoiceModal(purchaseId) {
+        new bootstrap.Modal(document.getElementById('invoiceModal' + purchaseId)).show();
+    }
+
+    function downloadPurchasePDF(purchaseId) {
+        const element = document.getElementById('purchase-invoice-' + purchaseId);
+
+        if (!element) {
+            alert('خطا: عنصر خرید یافت نشد');
+            return;
+        }
+
+        const btn = event?.target;
+        let originalText = '';
+        if (btn) {
+            originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ در حال ایجاد PDF...';
+            btn.disabled = true;
+        }
+
+        const clone = element.cloneNode(true);
+
+        clone.querySelectorAll('*').forEach(el => {
+            const bg = window.getComputedStyle(el).backgroundImage;
+            if (bg && bg.includes('gradient')) {
+                el.style.background = '#5a189a';
+                el.style.color = '#ffffff';
+            }
+        });
+
+        clone.style.width = '780px';
+        clone.style.maxWidth = '780px';
+        clone.style.background = '#ffffff';
+        clone.style.padding = '25px';
+        clone.style.margin = '0 auto';
+        clone.style.fontFamily = "'Vazirmatn', Tahoma, Arial, sans-serif";
+        clone.style.direction = 'rtl';
+        clone.style.boxSizing = 'border-box';
+
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'fixed';
+        wrapper.style.left = '-9999px';
+        wrapper.style.top = '0';
+        wrapper.style.width = '800px';
+        wrapper.style.background = '#ffffff';
+        wrapper.appendChild(clone);
+        document.body.appendChild(wrapper);
+
+        const opt = {
+            margin: [0, -30, 0, -30],
+            filename: 'purchase_invoice_' + purchaseId + '.pdf',
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: {
+                scale: 2,
+                letterRendering: true,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                scrollY: 0,
+                scrollX: 0
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'portrait'
+            },
+            pagebreak: { mode: ['css', 'legacy'] }
+        };
+
+        html2pdf().set(opt).from(clone).save().then(() => {
+            document.body.removeChild(wrapper);
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }).catch((error) => {
+            console.error('PDF generation error:', error);
+            document.body.removeChild(wrapper);
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+            alert('خطا در ایجاد PDF. لطفاً دوباره تلاش کنید.');
+        });
+    }
+</script>
+
+{% endblock %}

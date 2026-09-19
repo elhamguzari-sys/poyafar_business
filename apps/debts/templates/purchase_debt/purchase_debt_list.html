@@ -1,0 +1,425 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}بدهی تأمین‌کنندگان{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+                <i class="fas fa-file-invoice-dollar me-2"></i>
+                بدهی تأمین‌کنندگان
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98">بدهی‌ها</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-file-invoice-dollar fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_debt_amount|floatformat:2 }}</h3>
+                    <small>کل بدهی (افغانی)</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_debt_purchases }}</h3>
+                    <small>خریدهای بدهکار</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_paid_amount|floatformat:2 }}</h3>
+                    <small>پرداخت شده</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_suppliers_count }}</h3>
+                    <small>تأمین‌کنندگان بدهکار</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-pills mb-4" id="debtTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold"
+                    id="active-tab"
+                    data-bs-toggle="pill"
+                    data-bs-target="#active-debts"
+                    type="button"
+                    role="tab"
+                    style="border-radius: 30px; padding: 10px 22px;">
+                <i class="fas fa-clock me-1"></i> بدهی‌های جاری
+                <span class="badge bg-light text-dark ms-1">{{ paginator.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item ms-2" role="presentation">
+            <button class="nav-link fw-bold"
+                    id="settled-tab"
+                    data-bs-toggle="pill"
+                    data-bs-target="#settled-debts"
+                    type="button"
+                    role="tab"
+                    style="border-radius: 30px; padding: 10px 22px;">
+                <i class="fas fa-check-circle me-1"></i> تسویه‌شده
+                <span class="badge bg-success ms-1">{{ settled_count }}</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="debtTabsContent">
+
+        <!-- ==================== TAB 1: ACTIVE DEBTS ==================== -->
+        <div class="tab-pane fade show active" id="active-debts" role="tabpanel">
+
+            <!-- Search and Filters -->
+            <div class="card border-0 shadow-sm mb-4 rounded-3">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-12 col-lg-4 col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="fas fa-search" style="color: #450C98;"></i>
+                                </span>
+                                <input type="text" name="search" class="form-control border-start-0"
+                                       placeholder="جستجو در بدهی‌ها..."
+                                       value="{{ search_query }}">
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-lg-3 col-md-6">
+                            <select name="supplier" class="form-select">
+                                <option value="">همه تأمین‌کنندگان</option>
+                                {% for supplier in suppliers %}
+                                    <option value="{{ supplier }}" {% if supplier_filter == supplier %}selected{% endif %}>
+                                        {{ supplier }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-lg-3 col-md-6">
+                            <select name="payment_status" class="form-select">
+                                <option value="">همه وضعیت‌ها</option>
+                                <option value="partial" {% if payment_status == 'partial' %}selected{% endif %}>پرداخت جزئی</option>
+                                <option value="unpaid" {% if payment_status == 'unpaid' %}selected{% endif %}>پرداخت نشده</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-lg-2 col-md-6">
+                            <button type="submit" class="btn w-100 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                <i class="fas fa-filter me-1"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    {% if search_query or supplier_filter or payment_status %}
+                    <div class="mt-2">
+                        <a href="{{ request.path }}"
+                           class="btn btn-dark btn-sm"
+                           style="font-size: 0.85rem;">
+                            <i class="fas fa-times-circle me-1"></i> حذف جستجو
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Table Card -->
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                <tr class="text-white">
+                                    <th class="text-center" style="width: 50px;">#</th>
+                                    <th>شماره خرید</th>
+                                    <th class="d-none d-md-table-cell">تأمین‌کننده</th>
+                                    <th>مجموع خرید</th>
+                                    <th class="text-center">پرداخت شده</th>
+                                    <th class="text-center">باقی‌مانده</th>
+                                    <th class="text-center">وضعیت</th>
+                                    <th class="text-center" style="width: 100px;">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for purchase in purchases %}
+                                <tr class="border-bottom" id="debt-row-{{ purchase.id }}">
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">{{ forloop.counter }}</span>
+                                    </td>
+                                    <td class="notranslate">
+                                        <code class="text-muted">{{ purchase.purchase_number }}</code>
+                                    </td>
+                                    <td class="d-none d-md-table-cell">
+                                        <span class="fw-bold">{{ purchase.supplier_name }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">{{ purchase.total_amount|floatformat:2 }} افغانی</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1.05rem; font-weight: 600;">
+                                            {{ purchase.paid_amount|floatformat:2 }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if purchase.remaining_amount > 0 %}
+                                            <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; font-size: 1.05rem; font-weight: 600;">
+                                                {{ purchase.remaining_amount|floatformat:2 }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1.05rem; font-weight: 600;">
+                                                0
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if purchase.remaining_amount > 0 and purchase.paid_amount > 0 %}
+                                            <span class="badge rounded-pill px-3 py-2" style="background: rgba(255, 193, 7, 0.1); color: #ffc107; font-size: 1rem;">
+                                                <i class="fas fa-clock me-1"></i>پرداخت جزئی
+                                            </span>
+                                        {% else %}
+                                            <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; font-size: 1rem;">
+                                                <i class="fas fa-times-circle me-1"></i>پرداخت نشده
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-success border-0" title="پرداخت بدهی"
+                                               onclick="showPaymentModal('{{ purchase.id }}', '{{ purchase.supplier_name }}', '{{ purchase.remaining_amount }}')">
+                                                <i class="fas fa-money-bill-wave"></i>
+                                            </button>
+                                            <a href="{% url 'purchase_debt_history' purchase.id %}"
+                                               class="btn btn-outline-info border-0" title="سابقه پرداخت">
+                                                <i class="fas fa-history"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <i class="fas fa-check-circle fa-3x mb-3" style="color: #28a745;"></i>
+                                        <h5 class="text-muted">هیچ بدهی جاری وجود ندارد</h5>
+                                        <p class="text-muted">همه پرداخت‌ها کامل است 🎉</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if purchases.has_other_pages %}
+            <div class="d-flex justify-content-center mt-4">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        {% if purchases.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ purchases.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if supplier_filter %}&supplier={{ supplier_filter }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link" aria-hidden="true">&laquo;</span>
+                            </li>
+                        {% endif %}
+
+                        {% for num in purchases.paginator.page_range %}
+                            {% if purchases.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); border-color: #450C98;">{{ num }}</span>
+                                </li>
+                            {% elif num > purchases.number|add:'-3' and num < purchases.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if supplier_filter %}&supplier={{ supplier_filter }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if purchases.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ purchases.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if supplier_filter %}&supplier={{ supplier_filter }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link" aria-hidden="true">&raquo;</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+
+            <div class="text-center mt-2">
+                <small class="text-muted">
+                    نمایش {{ purchases.start_index }} تا {{ purchases.end_index }} از {{ paginator.count }} بدهی
+                </small>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- ==================== TAB 2: SETTLED DEBTS ==================== -->
+        <div class="tab-pane fade" id="settled-debts" role="tabpanel">
+
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                                <tr class="text-white">
+                                    <th class="text-center" style="width: 50px;">#</th>
+                                    <th>شماره خرید</th>
+                                    <th class="d-none d-md-table-cell">تأمین‌کننده</th>
+                                    <th>مجموع خرید</th>
+                                    <th class="text-center">پرداخت شده</th>
+                                    <th class="text-center">وضعیت</th>
+                                    <th class="text-center" style="width: 100px;">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for purchase in settled_purchases %}
+                                <tr class="border-bottom">
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">{{ forloop.counter }}</span>
+                                    </td>
+                                    <td class="notranslate">
+                                        <code class="text-muted">{{ purchase.purchase_number }}</code>
+                                    </td>
+                                    <td class="d-none d-md-table-cell">
+                                        <span class="fw-bold">{{ purchase.supplier_name }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">{{ purchase.total_amount|floatformat:2 }} افغانی</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1.05rem; font-weight: 600;">
+                                            {{ purchase.paid_amount|floatformat:2 }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.15); color: #198754; font-size: 1rem;">
+                                            <i class="fas fa-check-circle me-1"></i>تسویه‌شده
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'purchase_debt_history' purchase.id %}"
+                                               class="btn btn-outline-info border-0" title="سابقه پرداخت">
+                                                <i class="fas fa-history"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <i class="fas fa-inbox fa-3x mb-3" style="color: #9550fc;"></i>
+                                        <h5 class="text-muted">هیچ بدهی تسویه‌شده‌ای وجود ندارد</h5>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <h5 class="modal-title">
+                    <i class="fas fa-money-bill-wave me-2"></i>پرداخت بدهی
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="paymentForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert" style="background: rgba(69, 12, 152, 0.08); border: 1px solid rgba(69, 12, 152, 0.2); color: #450C98;">
+                        <strong>تأمین‌کننده:</strong> <span id="modalSupplierName"></span><br>
+                        <strong>باقی‌مانده بدهی:</strong> <span id="modalRemainingAmount"></span> افغانی
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">مبلغ پرداخت *</label>
+                        <input type="number" name="amount" class="form-control"
+                               min="1" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">تاریخ پرداخت</label>
+                        <input type="date" name="payment_date" class="form-control"
+                               value="{% now 'Y-m-d' %}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">یادداشت</label>
+                        <textarea name="note" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <small class="text-muted me-auto">پس از ثبت، بل پرداخت نمایش داده می‌شود</small>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn text-white rounded-pill px-4" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">ثبت پرداخت</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showPaymentModal(purchaseId, supplierName, remainingAmount) {
+        document.getElementById('modalSupplierName').textContent = supplierName;
+        document.getElementById('modalRemainingAmount').textContent = remainingAmount;
+        document.getElementById('paymentForm').action = '/debts/create_purchase_debt/' + purchaseId + '/';
+
+        const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        modal.show();
+    }
+</script>
+
+{% endblock %}

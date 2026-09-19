@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}پرداخت بدهی{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #dc3545; font-size: 2rem;">
+                <i class="fas fa-money-bill-wave me-2"></i>
+                پرداخت بدهی
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 fs-6">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_debt_list' %}" class="text-decoration-none text-muted">بدهی‌ها</a></li>
+                    <li class="breadcrumb-item active" style="color: #dc3545;">پرداخت بدهی</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'purchase_debt_list' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6" style="background: #dc3545;">
+            <i class="fas fa-arrow-right me-2"></i>
+            بازگشت به لیست
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Form Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-header text-white py-3" style="background: #dc3545;">
+            <h5 class="mb-0 fw-bold fs-4">
+                <i class="fas fa-money-bill-wave me-2"></i>
+                فرم پرداخت بدهی
+            </h5>
+        </div>
+        <div class="card-body p-4 p-md-5">
+            
+            <!-- Purchase Info -->
+            <div class="alert alert-danger shadow-sm rounded-3 fs-6 mb-4">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <strong>تأمین‌کننده:</strong><br>
+                        {{ purchase.supplier_name }}
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <strong>شماره خرید:</strong><br>
+                        {{ purchase.purchase_number }}
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <strong>مجموع خرید:</strong><br>
+                        {{ purchase.total_amount|floatformat:2 }} افغانی
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <strong>پرداخت شده:</strong><br>
+                        {{ purchase.paid_amount|floatformat:2 }} افغانی
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <strong>باقی‌مانده:</strong><br>
+                        <span class="fs-5 fw-bold">{{ purchase.remaining_amount|floatformat:2 }} افغانی</span>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" novalidate>
+                {% csrf_token %}
+
+                <div class="row">
+                    <!-- Amount Field -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="amount" class="form-label fw-bold fs-5">
+                            <i class="fas fa-money-bill me-1" style="color: #dc3545;"></i>
+                            مبلغ پرداخت <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" name="amount" id="amount" 
+                               class="form-control form-control-lg text-end" 
+                               min="1" max="{{ purchase.remaining_amount }}" 
+                               step="0.01" required>
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>حداکثر: {{ purchase.remaining_amount|floatformat:2 }} افغانی
+                        </small>
+                    </div>
+
+                    <!-- Payment Date Field -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="payment_date" class="form-label fw-bold fs-5">
+                            <i class="fas fa-calendar me-1" style="color: #dc3545;"></i>
+                            تاریخ پرداخت <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" name="payment_date" id="payment_date" 
+                               class="form-control form-control-lg text-end" 
+                               value="{% now 'Y-m-d' %}" required>
+                    </div>
+                </div>
+
+                <!-- Note Field -->
+                <div class="mb-4">
+                    <label for="note" class="form-label fw-bold fs-5">
+                        <i class="fas fa-align-left me-1" style="color: #dc3545;"></i>
+                        یادداشت
+                    </label>
+                    <textarea name="note" id="note" 
+                              class="form-control text-end" 
+                              rows="3" 
+                              placeholder="یادداشت (اختیاری)"></textarea>
+                    <small class="text-muted d-block mt-2 fs-6">
+                        <i class="far fa-file-alt me-1"></i>اختیاری – توضیح مختصر درباره پرداخت
+                    </small>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-5 pt-4 border-top">
+                    <div class="d-flex gap-2 mb-3 mb-sm-0">
+                        <button type="submit" class="btn btn-lg rounded-pill text-white px-4 fs-5" style="background: #dc3545;">
+                            <i class="fas fa-check-circle me-2"></i> ثبت پرداخت
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary rounded-pill px-4 fs-5">
+                            <i class="fas fa-undo me-2"></i> پاک کردن فرم
+                        </button>
+                    </div>
+                    <a href="{% url 'purchase_debt_list' %}" class="btn btn-outline-danger rounded-pill px-4 fs-5">
+                        <i class="fas fa-times me-2"></i> انصراف
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Previous Payments -->
+    {% if previous_payments %}
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden mt-4">
+        <div class="card-header text-white py-3" style="background: #450C98;">
+            <h5 class="mb-0 fw-bold fs-5">
+                <i class="fas fa-history me-2"></i>
+                پرداخت‌های اخیر
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th class="text-center">#</th>
+                            <th>مبلغ</th>
+                            <th>تاریخ</th>
+                            <th>یادداشت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in previous_payments %}
+                        <tr>
+                            <td class="text-center">{{ forloop.counter }}</td>
+                            <td class="text-success fw-bold">{{ payment.amount|floatformat:2 }} افغانی</td>
+                            <td>{{ payment.payment_date|date:"Y/m/d" }}</td>
+                            <td>{{ payment.note|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">هیچ پرداختی ثبت نشده است</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Subtle footer note -->
+    <div class="text-center mt-4 text-muted fs-6">
+        <i class="fas fa-info-circle me-1"></i> فیلدهای ستاره‌دار اجباری هستند | مبلغ پرداخت نمی‌تواند بیشتر از بدهی باقی‌مانده باشد
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,710 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_edit %}ویرایش مرجوعی{% else %}ثبت مرجوعی جدید{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc; font-size: 2rem;">
+                <i class="fas fa-truck-arrow-right me-2"></i>
+                {% if is_edit %}ویرایش مرجوعی{% else %}ثبت مرجوعی جدید{% endif %}
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 fs-6">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_return_list' %}" class="text-decoration-none text-muted">مرجوعی به تأمین‌کنندگان</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98;">
+                        {% if is_edit %}ویرایش{% else %}ثبت{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'supplier_return_list' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
+            <i class="fas fa-arrow-right me-2"></i>
+            بازگشت به لیست
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
+            {% if message.tags == 'success' %}
+            <i class="fas fa-check-circle me-2"></i>
+            {% elif message.tags == 'error' %}
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {% else %}
+            <i class="fas fa-info-circle me-2"></i>
+            {% endif %}
+            {{ message|linebreaksbr }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Form Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <h5 class="mb-0 fw-bold fs-4">
+                <i class="fas fa-truck-arrow-right me-2"></i>
+                {% if is_edit %}فرم ویرایش مرجوعی{% else %}فرم ثبت مرجوعی{% endif %}
+            </h5>
+        </div>
+        <div class="card-body p-4 p-md-5">
+            
+            <form method="POST" id="supplierReturnForm" novalidate>
+                {% csrf_token %}
+
+                {{ form.items_json }}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger shadow-sm rounded-3 fs-6">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <!-- شماره + تاریخ -->
+                <div class="row">
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.return_number.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-hashtag me-1" style="color: #450C98;"></i>
+                            شماره مرجوعی
+                        </label>
+                        {{ form.return_number }}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>شماره خودکار تولید می‌شود
+                        </small>
+                    </div>
+
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.return_date.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-calendar me-1" style="color: #450C98;"></i>
+                            تاریخ مرجوعی <span class="text-danger">*</span>
+                        </label>
+                        {{ form.return_date }}
+                        {% if form.return_date.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.return_date.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- ✅ انتخاب خرید اصلی -->
+                <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #f4efff 0%, #faf5ff 100%);">
+                    <div class="card-body p-4">
+                        <label for="{{ form.original_purchase.id_for_label }}" class="form-label fw-bold fs-4" style="color: #450C98;">
+                            <i class="fas fa-shopping-cart me-2"></i>
+                            انتخاب خرید اصلی <span class="text-danger">*</span>
+                        </label>
+                        {{ form.original_purchase }}
+                        {% if form.original_purchase.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.original_purchase.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>
+                            خرید اصلی را انتخاب کنید تا همه جزئیات آن نمایش داده شود.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- ✅ اطلاعات کامل خرید انتخاب‌شده -->
+                <div id="purchaseInfoBox" style="display: none;">
+
+                    <!-- ردیف ۱: اطلاعات اصلی خرید -->
+                    <div class="card mb-3 border-0 shadow-sm" style="background: linear-gradient(135deg, #fff8e1 0%, #fffbea 100%);">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center mb-3">
+                                <div style="width: 5px; height: 24px; background: #f59e0b; border-radius: 3px;" class="me-2"></div>
+                                <h6 class="mb-0 fw-bold" style="color: #b8860b;">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    اطلاعات خرید انتخاب‌شده
+                                </h6>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-6 col-md-3">
+                                    <small class="text-muted d-block mb-1"><i class="fas fa-hashtag me-1"></i> شماره خرید</small>
+                                    <strong class="notranslate" id="purchaseNumber" style="color: #b8860b; font-size: 1rem;">-</strong>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <small class="text-muted d-block mb-1"><i class="fas fa-truck me-1"></i> تأمین‌کننده</small>
+                                    <strong id="purchaseSupplier" style="color: #b8860b; font-size: 1rem;">-</strong>
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <small class="text-muted d-block mb-1"><i class="fas fa-phone me-1"></i> شماره تماس</small>
+                                    <strong id="purchaseSupplierNumber" class="notranslate" style="font-size: 0.9rem;">-</strong>
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <small class="text-muted d-block mb-1"><i class="fas fa-calendar me-1"></i> تاریخ خرید</small>
+                                    <strong id="purchaseDate" class="notranslate" style="font-size: 0.9rem;">-</strong>
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    <small class="text-muted d-block mb-1"><i class="fas fa-boxes me-1"></i> تعداد اقلام</small>
+                                    <strong id="purchaseItemsCount" style="font-size: 0.9rem;">-</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ردیف ۲: مبالغ خرید -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                                <small class="text-muted d-block mb-1">
+                                    <i class="fas fa-money-bill-wave me-1 text-primary"></i>
+                                    مجموع خرید
+                                </small>
+                                <strong class="text-primary notranslate" id="purchaseTotal" style="font-size: 1.1rem;">0</strong>
+                                <small class="text-muted">افغانی</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3" style="background: #dcfce7; border: 1px solid #86efac;">
+                                <small class="text-muted d-block mb-1">
+                                    <i class="fas fa-check-circle me-1 text-success"></i>
+                                    پرداختی
+                                </small>
+                                <strong class="text-success notranslate" id="purchasePaid" style="font-size: 1.1rem;">0</strong>
+                                <small class="text-muted">افغانی</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3" style="background: #fee2e2; border: 1px solid #fca5a5;">
+                                <small class="text-muted d-block mb-1">
+                                    <i class="fas fa-clock me-1 text-danger"></i>
+                                    باقی‌مانده
+                                </small>
+                                <strong class="text-danger notranslate" id="purchaseRemaining" style="font-size: 1.1rem;">0</strong>
+                                <small class="text-muted">افغانی</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3" style="background: #fef3c7; border: 1px solid #fcd34d;">
+                                <small class="text-muted d-block mb-1">
+                                    <i class="fas fa-undo-alt me-1" style="color: #b8860b;"></i>
+                                    برگشتی قبلی
+                                </small>
+                                <strong class="notranslate" id="purchaseReturned" style="color: #b8860b; font-size: 1.1rem;">0</strong>
+                                <small class="text-muted">افغانی</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ردیف ۳: اطلاعات دالری (اختیاری) -->
+                    <div id="dollarInfoBox" class="card mb-3 border-0 shadow-sm" style="display: none; background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);">
+                        <div class="card-body p-3">
+                            <div class="row g-3">
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block mb-1"><i class="fas fa-dollar-sign me-1 text-success"></i> مجموع دالری</small>
+                                    <strong class="text-success notranslate" id="purchaseDollarTotal" style="font-size: 1rem;">-</strong>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block mb-1"><i class="fas fa-exchange-alt me-1 text-info"></i> نرخ دالر</small>
+                                    <strong class="text-info notranslate" id="purchaseDollarRate" style="font-size: 1rem;">-</strong>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block mb-1"><i class="fas fa-calculator me-1 text-primary"></i> معادل افغانی</small>
+                                    <strong class="text-primary notranslate" id="purchaseDollarEquivalent" style="font-size: 1rem;">-</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ردیف ۴: یادداشت خرید -->
+                    <div id="purchaseNoteBox" class="alert alert-secondary rounded-3" style="display: none;">
+                        <small class="text-muted d-block mb-1"><i class="fas fa-sticky-note me-1"></i> یادداشت خرید</small>
+                        <span id="purchaseNote">-</span>
+                    </div>
+                </div>
+
+                <!-- ✅ نام تأمین‌کننده + مبلغ دریافتی -->
+                <div class="row">
+                    <div class="col-12 col-md-6 mb-4">
+                        <label class="form-label fw-bold fs-5">
+                            <i class="fas fa-user-tie me-1" style="color: #450C98;"></i>
+                            نام تأمین‌کننده
+                        </label>
+                        <div class="form-control bg-light d-flex align-items-center" style="min-height: 48px; cursor: not-allowed;">
+                            <span id="supplierNameDisplay" class="fw-bold text-dark">--- ابتدا خرید را انتخاب کنید ---</span>
+                        </div>
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-lock me-1"></i>به صورت خودکار از خرید اصلی خوانده می‌شود
+                        </small>
+                        {{ form.supplier_name }}
+                    </div>
+
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.received_amount.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-money-bill-transfer me-1" style="color: #450C98;"></i>
+                            مبلغ دریافتی از تأمین‌کننده
+                        </label>
+                        {{ form.received_amount }}
+                        {% if form.received_amount.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.received_amount.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>مبلغی که از تأمین‌کننده دریافت می‌شود
+                        </small>
+                    </div>
+                </div>
+
+                <!-- ✅ اقلام قابل برگشت -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3" style="border-bottom: 2px solid #9550fc;">
+                        <h5 class="mb-0 fw-bold fs-4" style="color: #450C98;">
+                            <i class="fas fa-boxes me-2"></i>
+                            اقلام قابل برگشت
+                        </h5>
+                        <span class="badge" style="background: #f3e8ff; color: #7c3aed; padding: 8px 16px; border-radius: 20px;">
+                            <i class="fas fa-list me-1"></i>
+                            <span id="itemsCount">0</span> قلم انتخاب شده
+                        </span>
+                    </div>
+                    <div class="card-body p-3">
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle" id="itemsTable">
+                                <thead class="table-light">
+                                    <tr class="text-center">
+                                        <th style="width: 5%">#</th>
+                                        <th class="text-end" style="width: 25%">محصول</th>
+                                        <th class="text-end" style="width: 10%">خریداری‌شده</th>
+                                        <th class="text-end" style="width: 10%">قبلاً برگشته</th>
+                                        <th class="text-end" style="width: 10%">قابل برگشت</th>
+                                        <th class="text-end" style="width: 10%">قیمت واحد</th>
+                                        <th class="text-end" style="width: 10%">موجودی انبار</th>
+                                        <th class="text-end" style="width: 12%">تعداد برگشتی</th>
+                                        <th style="width: 8%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsBody">
+                                    <tr id="emptyItemsRow">
+                                        <td colspan="9" class="text-center py-4 text-muted">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            لطفاً ابتدا یک خرید انتخاب کنید
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if form.items_json.errors %}
+                        <div class="alert alert-danger mt-3 rounded-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {{ form.items_json.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- یادداشت -->
+                <div class="mb-4">
+                    <label for="{{ form.note.id_for_label }}" class="form-label fw-bold fs-5">
+                        <i class="fas fa-align-left me-1" style="color: #450C98;"></i>
+                        یادداشت
+                    </label>
+                    {{ form.note }}
+                    {% if form.note.errors %}
+                    <div class="text-danger mt-2 fs-6">
+                        {% for error in form.note.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <small class="text-muted d-block mt-2 fs-6">
+                        <i class="far fa-file-alt me-1"></i>اختیاری – دلیل برگشت، توضیحات و ...
+                    </small>
+                </div>
+
+                <!-- دکمه‌ها -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-5 pt-4 border-top">
+                    <div class="d-flex gap-2 mb-3 mb-sm-0">
+                        <button type="submit" class="btn btn-lg rounded-pill text-white px-4 fs-5" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                            <i class="fas fa-save me-2"></i>
+                            {% if is_edit %}به‌روزرسانی{% else %}ثبت{% endif %}
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary rounded-pill px-4 fs-5">
+                            <i class="fas fa-undo me-2"></i>
+                        </button>
+                    </div>
+                    <a href="{% url 'supplier_return_list' %}" class="btn btn-outline-danger rounded-pill px-4 fs-5">
+                        <i class="fas fa-times me-2"></i> انصراف
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <div class="text-center mt-4 text-muted fs-6">
+        <i class="fas fa-info-circle me-1"></i> 
+        فیلدهای ستاره‌دار اجباری هستند | تعداد برگشتی نمی‌تواند بیشتر از مقدار قابل برگشت و موجودی انبار باشد
+    </div>
+
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// داده‌های خریدها از Django
+// ═══════════════════════════════════════════════════════════════════
+const PURCHASES_DATA = {{ purchases_data|safe }};
+const LOCATIONS = [
+    {% for loc in locations %}
+    { id: {{ loc.id }}, name: "{{ loc.name|escapejs }}", code: "{{ loc.code|escapejs }}" },
+    {% endfor %}
+];
+const PRODUCTS_MAP = {
+    {% for p in products %}
+    {{ p.id }}: "{{ p.name|escapejs }}",
+    {% endfor %}
+};
+const STOCK_DATA = {{ stock_data|default:"{}"|safe }};
+
+let currentPurchase = null;
+
+// ═══════════════════════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════════════════════
+function getLocationName(locId) {
+    const loc = LOCATIONS.find(l => l.id === parseInt(locId));
+    return loc ? loc.name : '---';
+}
+
+function getProductName(prodId) {
+    return PRODUCTS_MAP[parseInt(prodId)] || '---';
+}
+
+function getStock(pid, lid) {
+    const key = pid + '_' + lid;
+    return parseInt(STOCK_DATA[key] || 0);
+}
+
+function fmtMoney(n) {
+    return Number(n || 0).toLocaleString('fa-AF', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    });
+}
+
+function updateItemsJson() {
+    const items = [];
+    $('.item-row').each(function() {
+        const productId = $(this).data('product-id');
+        const locationId = $(this).data('location-id');
+        const quantity = parseInt($(this).find('.return-quantity').val()) || 0;
+
+        if (productId && locationId && quantity > 0) {
+            items.push({
+                product_id: parseInt(productId),
+                quantity: quantity,
+                location_id: parseInt(locationId),
+            });
+        }
+    });
+    $('#id_items_json').val(JSON.stringify(items));
+    $('#itemsCount').text(items.length);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// وقتی خرید انتخاب شد
+// ═══════════════════════════════════════════════════════════════════
+function handlePurchaseSelected(purchaseId) {
+    if (!purchaseId) {
+        $('#itemsBody').html(`
+            <tr id="emptyItemsRow">
+                <td colspan="9" class="text-center py-4 text-muted">
+                    <i class="fas fa-info-circle me-2"></i>
+                    لطفاً ابتدا یک خرید انتخاب کنید
+                </td>
+            </tr>
+        `);
+        $('#purchaseInfoBox').hide();
+        $('#itemsCount').text('0');
+        $('#supplierNameDisplay').text('--- ابتدا خرید را انتخاب کنید ---');
+        $('#id_supplier_name').val('');
+        currentPurchase = null;
+        return;
+    }
+
+    currentPurchase = PURCHASES_DATA.find(p => p.id === parseInt(purchaseId));
+    if (!currentPurchase) return;
+
+    // ═══ اطلاعات اصلی خرید ═══
+    $('#purchaseNumber').text(currentPurchase.number || '-');
+    $('#purchaseSupplier').text(currentPurchase.supplier || '-');
+    $('#purchaseSupplierNumber').text(currentPurchase.supplier_number || '-');
+    $('#purchaseDate').text(currentPurchase.date || '-');
+    $('#purchaseItemsCount').text((currentPurchase.items || []).length + ' قلم');
+
+    // ═══ مبالغ ═══
+    $('#purchaseTotal').text(fmtMoney(currentPurchase.total_amount));
+    $('#purchasePaid').text(fmtMoney(currentPurchase.paid_amount));
+    $('#purchaseRemaining').text(fmtMoney(currentPurchase.remaining_amount));
+    $('#purchaseReturned').text(fmtMoney(currentPurchase.total_returned_amount));
+
+    // ═══ اطلاعات دالری (اگر دارد) ═══
+    if (currentPurchase.total_dollar_amount > 0) {
+        $('#purchaseDollarTotal').text('$ ' + fmtMoney(currentPurchase.total_dollar_amount));
+        $('#purchaseDollarRate').text(fmtMoney(currentPurchase.dollar_rate) + ' افغانی');
+        const equivalent = (currentPurchase.total_dollar_amount || 0) * (currentPurchase.dollar_rate || 0);
+        $('#purchaseDollarEquivalent').text(fmtMoney(equivalent) + ' افغانی');
+        $('#dollarInfoBox').show();
+    } else {
+        $('#dollarInfoBox').hide();
+    }
+
+    // ═══ یادداشت خرید ═══
+    if (currentPurchase.note && currentPurchase.note.trim() !== '') {
+        $('#purchaseNote').text(currentPurchase.note);
+        $('#purchaseNoteBox').show();
+    } else {
+        $('#purchaseNoteBox').hide();
+    }
+
+    // ═══ نمایش Info Box ═══
+    $('#purchaseInfoBox').show();
+
+    // ═══ نام تأمین‌کننده در فیلد ═══
+    $('#supplierNameDisplay').text(currentPurchase.supplier || '---');
+    $('#id_supplier_name').val(currentPurchase.supplier || '');
+
+    // ═══ رندر اقلام ═══
+    renderPurchaseItems(currentPurchase);
+}
+
+function renderPurchaseItems(purchase) {
+    const tbody = $('#itemsBody');
+    tbody.empty();
+
+    const purchaseItems = purchase.items || [];
+
+    if (purchaseItems.length === 0) {
+        tbody.html(`
+            <tr>
+                <td colspan="9" class="text-center py-4 text-muted">
+                    <i class="fas fa-inbox me-2"></i>
+                    این خرید هیچ قلمی ندارد
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    let counter = 1;
+    purchaseItems.forEach(function(item) {
+        const productId = item.product_id;
+        const locationId = item.location_id;
+        const purchasedQty = parseInt(item.quantity) || 0;
+        const unitPrice = parseFloat(item.purchase_price) || 0;
+        const currency = item.currency || 'AFN';
+        const productName = item.product_name || getProductName(productId);
+        const locationName = item.location_name || getLocationName(locationId);
+
+        // مقدار قبلاً برگشته (فقط در ویرایش)
+        let alreadyReturned = 0;
+        {% if current_items %}
+        const currentItems = {{ current_items|safe }};
+        currentItems.forEach(function(ci) {
+            if (parseInt(ci.product_id) === parseInt(productId) && 
+                parseInt(ci.location_id) === parseInt(locationId)) {
+                alreadyReturned = parseInt(ci.quantity) || 0;
+            }
+        });
+        {% endif %}
+
+        const availableReturn = purchasedQty - alreadyReturned;
+        const stockQty = getStock(productId, locationId);
+        const maxReturn = Math.min(availableReturn, stockQty);
+
+        // نمایش قیمت با ارز
+        let priceDisplay = fmtMoney(unitPrice);
+        if (currency === 'USD') {
+            priceDisplay += ' $';
+        } else {
+            priceDisplay += ' اف';
+        }
+
+        const row = $(`
+            <tr class="item-row" data-product-id="${productId}" data-location-id="${locationId}">
+                <td class="text-center fw-bold">${counter}</td>
+                <td>
+                    <strong>${productName}</strong>
+                    <br>
+                    <small class="text-muted">
+                        <i class="fas fa-map-marker-alt me-1"></i>${locationName}
+                    </small>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-primary" style="font-size: 0.9rem;">${purchasedQty}</span>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-secondary" style="font-size: 0.9rem;">${alreadyReturned}</span>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-success" style="font-size: 0.9rem;">${availableReturn}</span>
+                </td>
+                <td class="text-end">
+                    <span class="notranslate fw-bold text-primary" style="font-size: 0.9rem;">${priceDisplay}</span>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-info" style="font-size: 0.9rem;">${stockQty}</span>
+                </td>
+                <td>
+                    <input type="number"
+                           class="form-control form-control-sm text-end return-quantity"
+                           min="0"
+                           max="${maxReturn}"
+                           value="${alreadyReturned > 0 ? alreadyReturned : 0}"
+                           data-max="${maxReturn}"
+                           ${maxReturn <= 0 ? 'disabled' : ''}>
+                </td>
+                <td class="text-center">
+                    <input type="checkbox" class="form-check-input row-selector" 
+                           ${alreadyReturned > 0 ? 'checked' : ''}
+                           ${maxReturn <= 0 ? 'disabled' : ''}
+                           title="انتخاب برای برگشت">
+                </td>
+            </tr>
+        `);
+
+        tbody.append(row);
+        counter++;
+    });
+
+    updateItemsJson();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// در حالت ویرایش، خرید قبلی را لود کن
+// ═══════════════════════════════════════════════════════════════════
+{% if is_edit and supplier_return.original_purchase %}
+$(document).ready(function() {
+    const purchaseId = '{{ supplier_return.original_purchase.id }}';
+    if (purchaseId) {
+        $('#id_original_purchase').val(purchaseId);
+        handlePurchaseSelected(purchaseId);
+    }
+});
+{% endif %}
+
+// ═══════════════════════════════════════════════════════════════════
+// Events
+// ═══════════════════════════════════════════════════════════════════
+$(document).ready(function() {
+
+    // تغییر خرید
+    $('#id_original_purchase').on('change', function() {
+        handlePurchaseSelected($(this).val());
+    });
+
+    // در حالت create اگر خرید از قبل انتخاب شده
+    {% if not is_edit %}
+    const initialPurchase = $('#id_original_purchase').val();
+    if (initialPurchase) {
+        handlePurchaseSelected(initialPurchase);
+    }
+    {% endif %}
+
+    // تغییر تعداد
+    $(document).on('input', '.return-quantity', function() {
+        const max = parseInt($(this).data('max')) || 0;
+        const val = parseInt($(this).val()) || 0;
+
+        if (val > max) {
+            $(this).val(max);
+            alert('تعداد نمی‌تواند بیشتر از ' + max + ' باشد');
+        }
+        if (val < 0) {
+            $(this).val(0);
+        }
+
+        const checkbox = $(this).closest('tr').find('.row-selector');
+        if (val > 0) {
+            checkbox.prop('checked', true);
+        } else {
+            checkbox.prop('checked', false);
+        }
+
+        updateItemsJson();
+    });
+
+    // چک‌باکس
+    $(document).on('change', '.row-selector', function() {
+        const row = $(this).closest('tr');
+        const input = row.find('.return-quantity');
+        const max = parseInt(input.data('max')) || 0;
+
+        if ($(this).is(':checked')) {
+            if (parseInt(input.val()) === 0) {
+                input.val(Math.min(1, max));
+            }
+        } else {
+            input.val(0);
+        }
+        updateItemsJson();
+    });
+
+    // Submit
+    $('#supplierReturnForm').submit(function(e) {
+        e.preventDefault();
+        updateItemsJson();
+
+        const items = JSON.parse($('#id_items_json').val() || '[]');
+        if (items.length === 0) {
+            alert('حداقل یک قلم باید برای برگشت انتخاب شود!');
+            return false;
+        }
+
+        const purchaseId = $('#id_original_purchase').val();
+        if (!purchaseId) {
+            alert('لطفاً خرید اصلی را انتخاب کنید!');
+            return false;
+        }
+
+        this.submit();
+    });
+});
+</script>
+
+<style>
+.form-control:focus,
+.form-select:focus {
+    border-color: #9550fc;
+    box-shadow: 0 0 0 0.25rem rgba(149, 80, 252, 0.25);
+}
+
+#id_return_number {
+    background-color: #f8f9fa !important;
+    cursor: not-allowed !important;
+}
+
+#id_supplier_name {
+    display: none !important;
+}
+
+.item-row:hover {
+    background-color: #faf5ff;
+}
+
+.return-quantity {
+    max-width: 100px;
+    margin: 0 auto;
+}
+
+.notranslate {
+    direction: ltr;
+    display: inline-block;
+}
+</style>
+
+{% endblock %}

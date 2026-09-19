@@ -1,0 +1,421 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load math_filters %}
+
+{% block title %}راپور قروض{% endblock %}
+
+{% block content %}
+<style>
+    :root { --primary: #450C98; --dark: #1e293b; --muted: #64748b; --bg-soft: #f8fafc; }
+    .db-wrapper { font-family: 'Vazirmatn', Tahoma, sans-serif; color: var(--dark); }
+    .db-header {
+        background: linear-gradient(135deg, #d97706 0%, #f59e0b 55%, #fbbf24 100%);
+        border-radius: 24px; padding: 32px 36px; color: #fff;
+        box-shadow: 0 15px 45px rgba(217, 119, 6, 0.3);
+        position: relative; overflow: hidden; margin-bottom: 22px;
+    }
+    .db-header::before { content: ''; position: absolute; top: -80px; left: -80px; width: 260px; height: 260px; background: rgba(255,255,255,0.08); border-radius: 50%; }
+    .db-header::after { content: ''; position: absolute; bottom: -100px; right: -60px; width: 300px; height: 300px; background: rgba(255,255,255,0.06); border-radius: 50%; }
+    .db-header .content { position: relative; z-index: 2; }
+    .db-header h1 { font-weight: 800; font-size: 1.8rem; margin: 0; }
+    .db-header .sub { opacity: 0.92; font-size: 0.95rem; margin-top: 6px; }
+    .db-header .meta-badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .db-header .meta-badge { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28); padding: 6px 16px; border-radius: 50px; font-size: 0.82rem; font-weight: 600; backdrop-filter: blur(8px); }
+    .pdf-action-bar { background: linear-gradient(135deg, #fff 0%, #fffbeb 100%); border-radius: 18px; padding: 18px 24px; box-shadow: 0 6px 22px rgba(217, 119, 6, 0.08); border: 1px solid #eef2f7; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .pdf-action-text h5 { margin: 0; font-weight: 800; color: #d97706; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+    .pdf-action-text p { margin: 4px 0 0; font-size: 0.82rem; color: var(--muted); }
+    .pdf-download-btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; border-radius: 50px; border: none; background: linear-gradient(135deg, #d97706, #f59e0b); color: #fff; font-size: 0.92rem; font-weight: 800; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(217, 119, 6, 0.35); font-family: 'Vazirmatn', Tahoma, sans-serif; white-space: nowrap; }
+    .pdf-download-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(217, 119, 6, 0.45); }
+    .pdf-download-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    .pdf-loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(30, 41, 59, 0.88); backdrop-filter: blur(8px); z-index: 99999; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 22px; }
+    .pdf-loading-overlay.active { display: flex; }
+    .pdf-loading-spinner { width: 70px; height: 70px; border: 5px solid rgba(255,255,255,0.15); border-top-color: #fbbf24; border-radius: 50%; animation: pdfSpin 0.9s linear infinite; }
+    @keyframes pdfSpin { to { transform: rotate(360deg); } }
+    .pdf-loading-text { color: #fff; font-weight: 800; font-size: 1.05rem; font-family: 'Vazirmatn', Tahoma, sans-serif; }
+    .pdf-loading-sub { color: rgba(255,255,255,0.7); font-size: 0.85rem; font-family: 'Vazirmatn', Tahoma, sans-serif; }
+    .report-nav { background: #fff; border-radius: 18px; padding: 14px 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.06); border: 1px solid #eef2f7; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .report-nav .nav-label { font-weight: 800; font-size: 0.85rem; color: var(--primary); margin-left: 8px; display: flex; align-items: center; gap: 6px; }
+    .nav-pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 50px; background: #f8fafc; color: #475569; font-size: 0.82rem; font-weight: 700; text-decoration: none; border: 1px solid #eef2f7; transition: all 0.25s ease; white-space: nowrap; }
+    .nav-pill:hover { background: #fff; color: var(--primary); border-color: #e9d5ff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(69, 12, 152, 0.15); }
+    .nav-pill.active-debts { background: linear-gradient(135deg, #d97706, #f59e0b); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35); }
+    .sec-title { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.05rem; color: #d97706; margin: 28px 0 16px; }
+    .sec-title .bar { width: 5px; height: 22px; background: linear-gradient(180deg, #d97706, #f59e0b); border-radius: 50px; }
+    .kpi-card { background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 6px 22px rgba(0,0,0,0.07); border: 1px solid #eef2f7; height: 100%; transition: all 0.35s ease; position: relative; overflow: hidden; }
+    .kpi-card::before { content: ''; position: absolute; top: 0; right: 0; width: 5px; height: 100%; }
+    .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.12); }
+    .kpi-card .kpi-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; margin-bottom: 14px; }
+    .kpi-card .kpi-value { font-size: 1.45rem; font-weight: 800; line-height: 1.2; margin: 0; }
+    .kpi-card .kpi-label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+    .kpi-card .kpi-sub { font-size: 0.75rem; color: #94a3b8; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+    .kpi-pd .kpi-icon { background: #fee2e2; color: #dc2626; }
+    .kpi-pd::before { background: linear-gradient(180deg, #f093fb, #f5576c); }
+    .kpi-sd .kpi-icon { background: #dcfce7; color: #16a34a; }
+    .kpi-sd::before { background: linear-gradient(180deg, #11998e, #38ef7d); }
+    .aging-card { background: #fff; border-radius: 20px; padding: 24px; box-shadow: 0 6px 24px rgba(0,0,0,0.07); border: 1px solid #eef2f7; }
+    .aging-row { padding: 12px 0; border-bottom: 1px dashed #eef2f7; }
+    .aging-row:last-child { border-bottom: none; }
+    .aging-row .aging-label { font-weight: 700; font-size: 0.85rem; display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .aging-row .aging-value { font-weight: 800; font-size: 0.95rem; }
+    .progress-soft { height: 8px; background: #eef2f7; border-radius: 50px; overflow: hidden; margin-top: 6px; }
+    .progress-soft .bar { height: 100%; border-radius: 50px; }
+    .table-card { background: #fff; border-radius: 20px; box-shadow: 0 6px 24px rgba(0,0,0,0.07); border: 1px solid #eef2f7; overflow: hidden; height: 100%; }
+    .table-card .table-head { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eef2f7; }
+    .table-card .table-head h6 { margin: 0; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+    .table-card .table-head .tag { font-size: 0.72rem; color: var(--muted); background: var(--bg-soft); padding: 3px 10px; border-radius: 50px; font-weight: 700; }
+    .table-card table { margin: 0; font-size: 0.85rem; }
+    .table-card table thead th { background: #fffbeb; color: #d97706; font-weight: 700; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #fde68a; padding: 12px 14px; white-space: nowrap; }
+    .table-card table tbody td { padding: 11px 14px; border-bottom: 1px solid #f5f7fa; vertical-align: middle; }
+    .table-card table tbody tr:last-child td { border-bottom: none; }
+    .table-card table tbody tr:hover { background: #fffbeb; }
+    .empty-state { text-align: center; padding: 30px 12px; color: #94a3b8; font-size: 0.85rem; }
+    .empty-state i { font-size: 1.8rem; margin-bottom: 8px; display: block; opacity: 0.5; }
+    .soft-divider { height: 1px; background: linear-gradient(90deg, transparent, #e2e8f0, transparent); margin: 30px 0; }
+    @media (max-width: 768px) {
+        .db-header { padding: 22px; }
+        .db-header h1 { font-size: 1.4rem; }
+        .kpi-card .kpi-value { font-size: 1.2rem; }
+        .report-nav { padding: 12px; }
+        .nav-pill { font-size: 0.75rem; padding: 6px 12px; }
+        .pdf-action-bar { flex-direction: column; align-items: stretch; }
+        .pdf-download-btn { justify-content: center; }
+    }
+</style>
+
+<div class="container-fluid db-wrapper py-4">
+    <div class="db-header">
+        <div class="content">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                    <h1><i class="fas fa-hand-holding-usd me-2"></i> راپور قروض</h1>
+                    <div class="sub"><i class="fas fa-info-circle me-1"></i> قروض خرید، قروض فروش و عمر قروض</div>
+                    <div class="meta-badges">
+                        <span class="meta-badge"><i class="fas fa-calendar-alt me-1"></i> {{ period.label }}</span>
+                        <span class="meta-badge"><i class="fas fa-calendar-day me-1"></i> {{ period.start|date:"Y/m/d" }} تا {{ period.end|date:"Y/m/d" }}</span>
+                        <span class="meta-badge"><i class="fas fa-clock me-1"></i> {% now "H:i" %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pdf-action-bar">
+        <div class="pdf-action-text">
+            <h5><i class="fas fa-file-pdf" style="color: #dc2626;"></i> دانلود PDF راپور قروض</h5>
+            <p>شامل KPI‌ها، عمر قروض، پرداخت‌های خرید و دریافت‌های فروش — A4</p>
+        </div>
+        <button type="button" class="pdf-download-btn" id="pdfDownloadBtn" onclick="downloadDebtsReport()">
+            <i class="fas fa-download"></i> <span>دانلود PDF</span>
+        </button>
+    </div>
+
+    <div class="report-nav">
+        <span class="nav-label"><i class="fas fa-compass"></i> پیمایش سریع:</span>
+        <a href="{% url 'report_overview' %}" class="nav-pill"><i class="fas fa-chart-pie"></i> جامع</a>
+        <a href="{% url 'report_sales' %}" class="nav-pill"><i class="fas fa-shopping-bag"></i> فروش</a>
+        <a href="{% url 'report_purchases' %}" class="nav-pill"><i class="fas fa-shopping-cart"></i> خرید</a>
+        <a href="{% url 'report_expenses' %}" class="nav-pill"><i class="fas fa-receipt"></i> مصارف</a>
+        <a href="{% url 'report_salaries' %}" class="nav-pill"><i class="fas fa-money-bill-wave"></i> معاشات</a>
+        <a href="{% url 'report_stock' %}" class="nav-pill"><i class="fas fa-warehouse"></i> انبار</a>
+        <a href="{% url 'report_treasury' %}" class="nav-pill"><i class="fas fa-vault"></i> خزانه</a>
+        <a href="{% url 'report_returns' %}" class="nav-pill"><i class="fas fa-undo-alt"></i> مرجوعی</a>
+        <a href="{% url 'report_debts' %}" class="nav-pill active-debts"><i class="fas fa-hand-holding-usd"></i> قروض</a>
+        <a href="{% url 'report_employees' %}" class="nav-pill"><i class="fas fa-users"></i> کارمندان</a>
+    </div>
+
+    <div class="row g-3 mb-2">
+        <div class="col-6 col-md-6 col-lg-3">
+            <div class="kpi-card kpi-pd">
+                <div class="kpi-icon"><i class="fas fa-arrow-up"></i></div>
+                <p class="kpi-value text-danger">{{ purchase_total|floatformat:0 }}</p>
+                <div class="kpi-label">پرداخت به تأمین‌کنندگان</div>
+                <div class="kpi-sub"><i class="fas fa-file-invoice me-1"></i> {{ purchase_count }} پرداخت</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-6 col-lg-3">
+            <div class="kpi-card kpi-sd">
+                <div class="kpi-icon"><i class="fas fa-arrow-down"></i></div>
+                <p class="kpi-value text-success">{{ sale_total|floatformat:0 }}</p>
+                <div class="kpi-label">دریافت از مشتریان</div>
+                <div class="kpi-sub"><i class="fas fa-file-invoice me-1"></i> {{ sale_count }} دریافت</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sec-title"><span class="bar"></span><i class="fas fa-hourglass-half me-1"></i> عمر قروض خرید</div>
+    <div class="row g-3 mb-2">
+        <div class="col-12">
+            <div class="aging-card">
+                <div class="aging-row">
+                    <div class="aging-label">
+                        <span class="text-success"><i class="fas fa-check-circle me-1"></i> ۰ - ۳۰ روز</span>
+                        <span class="aging-value text-success">{{ aging.current|floatformat:0 }}</span>
+                    </div>
+                    <div class="progress-soft"><div class="bar" style="width: 100%; background: linear-gradient(90deg, #11998e, #38ef7d);"></div></div>
+                </div>
+                <div class="aging-row">
+                    <div class="aging-label">
+                        <span class="text-info"><i class="fas fa-clock me-1"></i> ۳۱ - ۶۰ روز</span>
+                        <span class="aging-value text-info">{{ aging.medium|floatformat:0 }}</span>
+                    </div>
+                    <div class="progress-soft"><div class="bar" style="width: 75%; background: linear-gradient(90deg, #4facfe, #00f2fe);"></div></div>
+                </div>
+                <div class="aging-row">
+                    <div class="aging-label">
+                        <span class="text-warning"><i class="fas fa-exclamation-circle me-1"></i> ۶۱ - ۹۰ روز</span>
+                        <span class="aging-value text-warning">{{ aging.old|floatformat:0 }}</span>
+                    </div>
+                    <div class="progress-soft"><div class="bar" style="width: 50%; background: linear-gradient(90deg, #f6a821, #fbbf24);"></div></div>
+                </div>
+                <div class="aging-row">
+                    <div class="aging-label">
+                        <span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i> +۹۰ روز</span>
+                        <span class="aging-value text-danger">{{ aging.critical|floatformat:0 }}</span>
+                    </div>
+                    <div class="progress-soft"><div class="bar" style="width: 25%; background: linear-gradient(90deg, #f5576c, #dc2626);"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sec-title"><span class="bar"></span><i class="fas fa-arrow-up me-1"></i> پرداخت‌های بدهی خرید</div>
+    <div class="table-card mb-3">
+        <div class="table-head">
+            <h6 style="color: #dc2626;"><i class="fas fa-arrow-up"></i> پرداخت به تأمین‌کنندگان</h6>
+            <span class="tag">{{ purchase_debts|length }} پرداخت</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">#</th>
+                        <th>شماره خرید</th>
+                        <th>تأمین‌کننده</th>
+                        <th>تاریخ پرداخت</th>
+                        <th class="text-end">مبلغ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in purchase_debts %}
+                    <tr>
+                        <td class="text-center"><span class="badge bg-light text-dark">{{ forloop.counter }}</span></td>
+                        <td><code class="text-muted small">{{ d.purchase.purchase_number|default:'---' }}</code></td>
+                        <td class="fw-bold small">{{ d.purchase.supplier_name }}</td>
+                        <td class="text-muted small">{{ d.payment_date|date:"Y/m/d" }}</td>
+                        <td class="text-end fw-bold text-danger">{{ d.amount|floatformat:0 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5"><div class="empty-state"><i class="fas fa-arrow-up"></i>پرداختی ثبت نشده</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="sec-title"><span class="bar"></span><i class="fas fa-arrow-down me-1"></i> دریافت‌های بدهی فروش</div>
+    <div class="table-card mb-3">
+        <div class="table-head">
+            <h6 style="color: #16a34a;"><i class="fas fa-arrow-down"></i> دریافت از مشتریان</h6>
+            <span class="tag">{{ sale_debts|length }} دریافت</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">#</th>
+                        <th>شماره فروش</th>
+                        <th>مشتری</th>
+                        <th>تاریخ دریافت</th>
+                        <th class="text-end">مبلغ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in sale_debts %}
+                    <tr>
+                        <td class="text-center"><span class="badge bg-light text-dark">{{ forloop.counter }}</span></td>
+                        <td><code class="text-muted small">{{ d.sale.sale_number|default:'---' }}</code></td>
+                        <td class="fw-bold small">{{ d.sale.customer_name }}</td>
+                        <td class="text-muted small">{{ d.payment_date|date:"Y/m/d" }}</td>
+                        <td class="text-end fw-bold text-success">{{ d.amount|floatformat:0 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5"><div class="empty-state"><i class="fas fa-arrow-down"></i>دریافتی ثبت نشده</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="soft-divider"></div>
+    <div class="text-center text-muted small pb-3">
+        <i class="fas fa-shield-halved me-1" style="color: #d97706;"></i>
+        راپور قروض فقط برای <strong>مشاهده</strong> است
+        <br>
+        <span style="font-size: 0.75rem;">آخرین بروزرسانی: {% now "Y/m/d H:i" %}</span>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+    window.VAZIR_FONT_URL = 'https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/ttf/Vazirmatn-Regular.ttf';
+    window.VAZIR_FONT_BOLD_URL = 'https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/ttf/Vazirmatn-Bold.ttf';
+    function showLoading(t, s) { let o = document.getElementById('pdfLoadingOverlay');
+        if (!o) { o = document.createElement('div'); o.id = 'pdfLoadingOverlay'; o.className = 'pdf-loading-overlay';
+            o.innerHTML = '<div class="pdf-loading-spinner"></div><div class="pdf-loading-text" id="pdfLoadingText"></div><div class="pdf-loading-sub" id="pdfLoadingSub"></div>';
+            document.body.appendChild(o); }
+        document.getElementById('pdfLoadingText').textContent = t || 'در حال ساخت...';
+        document.getElementById('pdfLoadingSub').textContent = s || ''; o.classList.add('active'); }
+    function hideLoading() { const o = document.getElementById('pdfLoadingOverlay'); if (o) o.classList.remove('active'); }
+    async function fetchFont(u) { try { const r = await fetch(u); if (!r.ok) throw 0; return ab2b64(await r.arrayBuffer()); } catch (e) { return null; } }
+    function ab2b64(b) { let s = ''; const y = new Uint8Array(b); const L = y.byteLength; const c = 0x8000;
+        for (let i = 0; i < L; i += c) s += String.fromCharCode.apply(null, y.subarray(i, i + c)); return btoa(s); }
+
+    async function downloadDebtsReport() {
+        const btn = document.getElementById('pdfDownloadBtn');
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>در حال ساخت...</span>';
+        showLoading('در حال ساخت PDF...', 'لطفاً صبر کنید');
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+            const fR = await fetchFont(window.VAZIR_FONT_URL);
+            const fB = await fetchFont(window.VAZIR_FONT_BOLD_URL);
+            if (!fR) throw new Error('فونت لود نشد');
+            doc.addFileToVFS('Vazirmatn-Regular.ttf', fR);
+            doc.addFont('Vazirmatn-Regular.ttf', 'Vazirmatn', 'normal');
+            if (fB) { doc.addFileToVFS('Vazirmatn-Bold.ttf', fB); doc.addFont('Vazirmatn-Bold.ttf', 'Vazirmatn', 'bold'); }
+            doc.setFont('Vazirmatn', 'normal');
+
+            const data = {
+                periodLabel: "{{ period.label|escapejs }}",
+                periodStart: "{{ period.start|date:'Y/m/d' }}",
+                periodEnd: "{{ period.end|date:'Y/m/d' }}",
+                today: new Date().toLocaleDateString('fa-AF'),
+                time: new Date().toLocaleTimeString('fa-AF', {hour: '2-digit', minute: '2-digit'}),
+                purchaseTotal: "{{ purchase_total|floatformat:0 }}",
+                saleTotal: "{{ sale_total|floatformat:0 }}",
+                purchaseCount: "{{ purchase_count }}",
+                saleCount: "{{ sale_count }}",
+                agingCurrent: "{{ aging.current|floatformat:0 }}",
+                agingMedium: "{{ aging.medium|floatformat:0 }}",
+                agingOld: "{{ aging.old|floatformat:0 }}",
+                agingCritical: "{{ aging.critical|floatformat:0 }}",
+            };
+            const purchaseDebts = [
+                {% for d in purchase_debts %}
+                { rank: {{ forloop.counter }}, number: "{{ d.purchase.purchase_number|default:'---'|escapejs }}", supplier: "{{ d.purchase.supplier_name|escapejs }}", date: "{{ d.payment_date|date:'Y/m/d' }}", amount: "{{ d.amount|floatformat:0 }}" },
+                {% endfor %}
+            ];
+            const saleDebts = [
+                {% for d in sale_debts %}
+                { rank: {{ forloop.counter }}, number: "{{ d.sale.sale_number|default:'---'|escapejs }}", customer: "{{ d.sale.customer_name|escapejs }}", date: "{{ d.payment_date|date:'Y/m/d' }}", amount: "{{ d.amount|floatformat:0 }}" },
+                {% endfor %}
+            ];
+
+            const PW = 210, PH = 297, M = 12, CW = PW - 24;
+            let y = M, pn = 1;
+            const setFont = (sz, w = 'normal', c = [30, 41, 59]) => { doc.setFont('Vazirmatn', w); doc.setFontSize(sz); doc.setTextColor(c[0], c[1], c[2]); };
+            const drawFooter = () => { const fy = PH - 8; doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.3);
+                doc.line(M, fy - 3, PW - M, fy - 3);
+                setFont(7, 'normal', [120, 120, 120]);
+                doc.text('صفحه ' + pn, M + 2, fy, { align: 'left' });
+                doc.text(data.today + ' - ' + data.time, PW / 2, fy, { align: 'center' });
+                doc.text('poyafar@yahoo.com', PW - M - 2, fy, { align: 'right' }); };
+            const drawMiniHeader = () => { doc.setFillColor(217, 119, 6); doc.rect(0, 0, PW, 8, 'F');
+                setFont(8, 'normal', [255, 255, 255]);
+                doc.text('راپور قروض — شرکت نرم‌افزاری پویافر', PW - M, 5.5, { align: 'right' }); y = 14; };
+            const checkPage = (n = 20) => { if (y + n > PH - 15) { drawFooter(); doc.addPage(); pn++; drawMiniHeader(); } };
+            const drawSection = (t) => { checkPage(12); setFont(11, 'bold', [217, 119, 6]); doc.text(t, PW - M, y, { align: 'right' });
+                doc.setDrawColor(217, 119, 6); doc.setLineWidth(0.6); doc.line(PW - M - 50, y + 1.5, PW - M, y + 1.5); y += 6; };
+            const drawTable = (heads, rows, ws) => { const hH = 7.5, rH = 6.5, tW = ws.reduce((a, b) => a + b, 0);
+                const sx = PW - M - tW; checkPage(hH + rH * 2);
+                doc.setFillColor(217, 119, 6); doc.rect(sx, y, tW, hH, 'F');
+                setFont(8, 'bold', [255, 255, 255]);
+                let xp = PW - M;
+                heads.forEach((h, i) => { xp -= ws[i]; doc.text(h, xp + ws[i] - 2, y + 5, { align: 'right' }); }); y += hH;
+                rows.forEach((r, idx) => { checkPage(rH);
+                    if (idx % 2 === 0) { doc.setFillColor(255, 251, 235); doc.rect(sx, y, tW, rH, 'F'); }
+                    doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.2); doc.rect(sx, y, tW, rH);
+                    setFont(8, 'normal', [30, 41, 59]); xp = PW - M;
+                    r.forEach((c, i) => { xp -= ws[i]; let x, a;
+                        if (i === 0) { a = 'center'; x = xp + ws[i] / 2; }
+                        else if (i === r.length - 1) { a = 'left'; x = xp + 3; }
+                        else { a = 'right'; x = xp + ws[i] - 2; }
+                        doc.text(String(c), x, y + 4.5, { align: a }); }); y += rH; }); y += 4; };
+            const drawKpi = (x, yy, w, h, t, v, m, col) => { doc.setDrawColor(226, 232, 240); doc.setFillColor(255, 255, 255);
+                doc.roundedRect(x, yy, w, h, 1.5, 1.5, 'FD');
+                doc.setFillColor(col[0], col[1], col[2]); doc.rect(x, yy, w, 1.5, 'F');
+                setFont(7, 'normal', [100, 116, 139]); doc.text(t, x + w - 3, yy + 5, { align: 'right' });
+                setFont(12.5, 'bold', col); doc.text(v, x + w - 3, yy + 12, { align: 'right' });
+                setFont(6, 'normal', [148, 163, 184]); if (m) doc.text(m, x + w - 3, yy + 17.5, { align: 'right' }); };
+
+            doc.setFillColor(217, 119, 6); doc.rect(0, 0, PW, 32, 'F');
+            doc.setFillColor(245, 158, 11); doc.circle(PW - 15, 16, 22, 'F');
+            setFont(18, 'bold', [255, 255, 255]); doc.text('راپور قروض', PW - M, 12, { align: 'right' });
+            setFont(9, 'normal', [255, 255, 255]); doc.text('شرکت نرم‌افزاری پویافر — تحلیل قروض خرید و فروش', PW - M, 19, { align: 'right' });
+            setFont(8, 'normal', [255, 255, 255]);
+            doc.text('دوره: ' + data.periodLabel, PW - M, 27, { align: 'right' });
+            doc.text('از: ' + data.periodStart + '  تا: ' + data.periodEnd, M + 2, 27, { align: 'left' });
+            y = 40;
+
+            drawSection('شاخص‌های کلیدی');
+            const kW = (CW - 2) / 2, kH = 20, kG = 2;
+            [
+                { t: 'پرداخت به تأمین‌کنندگان', v: data.purchaseTotal, m: data.purchaseCount + ' پرداخت', c: [220, 38, 38] },
+                { t: 'دریافت از مشتریان', v: data.saleTotal, m: data.saleCount + ' دریافت', c: [22, 163, 74] },
+            ].forEach((k, i) => {
+                const col = i % 2, row = Math.floor(i / 2);
+                const x = PW - M - (col + 1) * kW - col * kG + kW - kW;
+                drawKpi(x, y + row * (kH + kG), kW, kH, k.t, k.v, k.m, k.c);
+            });
+            y += Math.ceil(2 / 2) * (kH + kG) + 6;
+
+            drawSection('عمر قروض خرید');
+            drawTable(['دوره', 'مبلغ (افغانی)'],
+                [['۰ - ۳۰ روز', data.agingCurrent], ['۳۱ - ۶۰ روز', data.agingMedium], ['۶۱ - ۹۰ روز', data.agingOld], ['+۹۰ روز', data.agingCritical]],
+                [90, 90]);
+
+            if (purchaseDebts.length > 0) {
+                drawSection('پرداخت‌های بدهی خرید');
+                drawTable(['#', 'شماره خرید', 'تأمین‌کننده', 'تاریخ', 'مبلغ'],
+                    purchaseDebts.map(d => [d.rank, d.number, d.supplier, d.date, d.amount]), [10, 30, 65, 30, 45]);
+            }
+
+            if (saleDebts.length > 0) {
+                drawSection('دریافت‌های بدهی فروش');
+                drawTable(['#', 'شماره فروش', 'مشتری', 'تاریخ', 'مبلغ'],
+                    saleDebts.map(d => [d.rank, d.number, d.customer, d.date, d.amount]), [10, 30, 65, 30, 45]);
+            }
+
+            checkPage(35); y += 8;
+            const sw = (CW - 20) / 3;
+            ['امضای تهیه‌کننده', 'امضای مدیر', 'مهر شرکت'].forEach((l, i) => {
+                const x = PW - M - i * (sw + 10) - sw;
+                doc.setDrawColor(148, 163, 184); doc.setLineWidth(0.3);
+                doc.line(x + 10, y + 12, x + sw - 10, y + 12);
+                setFont(8, 'normal', [100, 116, 139]); doc.text(l, x + sw / 2, y + 17, { align: 'center' });
+            });
+            y += 24;
+
+            checkPage(20);
+            doc.setFillColor(255, 251, 235); doc.roundedRect(M, y, CW, 15, 2, 2, 'F');
+            setFont(9, 'bold', [217, 119, 6]); doc.text('شرکت نرم‌افزاری پویافر', PW / 2, y + 5.5, { align: 'center' });
+            setFont(7.5, 'normal', [100, 116, 139]); doc.text('کابل، افغانستان | poyafar@yahoo.com | +93794483138', PW / 2, y + 11, { align: 'center' });
+
+            const tp = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= tp; i++) { doc.setPage(i); drawFooter(); }
+
+            doc.save('Poyafar_Debts_Report_' + new Date().toISOString().slice(0, 10) + '.pdf');
+            hideLoading();
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        } catch (err) {
+            console.error('PDF Error:', err);
+            hideLoading();
+            btn.disabled = false;
+            btn.innerHTML = orig;
+            alert('خطا در ساخت PDF: ' + err.message);
+        }
+    }
+</script>
+{% endblock %}

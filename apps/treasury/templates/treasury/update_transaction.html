@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}ثبت تراکنش جدید{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc; font-size: 2rem;">
+                <i class="fas fa-exchange-alt me-2"></i>
+                ثبت تراکنش جدید
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 fs-6">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'transaction_list' %}" class="text-decoration-none text-muted">تراکنش‌ها</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98;">ثبت جدید</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'transaction_list' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
+            <i class="fas fa-arrow-right me-2"></i>
+            بازگشت به لیست
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Balance Cards -->
+    
+    <!-- Form Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <h5 class="mb-0 fw-bold fs-4">
+                <i class="fas fa-exchange-alt me-2"></i>
+                فرم ثبت تراکنش
+            </h5>
+        </div>
+        <div class="card-body p-4 p-md-5">
+            
+            <form method="POST" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                <!-- Display non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger shadow-sm rounded-3 fs-6">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <!-- Transaction Number -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.transaction_number.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-hashtag me-1" style="color: #450C98;"></i>
+                            شماره تراکنش
+                        </label>
+                        {{ form.transaction_number }}
+                        {% if form.transaction_number.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% for error in form.transaction_number.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-magic me-1"></i>شماره تراکنش به صورت خودکار تولید می‌شود (قابل ویرایش)
+                        </small>
+                    </div>
+
+                    <!-- Transaction Date -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.transaction_date.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-calendar me-1" style="color: #450C98;"></i>
+                            تاریخ تراکنش <span class="text-danger">*</span>
+                        </label>
+                        {{ form.transaction_date }}
+                        {% if form.transaction_date.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% for error in form.transaction_date.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Transaction Type -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.transaction_type.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-arrow-left-right me-1" style="color: #450C98;"></i>
+                            نوع تراکنش <span class="text-danger">*</span>
+                        </label>
+                        {{ form.transaction_type }}
+                        {% if form.transaction_type.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.transaction_type.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>واریز (اضافه به خزانه) یا برداشت (کسر از خزانه)
+                        </small>
+                    </div>
+
+                    <!-- Money Type -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.money_type.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-wallet me-1" style="color: #450C98;"></i>
+                            نوع پول <span class="text-danger">*</span>
+                        </label>
+                        {{ form.money_type }}
+                        {% if form.money_type.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.money_type.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-list me-1"></i>صرافی، بانک، شخصی، قرض و...
+                        </small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Amount -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.amount.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-money-bill-wave me-1" style="color: #450C98;"></i>
+                            مقدار (افغانی) <span class="text-danger">*</span>
+                        </label>
+                        {{ form.amount }}
+                        {% if form.amount.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% for error in form.amount.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>مقدار پول را به افغانی وارد کنید
+                        </small>
+                    </div>
+
+                    <!-- From Who -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.from_who.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-user me-1" style="color: #450C98;"></i>
+                            از چه کسی / به چه کسی <span class="text-danger">*</span>
+                        </label>
+                        {{ form.from_who }}
+                        {% if form.from_who.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.from_who.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-user me-1"></i>نام شخص، شرکت یا منبع تراکنش
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Description Field -->
+                <div class="mb-4">
+                    <label for="{{ form.description.id_for_label }}" class="form-label fw-bold fs-5">
+                        <i class="fas fa-align-left me-1" style="color: #450C98;"></i>
+                        توضیحات
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <div class="text-danger mt-2 fs-6">
+                        {% for error in form.description.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <small class="text-muted d-block mt-2 fs-6">
+                        <i class="far fa-file-alt me-1"></i>اختیاری – توضیح مختصر درباره تراکنش
+                    </small>
+                </div>
+
+                <!-- Transaction Image Field -->
+                <div class="mb-4">
+                    <label for="{{ form.transaction_image.id_for_label }}" class="form-label fw-bold fs-5">
+                        <i class="fas fa-image me-1" style="color: #450C98;"></i>
+                        تصویر تراکنش
+                    </label>
+                    {{ form.transaction_image }}
+                    {% if form.transaction_image.errors %}
+                    <div class="text-danger mt-2 fs-6">
+                        {% for error in form.transaction_image.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <small class="text-muted d-block mt-2 fs-6">
+                        <i class="fas fa-camera me-1"></i>اختیاری – تصویر سند یا رسید تراکنش را آپلود کنید
+                    </small>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-5 pt-4 border-top">
+                    <div class="d-flex gap-2 mb-3 mb-sm-0">
+                        <button type="submit" class="btn btn-lg rounded-pill text-white px-4 fs-5" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                            <i class="fas fa-save me-2"></i> ثبت 
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary rounded-pill px-4 fs-5">
+                            <i class="fas fa-undo me-2"></i> 
+                        </button>
+                    </div>
+                    <a href="{% url 'transaction_list' %}" class="btn btn-outline-danger rounded-pill px-4 fs-5">
+                        <i class="fas fa-times me-2"></i> 
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Subtle footer note -->
+    <div class="text-center mt-4 text-muted fs-6">
+        <i class="fas fa-info-circle me-1"></i> فیلدهای ستاره‌دار اجباری هستند | در صورت برداشت، موجودی خزانه بررسی می‌شود
+    </div>
+
+</div>
+{% endblock %}

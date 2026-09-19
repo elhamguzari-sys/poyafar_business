@@ -1,0 +1,719 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load math_filters %}
+
+{% block title %}راپور مصارف{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #450C98;
+        --primary-light: #9550fc;
+        --success: #11998e;
+        --danger: #f5576c;
+        --info: #4facfe;
+        --warning: #f6a821;
+        --dark: #1e293b;
+        --muted: #64748b;
+        --bg-soft: #f8fafc;
+    }
+    .ex-wrapper { font-family: 'Vazirmatn', Tahoma, sans-serif; color: var(--dark); }
+    .ex-header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 55%, #67e8f9 100%);
+        border-radius: 24px; padding: 32px 36px; color: #fff;
+        box-shadow: 0 15px 45px rgba(79, 172, 254, 0.3);
+        position: relative; overflow: hidden; margin-bottom: 22px;
+    }
+    .ex-header::before {
+        content: ''; position: absolute; top: -80px; left: -80px;
+        width: 260px; height: 260px;
+        background: rgba(255,255,255,0.08); border-radius: 50%;
+    }
+    .ex-header::after {
+        content: ''; position: absolute; bottom: -100px; right: -60px;
+        width: 300px; height: 300px;
+        background: rgba(255,255,255,0.06); border-radius: 50%;
+    }
+    .ex-header .content { position: relative; z-index: 2; }
+    .ex-header h1 { font-weight: 800; font-size: 1.8rem; margin: 0; }
+    .ex-header .sub { opacity: 0.92; font-size: 0.95rem; margin-top: 6px; }
+    .ex-header .meta-badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .ex-header .meta-badge {
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.28);
+        padding: 6px 16px; border-radius: 50px;
+        font-size: 0.82rem; font-weight: 600; backdrop-filter: blur(8px);
+    }
+    .pdf-action-bar {
+        background: linear-gradient(135deg, #fff 0%, #eff6ff 100%);
+        border-radius: 18px; padding: 18px 24px;
+        box-shadow: 0 6px 22px rgba(79, 172, 254, 0.08);
+        border: 1px solid #eef2f7; margin-bottom: 22px;
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 16px; flex-wrap: wrap;
+    }
+    .pdf-action-text h5 {
+        margin: 0; font-weight: 800; color: var(--info);
+        font-size: 1rem; display: flex; align-items: center; gap: 8px;
+    }
+    .pdf-action-text p { margin: 4px 0 0; font-size: 0.82rem; color: var(--muted); }
+    .pdf-download-btn {
+        display: inline-flex; align-items: center; gap: 10px;
+        padding: 12px 28px; border-radius: 50px; border: none;
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        color: #fff; font-size: 0.92rem; font-weight: 800;
+        cursor: pointer; transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(79, 172, 254, 0.35);
+        font-family: 'Vazirmatn', Tahoma, sans-serif; white-space: nowrap;
+    }
+    .pdf-download-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(79, 172, 254, 0.45);
+    }
+    .pdf-download-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    .pdf-loading-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(30, 41, 59, 0.88); backdrop-filter: blur(8px);
+        z-index: 99999; display: none;
+        align-items: center; justify-content: center;
+        flex-direction: column; gap: 22px;
+    }
+    .pdf-loading-overlay.active { display: flex; }
+    .pdf-loading-spinner {
+        width: 70px; height: 70px;
+        border: 5px solid rgba(255,255,255,0.15);
+        border-top-color: #00f2fe; border-radius: 50%;
+        animation: pdfSpin 0.9s linear infinite;
+    }
+    @keyframes pdfSpin { to { transform: rotate(360deg); } }
+    .pdf-loading-text { color: #fff; font-weight: 800; font-size: 1.05rem; font-family: 'Vazirmatn', Tahoma, sans-serif; }
+    .pdf-loading-sub { color: rgba(255,255,255,0.7); font-size: 0.85rem; font-family: 'Vazirmatn', Tahoma, sans-serif; }
+    .report-nav {
+        background: #fff; border-radius: 18px; padding: 14px 18px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+        border: 1px solid #eef2f7; margin-bottom: 24px;
+        display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    }
+    .report-nav .nav-label {
+        font-weight: 800; font-size: 0.85rem;
+        color: var(--primary); margin-left: 8px;
+        display: flex; align-items: center; gap: 6px;
+    }
+    .nav-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; border-radius: 50px;
+        background: #f8fafc; color: #475569;
+        font-size: 0.82rem; font-weight: 700;
+        text-decoration: none; border: 1px solid #eef2f7;
+        transition: all 0.25s ease; white-space: nowrap;
+    }
+    .nav-pill:hover {
+        background: #fff; color: var(--primary);
+        border-color: #e9d5ff; transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(69, 12, 152, 0.15);
+    }
+    .nav-pill.active-expense {
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        color: #fff; border-color: transparent;
+        box-shadow: 0 4px 14px rgba(79, 172, 254, 0.35);
+    }
+    .period-toolbar {
+        background: #fff; border-radius: 16px; padding: 14px 20px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+        border: 1px solid #eef2f7; margin-bottom: 22px;
+        display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    }
+    .period-toolbar .lbl { font-weight: 700; font-size: 0.82rem; color: var(--muted); margin-left: 8px; }
+    .period-btn {
+        display: inline-block; padding: 6px 14px;
+        border-radius: 50px; background: #f8fafc;
+        color: #64748b; font-size: 0.78rem;
+        font-weight: 700; text-decoration: none;
+        border: 1px solid #eef2f7;
+        transition: all 0.25s ease; white-space: nowrap;
+    }
+    .period-btn:hover { background: #eff6ff; color: var(--info); border-color: #bfdbfe; }
+    .period-btn.active {
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        color: #fff; border-color: transparent;
+        box-shadow: 0 4px 14px rgba(79, 172, 254, 0.35);
+    }
+    .sec-title {
+        display: flex; align-items: center; gap: 12px;
+        font-weight: 800; font-size: 1.05rem;
+        color: var(--primary); margin: 28px 0 16px;
+    }
+    .sec-title .bar {
+        width: 5px; height: 22px;
+        background: linear-gradient(180deg, #4facfe, #00f2fe);
+        border-radius: 50px;
+    }
+    .kpi-card {
+        background: #fff; border-radius: 20px; padding: 20px;
+        box-shadow: 0 6px 22px rgba(0,0,0,0.07);
+        border: 1px solid #eef2f7; height: 100%;
+        transition: all 0.35s ease;
+        position: relative; overflow: hidden;
+    }
+    .kpi-card::before { content: ''; position: absolute; top: 0; right: 0; width: 5px; height: 100%; }
+    .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.12); }
+    .kpi-card .kpi-icon {
+        width: 52px; height: 52px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.35rem; margin-bottom: 14px;
+    }
+    .kpi-card .kpi-value { font-size: 1.45rem; font-weight: 800; line-height: 1.2; margin: 0; }
+    .kpi-card .kpi-label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+    .kpi-card .kpi-sub { font-size: 0.75rem; color: #94a3b8; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+    .kpi-total .kpi-icon { background: #dbeafe; color: #2563eb; }
+    .kpi-total::before { background: linear-gradient(180deg, #4facfe, #00f2fe); }
+    .kpi-count .kpi-icon { background: #e0e7ff; color: #4f46e5; }
+    .kpi-count::before { background: linear-gradient(180deg, #4f46e5, #818cf8); }
+    .kpi-avg .kpi-icon { background: #f3e8ff; color: #7c3aed; }
+    .kpi-avg::before { background: linear-gradient(180deg, #450C98, #9550fc); }
+    .chart-card {
+        background: #fff; border-radius: 20px; padding: 24px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.07);
+        border: 1px solid #eef2f7; height: 100%;
+    }
+    .chart-card .chart-head {
+        display: flex; justify-content: space-between;
+        align-items: center; margin-bottom: 18px;
+        flex-wrap: wrap; gap: 8px;
+    }
+    .chart-card .chart-title {
+        font-weight: 800; font-size: 0.98rem;
+        color: var(--info); display: flex; align-items: center; gap: 8px;
+    }
+    .chart-card .chart-tag {
+        font-size: 0.72rem; color: var(--muted);
+        background: var(--bg-soft); padding: 4px 12px;
+        border-radius: 50px; font-weight: 700;
+    }
+    .chart-wrap { position: relative; height: 300px; width: 100%; }
+    .table-card {
+        background: #fff; border-radius: 20px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.07);
+        border: 1px solid #eef2f7; overflow: hidden; height: 100%;
+    }
+    .table-card .table-head {
+        padding: 16px 20px; display: flex;
+        justify-content: space-between; align-items: center;
+        border-bottom: 1px solid #eef2f7;
+    }
+    .table-card .table-head h6 {
+        margin: 0; font-weight: 800; font-size: 0.95rem;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .table-card .table-head .tag {
+        font-size: 0.72rem; color: var(--muted);
+        background: var(--bg-soft); padding: 3px 10px;
+        border-radius: 50px; font-weight: 700;
+    }
+    .table-card table { margin: 0; font-size: 0.85rem; }
+    .table-card table thead th {
+        background: #eff6ff; color: var(--info);
+        font-weight: 700; font-size: 0.76rem;
+        text-transform: uppercase; letter-spacing: 0.3px;
+        border-bottom: 1px solid #bfdbfe;
+        padding: 12px 14px; white-space: nowrap;
+    }
+    .table-card table tbody td {
+        padding: 11px 14px;
+        border-bottom: 1px solid #f5f7fa;
+        vertical-align: middle;
+    }
+    .table-card table tbody tr:last-child td { border-bottom: none; }
+    .table-card table tbody tr:hover { background: #eff6ff; }
+    .rank-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 26px; height: 26px; border-radius: 8px;
+        font-size: 0.75rem; font-weight: 800;
+        background: #f1f5f9; color: #64748b;
+    }
+    .rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #fff; }
+    .rank-2 { background: linear-gradient(135deg, #cbd5e1, #94a3b8); color: #fff; }
+    .rank-3 { background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; }
+    .progress-soft {
+        height: 8px; background: #eef2f7;
+        border-radius: 50px; overflow: hidden; margin-top: 6px;
+    }
+    .progress-soft .bar { height: 100%; border-radius: 50px; }
+    .empty-state { text-align: center; padding: 30px 12px; color: #94a3b8; font-size: 0.85rem; }
+    .empty-state i { font-size: 1.8rem; margin-bottom: 8px; display: block; opacity: 0.5; }
+    .expenses-list-card {
+        background: #fff; border-radius: 20px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.07);
+        border: 1px solid #eef2f7; overflow: hidden;
+    }
+    .expenses-list-card .list-head {
+        padding: 18px 24px; display: flex;
+        justify-content: space-between; align-items: center;
+        border-bottom: 1px solid #eef2f7;
+        background: linear-gradient(135deg, #eff6ff 0%, #fff 100%);
+    }
+    .expenses-list-card .list-head h6 {
+        margin: 0; font-weight: 800; font-size: 1rem;
+        color: var(--info); display: flex; align-items: center; gap: 8px;
+    }
+    .expenses-list-card .list-head .count-tag {
+        font-size: 0.75rem; color: var(--info);
+        background: #dbeafe; padding: 4px 12px;
+        border-radius: 50px; font-weight: 700;
+    }
+    .expenses-list-card table { margin: 0; font-size: 0.85rem; }
+    .expenses-list-card table thead th {
+        background: #eff6ff; color: var(--info);
+        font-weight: 700; font-size: 0.76rem;
+        text-transform: uppercase; letter-spacing: 0.3px;
+        border-bottom: 1px solid #bfdbfe;
+        padding: 12px 14px; white-space: nowrap;
+    }
+    .expenses-list-card table tbody td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f5f7fa;
+        vertical-align: middle;
+    }
+    .expenses-list-card table tbody tr:last-child td { border-bottom: none; }
+    .expenses-list-card table tbody tr:hover { background: #eff6ff; }
+    .soft-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+        margin: 30px 0;
+    }
+    @media (max-width: 768px) {
+        .ex-header { padding: 22px; }
+        .ex-header h1 { font-size: 1.4rem; }
+        .kpi-card .kpi-value { font-size: 1.2rem; }
+        .chart-wrap { height: 240px; }
+        .report-nav { padding: 12px; }
+        .nav-pill { font-size: 0.75rem; padding: 6px 12px; }
+        .pdf-action-bar { flex-direction: column; align-items: stretch; }
+        .pdf-download-btn { justify-content: center; }
+    }
+</style>
+
+<div class="container-fluid ex-wrapper py-4">
+    <div class="ex-header">
+        <div class="content">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                    <h1><i class="fas fa-receipt me-2"></i> راپور مصارف</h1>
+                    <div class="sub"><i class="fas fa-info-circle me-1"></i> تحلیل کامل مصارف و تفکیک بر اساس عنوان</div>
+                    <div class="meta-badges">
+                        <span class="meta-badge"><i class="fas fa-calendar-alt me-1"></i> {{ period.label }}</span>
+                        <span class="meta-badge"><i class="fas fa-calendar-day me-1"></i> {{ period.start|date:"Y/m/d" }} تا {{ period.end|date:"Y/m/d" }}</span>
+                        <span class="meta-badge"><i class="fas fa-clock me-1"></i> {% now "H:i" %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pdf-action-bar">
+        <div class="pdf-action-text">
+            <h5><i class="fas fa-file-pdf" style="color: #dc2626;"></i> دانلود PDF راپور مصارف</h5>
+            <p>شامل KPI‌ها، تفکیک مصارف و لیست کامل — آماده چاپ در A4</p>
+        </div>
+        <button type="button" class="pdf-download-btn" id="pdfDownloadBtn" onclick="downloadExpensesReport()">
+            <i class="fas fa-download"></i> <span>دانلود PDF</span>
+        </button>
+    </div>
+
+    <div class="report-nav">
+        <span class="nav-label"><i class="fas fa-compass"></i> پیمایش سریع:</span>
+        <a href="{% url 'report_overview' %}" class="nav-pill"><i class="fas fa-chart-pie"></i> جامع</a>
+        <a href="{% url 'report_sales' %}" class="nav-pill"><i class="fas fa-shopping-bag"></i> فروش</a>
+        <a href="{% url 'report_purchases' %}" class="nav-pill"><i class="fas fa-shopping-cart"></i> خرید</a>
+        <a href="{% url 'report_expenses' %}" class="nav-pill active-expense"><i class="fas fa-receipt"></i> مصارف</a>
+        <a href="{% url 'report_salaries' %}" class="nav-pill"><i class="fas fa-money-bill-wave"></i> معاشات</a>
+        <a href="{% url 'report_stock' %}" class="nav-pill"><i class="fas fa-warehouse"></i> انبار</a>
+        <a href="{% url 'report_treasury' %}" class="nav-pill"><i class="fas fa-vault"></i> خزانه</a>
+        <a href="{% url 'report_returns' %}" class="nav-pill"><i class="fas fa-undo-alt"></i> مرجوعی</a>
+        <a href="{% url 'report_debts' %}" class="nav-pill"><i class="fas fa-hand-holding-usd"></i> قروض</a>
+        <a href="{% url 'report_employees' %}" class="nav-pill"><i class="fas fa-users"></i> کارمندان</a>
+    </div>
+
+    <div class="period-toolbar">
+        <span class="lbl"><i class="fas fa-filter me-1"></i> دوره:</span>
+        <a href="?period=today" class="period-btn {% if period.key == 'today' %}active{% endif %}">امروز</a>
+        <a href="?period=yesterday" class="period-btn {% if period.key == 'yesterday' %}active{% endif %}">دیروز</a>
+        <a href="?period=this_week" class="period-btn {% if period.key == 'this_week' %}active{% endif %}">هفته جاری</a>
+        <a href="?period=last_week" class="period-btn {% if period.key == 'last_week' %}active{% endif %}">هفته گذشته</a>
+        <a href="?period=this_month" class="period-btn {% if period.key == 'this_month' %}active{% endif %}">ماه جاری</a>
+        <a href="?period=last_month" class="period-btn {% if period.key == 'last_month' %}active{% endif %}">ماه گذشته</a>
+        <a href="?period=7" class="period-btn {% if period.key == '7' %}active{% endif %}">۷ روز</a>
+        <a href="?period=30" class="period-btn {% if period.key == '30' %}active{% endif %}">۳۰ روز</a>
+        <a href="?period=90" class="period-btn {% if period.key == '90' %}active{% endif %}">۹۰ روز</a>
+        <a href="?period=365" class="period-btn {% if period.key == '365' %}active{% endif %}">۱ سال</a>
+        <a href="?period=this_year" class="period-btn {% if period.key == 'this_year' %}active{% endif %}">سال جاری</a>
+        <a href="?period=last_year" class="period-btn {% if period.key == 'last_year' %}active{% endif %}">سال گذشته</a>
+    </div>
+
+    <div class="row g-3 mb-2">
+        <div class="col-6 col-md-4 col-lg-4">
+            <div class="kpi-card kpi-total">
+                <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
+                <p class="kpi-value text-info">{{ stats.total|floatformat:0 }}</p>
+                <div class="kpi-label">مجموع مصارف (افغانی)</div>
+                <div class="kpi-sub"><i class="fas fa-file-invoice me-1"></i> {{ stats.count }} سند</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-4">
+            <div class="kpi-card kpi-count">
+                <div class="kpi-icon"><i class="fas fa-file-invoice"></i></div>
+                <p class="kpi-value" style="color: #4f46e5;">{{ stats.count }}</p>
+                <div class="kpi-label">تعداد اسناد مصرف</div>
+                <div class="kpi-sub"><i class="fas fa-calendar-day me-1"></i> {{ period.label }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-4">
+            <div class="kpi-card kpi-avg">
+                <div class="kpi-icon"><i class="fas fa-calculator"></i></div>
+                <p class="kpi-value" style="color: var(--primary);">{{ stats.avg|floatformat:0 }}</p>
+                <div class="kpi-label">میانگین هر مصرف</div>
+                <div class="kpi-sub"><i class="fas fa-chart-simple me-1"></i> افغانی</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sec-title"><span class="bar"></span><i class="fas fa-chart-column me-1"></i> روند روزانه مصارف</div>
+    <div class="row g-3 mb-2">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="chart-head">
+                    <div class="chart-title"><i class="fas fa-chart-line"></i> نمودار مصارف روزانه</div>
+                    <span class="chart-tag"><i class="fas fa-calendar-day me-1"></i> {{ period.days }} روز</span>
+                </div>
+                <div class="chart-wrap"><canvas id="dailyChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sec-title"><span class="bar"></span><i class="fas fa-chart-pie me-1"></i> تفکیک مصارف بر اساس عنوان</div>
+    <div class="row g-3 mb-2">
+        <div class="col-12">
+            <div class="table-card">
+                <div class="table-head">
+                    <h6 style="color: #4facfe;"><i class="fas fa-chart-pie"></i> تفکیک مصارف</h6>
+                    <span class="tag">Top 20</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">#</th>
+                                <th>عنوان مصرف</th>
+                                <th class="text-end">مبلغ</th>
+                                <th style="width:200px;">سهم از کل</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for e in breakdown %}
+                            <tr>
+                                <td><span class="rank-badge rank-{{ forloop.counter }}">{{ forloop.counter }}</span></td>
+                                <td class="fw-bold small">{{ e.title }}</td>
+                                <td class="text-end fw-bold text-info">{{ e.total|floatformat:0 }}</td>
+                                <td>
+                                    <div class="progress-soft" style="margin-top:0;">
+                                        <div class="bar" style="width: {% widthratio e.total stats.total 100 %}%; background: linear-gradient(90deg, #4facfe, #00f2fe);"></div>
+                                    </div>
+                                    <small class="text-muted">{% widthratio e.total stats.total 100 %}%</small>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4"><div class="empty-state"><i class="fas fa-receipt"></i>مصرفی ثبت نشده</div></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sec-title"><span class="bar"></span><i class="fas fa-list me-1"></i> لیست کامل مصارف</div>
+    <div class="expenses-list-card mb-3">
+        <div class="list-head">
+            <h6><i class="fas fa-list"></i> همه مصارف دوره</h6>
+            <span class="count-tag"><i class="fas fa-file-invoice me-1"></i> {{ expenses|length }} مصرف</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">#</th>
+                        <th>شماره</th>
+                        <th>تاریخ</th>
+                        <th>عنوان</th>
+                        <th class="text-center">اقلام</th>
+                        <th class="text-end">مجموع</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr>
+                        <td class="text-center">
+                            <span class="badge rounded-pill text-white"
+                                  style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                                {{ forloop.counter }}
+                            </span>
+                        </td>
+                        <td><code class="text-muted small">{{ expense.expense_number|default:'---' }}</code></td>
+                        <td class="text-muted small">{{ expense.expense_date|date:"Y/m/d" }}</td>
+                        <td class="fw-bold small">{{ expense.title }}</td>
+                        <td class="text-center"><span class="badge bg-light text-dark">{{ expense.items|length }}</span></td>
+                        <td class="text-end fw-bold text-info">{{ expense.total_amount|floatformat:0 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6"><div class="empty-state"><i class="fas fa-receipt"></i>مصرفی در این دوره ثبت نشده</div></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="soft-divider"></div>
+    <div class="text-center text-muted small pb-3">
+        <i class="fas fa-shield-halved me-1" style="color: #4facfe;"></i>
+        راپور مصارف فقط برای <strong>مشاهده</strong> است
+        <br>
+        <span style="font-size: 0.75rem;">آخرین بروزرسانی: {% now "Y/m/d H:i" %}</span>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+    window.VAZIR_FONT_URL = 'https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/ttf/Vazirmatn-Regular.ttf';
+    window.VAZIR_FONT_BOLD_URL = 'https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/ttf/Vazirmatn-Bold.ttf';
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const c = document.getElementById('dailyChart');
+        if (c) {
+            const ctx = c.getContext('2d');
+            const g = ctx.createLinearGradient(0, 0, 0, 300);
+            g.addColorStop(0, 'rgba(79,172,254,0.3)'); g.addColorStop(1, 'rgba(79,172,254,0.02)');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: {{ daily_labels|safe }},
+                    datasets: [{ label: 'مصارف', data: {{ daily_expenses|safe }},
+                        borderColor: '#4facfe', backgroundColor: g,
+                        borderWidth: 3, tension: 0.4, fill: true,
+                        pointRadius: 4, pointBackgroundColor: '#4facfe',
+                        pointBorderColor: '#fff', pointBorderWidth: 2 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top',
+                        labels: { font: { family: 'Vazirmatn, Tahoma', size: 12, weight: '600' },
+                                  color: '#4facfe', usePointStyle: true, pointStyle: 'circle' } },
+                        tooltip: { rtl: true, backgroundColor: 'rgba(30,41,59,0.95)', padding: 12, cornerRadius: 10 } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#64748b' }, grid: { color: 'rgba(148,163,184,0.12)' } },
+                        x: { ticks: { color: '#64748b' }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+    });
+
+    function showLoading(t, s) {
+        let o = document.getElementById('pdfLoadingOverlay');
+        if (!o) {
+            o = document.createElement('div'); o.id = 'pdfLoadingOverlay';
+            o.className = 'pdf-loading-overlay';
+            o.innerHTML = '<div class="pdf-loading-spinner"></div><div class="pdf-loading-text" id="pdfLoadingText"></div><div class="pdf-loading-sub" id="pdfLoadingSub"></div>';
+            document.body.appendChild(o);
+        }
+        document.getElementById('pdfLoadingText').textContent = t || 'در حال ساخت...';
+        document.getElementById('pdfLoadingSub').textContent = s || '';
+        o.classList.add('active');
+    }
+    function hideLoading() {
+        const o = document.getElementById('pdfLoadingOverlay');
+        if (o) o.classList.remove('active');
+    }
+    async function fetchFont(u) {
+        try { const r = await fetch(u); if (!r.ok) throw 0; return ab2b64(await r.arrayBuffer()); }
+        catch (e) { return null; }
+    }
+    function ab2b64(b) {
+        let s = ''; const y = new Uint8Array(b); const L = y.byteLength; const c = 0x8000;
+        for (let i = 0; i < L; i += c) s += String.fromCharCode.apply(null, y.subarray(i, i + c));
+        return btoa(s);
+    }
+
+    async function downloadExpensesReport() {
+        const btn = document.getElementById('pdfDownloadBtn');
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>در حال ساخت...</span>';
+        showLoading('در حال ساخت PDF...', 'لطفاً صبر کنید');
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+            const fR = await fetchFont(window.VAZIR_FONT_URL);
+            const fB = await fetchFont(window.VAZIR_FONT_BOLD_URL);
+            if (!fR) throw new Error('فونت لود نشد');
+            doc.addFileToVFS('Vazirmatn-Regular.ttf', fR);
+            doc.addFont('Vazirmatn-Regular.ttf', 'Vazirmatn', 'normal');
+            if (fB) { doc.addFileToVFS('Vazirmatn-Bold.ttf', fB); doc.addFont('Vazirmatn-Bold.ttf', 'Vazirmatn', 'bold'); }
+            doc.setFont('Vazirmatn', 'normal');
+
+            const data = {
+                periodLabel: "{{ period.label|escapejs }}",
+                periodStart: "{{ period.start|date:'Y/m/d' }}",
+                periodEnd: "{{ period.end|date:'Y/m/d' }}",
+                today: new Date().toLocaleDateString('fa-AF'),
+                time: new Date().toLocaleTimeString('fa-AF', {hour: '2-digit', minute: '2-digit'}),
+                total: "{{ stats.total|floatformat:0 }}",
+                count: "{{ stats.count }}",
+                avg: "{{ stats.avg|floatformat:0 }}",
+            };
+            const breakdown = [
+                {% for e in breakdown %}
+                { rank: {{ forloop.counter }}, title: "{{ e.title|escapejs }}", total: "{{ e.total|floatformat:0 }}" },
+                {% endfor %}
+            ];
+            const expensesList = [
+                {% for e in expenses %}
+                { rank: {{ forloop.counter }}, number: "{{ e.expense_number|default:'---'|escapejs }}", date: "{{ e.expense_date|date:'Y/m/d' }}", title: "{{ e.title|escapejs }}", items: "{{ e.items|length }}", total: "{{ e.total_amount|floatformat:0 }}" },
+                {% endfor %}
+            ];
+
+            const PW = 210, PH = 297, M = 12, CW = PW - 24;
+            let y = M, pn = 1;
+
+            const setFont = (sz, w = 'normal', c = [30, 41, 59]) => { doc.setFont('Vazirmatn', w); doc.setFontSize(sz); doc.setTextColor(c[0], c[1], c[2]); };
+            const drawFooter = () => {
+                const fy = PH - 8;
+                doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.3);
+                doc.line(M, fy - 3, PW - M, fy - 3);
+                setFont(7, 'normal', [120, 120, 120]);
+                doc.text('صفحه ' + pn, M + 2, fy, { align: 'left' });
+                doc.text(data.today + ' - ' + data.time, PW / 2, fy, { align: 'center' });
+                doc.text('poyafar@yahoo.com', PW - M - 2, fy, { align: 'right' });
+            };
+            const drawMiniHeader = () => {
+                doc.setFillColor(79, 172, 254); doc.rect(0, 0, PW, 8, 'F');
+                setFont(8, 'normal', [255, 255, 255]);
+                doc.text('راپور مصارف — شرکت نرم‌افزاری پویافر', PW - M, 5.5, { align: 'right' });
+                y = 14;
+            };
+            const checkPage = (n = 20) => {
+                if (y + n > PH - 15) { drawFooter(); doc.addPage(); pn++; drawMiniHeader(); }
+            };
+            const drawSection = (t) => {
+                checkPage(12);
+                setFont(11, 'bold', [79, 172, 254]);
+                doc.text(t, PW - M, y, { align: 'right' });
+                doc.setDrawColor(79, 172, 254); doc.setLineWidth(0.6);
+                doc.line(PW - M - 50, y + 1.5, PW - M, y + 1.5);
+                y += 6;
+            };
+            const drawTable = (heads, rows, ws) => {
+                const hH = 7.5, rH = 6.5, tW = ws.reduce((a, b) => a + b, 0);
+                const sx = PW - M - tW;
+                checkPage(hH + rH * 2);
+                doc.setFillColor(79, 172, 254); doc.rect(sx, y, tW, hH, 'F');
+                setFont(8, 'bold', [255, 255, 255]);
+                let xp = PW - M;
+                heads.forEach((h, i) => { xp -= ws[i]; doc.text(h, xp + ws[i] - 2, y + 5, { align: 'right' }); });
+                y += hH;
+                rows.forEach((r, idx) => {
+                    checkPage(rH);
+                    if (idx % 2 === 0) { doc.setFillColor(239, 246, 255); doc.rect(sx, y, tW, rH, 'F'); }
+                    doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.2); doc.rect(sx, y, tW, rH);
+                    setFont(8, 'normal', [30, 41, 59]);
+                    xp = PW - M;
+                    r.forEach((c, i) => {
+                        xp -= ws[i];
+                        let x, a;
+                        if (i === 0) { a = 'center'; x = xp + ws[i] / 2; }
+                        else if (i === r.length - 1) { a = 'left'; x = xp + 3; }
+                        else { a = 'right'; x = xp + ws[i] - 2; }
+                        doc.text(String(c), x, y + 4.5, { align: a });
+                    });
+                    y += rH;
+                });
+                y += 4;
+            };
+            const drawKpi = (x, yy, w, h, t, v, m, col) => {
+                doc.setDrawColor(226, 232, 240); doc.setFillColor(255, 255, 255);
+                doc.roundedRect(x, yy, w, h, 1.5, 1.5, 'FD');
+                doc.setFillColor(col[0], col[1], col[2]); doc.rect(x, yy, w, 1.5, 'F');
+                setFont(7, 'normal', [100, 116, 139]); doc.text(t, x + w - 3, yy + 5, { align: 'right' });
+                setFont(12.5, 'bold', col); doc.text(v, x + w - 3, yy + 12, { align: 'right' });
+                setFont(6, 'normal', [148, 163, 184]); if (m) doc.text(m, x + w - 3, yy + 17.5, { align: 'right' });
+            };
+
+            // Header
+            doc.setFillColor(79, 172, 254); doc.rect(0, 0, PW, 32, 'F');
+            doc.setFillColor(0, 242, 254); doc.circle(PW - 15, 16, 22, 'F');
+            setFont(18, 'bold', [255, 255, 255]); doc.text('راپور مصارف', PW - M, 12, { align: 'right' });
+            setFont(9, 'normal', [255, 255, 255]); doc.text('شرکت نرم‌افزاری پویافر — تحلیل کامل مصارف', PW - M, 19, { align: 'right' });
+            setFont(8, 'normal', [255, 255, 255]);
+            doc.text('دوره: ' + data.periodLabel, PW - M, 27, { align: 'right' });
+            doc.text('از: ' + data.periodStart + '  تا: ' + data.periodEnd, M + 2, 27, { align: 'left' });
+            y = 40;
+
+            // KPI
+            drawSection('شاخص‌های کلیدی');
+            const kW = (CW - 4) / 3, kH = 20, kG = 2;
+            [
+                { t: 'مجموع مصارف', v: data.total, m: data.count + ' سند', c: [79, 172, 254] },
+                { t: 'تعداد اسناد', v: data.count, m: 'دوره انتخابی', c: [79, 70, 229] },
+                { t: 'میانگین هر مصرف', v: data.avg, m: 'افغانی', c: [124, 58, 237] },
+            ].forEach((k, i) => {
+                const col = i % 3, row = Math.floor(i / 3);
+                const x = PW - M - (col + 1) * kW - col * kG + kW - kW;
+                drawKpi(x, y + row * (kH + kG), kW, kH, k.t, k.v, k.m, k.c);
+            });
+            y += Math.ceil(3 / 3) * (kH + kG) + 6;
+
+            // Breakdown
+            if (breakdown.length > 0) {
+                drawSection('تفکیک مصارف بر اساس عنوان');
+                drawTable(['#', 'عنوان مصرف', 'مبلغ (افغانی)'], breakdown.map(e => [e.rank, e.title, e.total]), [12, 120, 52]);
+            }
+
+            // List
+            drawSection('لیست کامل مصارف');
+            drawTable(['#', 'شماره', 'تاریخ', 'عنوان', 'اقلام', 'مجموع'],
+                expensesList.map(e => [e.rank, e.number, e.date, e.title, e.items, e.total]),
+                [10, 25, 22, 65, 15, 37]);
+
+            // Signatures
+            checkPage(35); y += 8;
+            const sw = (CW - 20) / 3;
+            ['امضای تهیه‌کننده', 'امضای مدیر', 'مهر شرکت'].forEach((l, i) => {
+                const x = PW - M - i * (sw + 10) - sw;
+                doc.setDrawColor(148, 163, 184); doc.setLineWidth(0.3);
+                doc.line(x + 10, y + 12, x + sw - 10, y + 12);
+                setFont(8, 'normal', [100, 116, 139]); doc.text(l, x + sw / 2, y + 17, { align: 'center' });
+            });
+            y += 24;
+
+            checkPage(20);
+            doc.setFillColor(239, 246, 255); doc.roundedRect(M, y, CW, 15, 2, 2, 'F');
+            setFont(9, 'bold', [79, 172, 254]); doc.text('شرکت نرم‌افزاری پویافر', PW / 2, y + 5.5, { align: 'center' });
+            setFont(7.5, 'normal', [100, 116, 139]); doc.text('کابل، افغانستان | poyafar@yahoo.com | +93794483138', PW / 2, y + 11, { align: 'center' });
+
+            const tp = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= tp; i++) { doc.setPage(i); drawFooter(); }
+
+            doc.save('Poyafar_Expenses_Report_' + new Date().toISOString().slice(0, 10) + '.pdf');
+            hideLoading();
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        } catch (err) {
+            console.error('PDF Error:', err);
+            hideLoading();
+            btn.disabled = false;
+            btn.innerHTML = orig;
+            alert('خطا در ساخت PDF: ' + err.message);
+        }
+    }
+</script>
+{% endblock %}

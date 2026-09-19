@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}لیست موجودی‌ها{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+                <i class="fas fa-cubes me-2"></i>
+                لیست موجودی‌ها
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98">موجودی‌ها</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-cubes fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_inventories_count }}</h3>
+                    <small>کل ردیف‌ها</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-store fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ shop_inventories_count }}</h3>
+                    <small>ردیف‌های دوکان</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-warehouse fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ warehouse_inventories_count }}</h3>
+                    <small>ردیف‌های گدام</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ out_of_stock_count }}</h3>
+                    <small>ناموجود</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4 rounded-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search" style="color: #450C98;"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0" 
+                               placeholder="جستجو در موجودی‌ها..." 
+                               value="{{ request.GET.search }}">
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <select name="location" class="form-select">
+                        <option value="">همه موقعیت‌ها</option>
+                        {% for loc in locations %}
+                            <option value="{{ loc.id }}" {% if request.GET.location == loc.id|stringformat:"s" %}selected{% endif %}>
+                                {{ loc.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-2">
+                    <select name="stock_filter" class="form-select">
+                        <option value="">همه</option>
+                        <option value="available" {% if request.GET.stock_filter == 'available' %}selected{% endif %}>موجود</option>
+                        <option value="out" {% if request.GET.stock_filter == 'out' %}selected{% endif %}>ناموجود</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <button type="submit" class="btn w-100 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <i class="fas fa-filter me-1"></i>
+                    </button>
+                </div>
+            </form>
+
+            {% if request.GET.search or request.GET.location or request.GET.stock_filter %}
+            <div class="mt-2">
+                <a href="{{ request.path }}" class="btn btn-dark btn-sm" style="font-size: 0.85rem;">
+                    <i class="fas fa-times-circle me-1"></i> حذف جستجو
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <tr class="text-white">
+                            <th class="text-center" style="width: 50px;">#</th>
+                            <th>کالا</th>
+                            <th class="d-none d-md-table-cell">کد کالا</th>
+                            <th>موقعیت</th>
+                            <th class="text-center">موجودی</th>
+                            <th class="d-none d-lg-table-cell">آخرین ویرایش</th>
+                            <th class="text-center" style="width: 100px;">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in inventories %}
+                        <tr class="border-bottom">
+                            <td class="text-center">
+                                <span class="badge rounded-pill text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">{{ forloop.counter }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if inv.product.image %}
+                                        <img src="{{ inv.product.image.url }}" alt="{{ inv.product.name }}" 
+                                             class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="p-2 rounded me-2" style="background: rgba(149, 80, 252, 0.1);">
+                                            <i class="fas fa-box" style="color: #9550fc;"></i>
+                                        </div>
+                                    {% endif %}
+                                    <span class="fw-bold">{{ inv.product.name }}</span>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <code class="text-muted">{{ inv.product.sku }}</code>
+                            </td>
+                            <td>
+                                {% if inv.location.type == 'shop' %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
+                                        <i class="fas fa-store me-1"></i>{{ inv.location.name }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(79, 172, 254, 0.1); color: #4facfe;">
+                                        <i class="fas fa-warehouse me-1"></i>{{ inv.location.name }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if inv.quantity > 0 %}
+                                    <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 1.1rem; font-weight: 600;">
+                                        {{ inv.quantity }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; font-size: 1.1rem; font-weight: 600;">
+                                        {{ inv.quantity }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="d-none d-lg-table-cell">
+                                <span class="text-muted" style="font-size: 1rem; font-weight: 500;">
+                                    {{ inv.updated_at|date:"Y/m/d H:i" }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'inventory_detail' inv.id %}" 
+                                   class="btn btn-sm btn-outline-primary border-0" title="جزئیات">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="fas fa-cubes fa-3x mb-3" style="color: #9550fc;"></i>
+                                <h5 class="text-muted">هیچ موجودی ثبت نشده است</h5>
+                                <p class="text-muted">برای ثبت موجودی، از بخش حرکات کالا استفاده کنید</p>
+                                <a href="{% url 'create_stock_movement' %}" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                    <i class="fas fa-plus me-1"></i> ثبت حرکت
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if inventories.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if inventories.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ inventories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                    </li>
+                {% endif %}
+
+                {% for num in inventories.paginator.page_range %}
+                    {% if inventories.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); border-color: #450C98;">{{ num }}</span>
+                        </li>
+                    {% elif num > inventories.number|add:'-3' and num < inventories.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if inventories.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ inventories.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <div class="text-center mt-2">
+        <small class="text-muted">
+            نمایش {{ inventories.start_index }} تا {{ inventories.end_index }} از {{ paginator.count }} ردیف
+        </small>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

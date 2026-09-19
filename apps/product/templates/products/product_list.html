@@ -1,0 +1,660 @@
+{% extends 'base.html' %}
+
+{% block title %}لیست کالاها{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+                <i class="fas fa-boxes me-2"></i>
+                لیست اجناس
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98">اجناس</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'create_product' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <i class="fas fa-plus-circle me-2"></i>
+            ایجاد جنس جدید
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-boxes fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_products_count }}</h3>
+                    <small>کل اجناس</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-store fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_shop_stock }}</h3>
+                    <small>موجودی دوکان</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-warehouse fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_stock_stock }}</h3>
+                    <small>موجودی گدام‌ها</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-cubes fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_current_stock }}</h3>
+                    <small>موجودی کل</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4 rounded-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-12 col-lg-4 col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search" style="color: #450C98;"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0"
+                               placeholder="جستجو در اجناس..."
+                               value="{{ request.GET.search }}">
+                    </div>
+                </div>
+                <div class="col-12 col-lg-2 col-md-6">
+                    <select name="category" class="form-select">
+                        <option value="">همه دسته‌بندی‌ها</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-lg-2 col-md-6">
+                    <select name="status" class="form-select">
+                        <option value="">همه وضعیت‌ها</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>فعال</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>غیرفعال</option>
+                        <option value="out_of_stock" {% if request.GET.status == 'out_of_stock' %}selected{% endif %}>ناموجود</option>
+                    </select>
+                </div>
+                <div class="col-12 col-lg-2 col-md-6">
+                    <select name="stock_filter" class="form-select">
+                        <option value="">همه موجودی‌ها</option>
+                        <option value="below_min" {% if request.GET.stock_filter == 'below_min' %}selected{% endif %}>
+                            کمتر از حد اقل
+                        </option>
+                        <option value="above_min" {% if request.GET.stock_filter == 'above_min' %}selected{% endif %}>
+                            بیشتر از حد اقل
+                        </option>
+                    </select>
+                </div>
+                <div class="col-12 col-lg-2 col-md-6">
+                    <button type="submit" class="btn w-100 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <i class="fas fa-filter me-1"></i>
+                    </button>
+                </div>
+            </form>
+
+            {% if request.GET.search or request.GET.status or request.GET.stock_filter or request.GET.category %}
+            <div class="mt-2">
+                <a href="{{ request.path }}"
+                   class="btn btn-dark btn-sm"
+                   style="font-size: 0.85rem;">
+                    <i class="fas fa-times-circle me-1"></i> حذف جستجو
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <tr class="text-white">
+                            <th class="text-center" style="width: 50px;">#</th>
+                            <th>نام اجناس</th>
+                            <th class="d-none d-md-table-cell">کد جنس</th>
+                            <th class="d-none d-lg-table-cell">دسته‌بندی</th>
+                            <th>قیمت فروش</th>
+                            <th class="text-center">دوکان</th>
+
+                          
+
+                            <th class="text-center">جمع گدام‌ها</th>
+                            <th class="text-center">کل</th>
+                            <th class="text-center">وضعیت</th>
+                            <th class="text-center" style="width: 130px;">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr class="border-bottom" id="product-row-{{ product.id }}">
+                            <td class="text-center">
+                                <span class="badge rounded-pill text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">{{ forloop.counter }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                             class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="p-2 rounded me-2" style="background: rgba(149, 80, 252, 0.1);">
+                                            <i class="fas fa-box" style="color: #9550fc;"></i>
+                                        </div>
+                                    {% endif %}
+                                    <span class="fw-bold">{{ product.name }}</span>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <code class="text-muted">{{ product.sku }}</code>
+                            </td>
+                            <td class="d-none d-lg-table-cell">
+                                {% if product.category %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">
+                                        {{ product.category.name }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="fw-bold">{{ product.sale_price }} افغانی</span>
+                            </td>
+
+                            <!-- دوکان -->
+                            <td class="text-center">
+                                {% if product.shop_stock <= product.min_stock and product.shop_stock > 0 %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(255, 193, 7, 0.1); color: #ffc107; font-size: 1.1rem; font-weight: 600;">
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ product.shop_stock }}
+                                    </span>
+                                {% elif product.shop_stock == 0 %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; font-size: 1.1rem; font-weight: 600;">
+                                        {{ product.shop_stock }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1.1rem; font-weight: 600;">
+                                        <i class="fas fa-store me-1"></i>{{ product.shop_stock }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                         
+                            <!-- جمع گدام‌ها -->
+                            <td class="text-center">
+                                {% if product.stock_stock <= product.min_stock and product.stock_stock > 0 %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(255, 193, 7, 0.1); color: #ffc107; font-size: 1.1rem; font-weight: 600;">
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ product.stock_stock }}
+                                    </span>
+                                {% elif product.stock_stock == 0 %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; font-size: 1.1rem; font-weight: 600;">
+                                        {{ product.stock_stock }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(79, 172, 254, 0.1); color: #4facfe; font-size: 1.1rem; font-weight: 600;">
+                                        <i class="fas fa-warehouse me-1"></i>{{ product.stock_stock }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- کل -->
+                            <td class="text-center">
+                                {% if product.current_stock <= product.min_stock %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; font-size: 1.1rem; font-weight: 600;">
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ product.current_stock }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1.1rem; font-weight: 600;">
+                                        {{ product.current_stock }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- وضعیت -->
+                            <td class="text-center">
+                                {% if product.status == 'active' %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1rem;">
+                                        <i class="fas fa-circle me-1"></i>فعال
+                                    </span>
+                                {% elif product.status == 'out_of_stock' %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: #fceaec; color: #dc3545; font-size: 1rem;">
+                                        <i class="fas fa-circle me-1"></i>ناموجود
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: #9392921c; color: #000000; font-size: 1rem;">
+                                        <i class="fas fa-circle me-1"></i>غیرفعال
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- عملیات -->
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-info border-0" title="جزئیات"
+                                            onclick="showDetailModal('{{ product.id }}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <a href="{% url 'update_product' product.id %}"
+                                       class="btn btn-outline-warning border-0" title="ویرایش">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger border-0" title="حذف"
+                                       onclick="event.preventDefault(); showDeleteModal('{{ product.id }}','{{ product.name }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Hidden Delete Form -->
+                        <form id="deleteForm-{{ product.id }}"
+                              method="POST"
+                              action="{% url 'delete_product' product.id %}"
+                              style="display:none;">
+                            {% csrf_token %}
+                        </form>
+
+                        <!-- ==================== DETAIL MODAL ==================== -->
+                        <div class="modal fade" id="detailModal{{ product.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                        <h5 class="modal-title fs-4">
+                                            <i class="fas fa-box-open me-2"></i>
+                                            جزئیات کالا: {{ product.name }}
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                   <div class="modal-body p-4">
+
+    <!-- اطلاعات محصول -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center mb-3 mb-md-0">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                    class="rounded shadow-sm" style="width: 180px; height: 180px; object-fit: cover;">
+                            {% else %}
+                                <div class="p-5 rounded shadow-sm mx-auto" style="background: rgba(149, 80, 252, 0.1); width: 180px; height: 180px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-box fa-5x" style="color: #9550fc;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-9">
+                            <h3 class="fw-bold mb-3">{{ product.name }}</h3>
+                            <div class="row g-3">
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block">کد کالا</small>
+                                    <code class="fw-bold">{{ product.sku }}</code>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block">دسته‌بندی</small>
+                                    <span class="fw-bold">{{ product.category.name|default:"-" }}</span>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block">واحد</small>
+                                    <span class="fw-bold">{{ product.get_unit_display }}</span>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block">قیمت خرید</small>
+                                    <span class="fw-bold text-primary">{{ product.purchase_price }} افغانی</span>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block">قیمت عمده</small>
+                                    <span class="fw-bold text-info">{{ product.wholesale_price }} افغانی</span>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block">قیمت فروش</small>
+                                    <span class="fw-bold text-success">{{ product.sale_price }} افغانی</span>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block">حداقل موجودی</small>
+                                    <span class="fw-bold">{{ product.min_stock }}</span>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block">تاریخ ثبت</small>
+                                    <span class="fw-bold">{{ product.created_at|date:"Y/m/d" }}</span>
+                                </div>
+                                <div class="col-6 col-md-4">
+                                    <small class="text-muted d-block">آخرین ویرایش</small>
+                                    <span class="fw-bold">{{ product.updated_at|date:"Y/m/d" }}</span>
+                                </div>
+                            </div>
+                            {% if product.description %}
+                            <div class="mt-3">
+                                <small class="text-muted d-block">توضیحات</small>
+                                <p class="mb-0">{{ product.description }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+    <!-- کارت‌های جمع -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <div class="card-body text-center py-3">
+                    <i class="fas fa-cubes fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ product.current_stock }}</h3>
+                    <small>موجودی کل</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-3">
+                    <i class="fas fa-store fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ product.shop_stock }}</h3>
+                    <small>دوکان</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center py-3">
+                    <i class="fas fa-warehouse fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ product.stock_stock }}</h3>
+                    <small>جمع گدام‌ها</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center py-3">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ product.min_stock }}</h3>
+                    <small>حداقل موجودی</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   
+
+    <!-- ==================== موجودی به شکل کارت (به‌جای جدول) ==================== -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <h6 class="mb-0 fw-bold">
+                <i class="fas fa-list-alt me-2"></i>
+                جزئیات موجودی
+            </h6>
+        </div>
+        <div class="card-body p-3">
+            <div class="row g-3">
+                {% for item in product.stock_by_location %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="p-3 rounded-3 h-100" style="background: #f8fafd; border-right: 4px solid {% if item.quantity == 0 %}#dc3545{% elif item.quantity <= product.min_stock %}#ffc107{% else %}#198754{% endif %};">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <h6 class="fw-bold mb-0">{{ item.location.name }}</h6>
+                                <small class="text-muted">
+                                    {% if item.location.type == 'shop' %}
+                                        <i class="fas fa-store me-1"></i>دوکان
+                                    {% else %}
+                                        <i class="fas fa-warehouse me-1"></i>گدام
+                                    {% endif %}
+                                    | کد: {{ item.location.code }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <h3 class="fw-bold mb-0" style="color: {% if item.quantity == 0 %}#dc3545{% elif item.quantity <= product.min_stock %}#ffc107{% else %}#198754{% endif %};">
+                                    {{ item.quantity }}
+                                </h3>
+                            </div>
+                        </div>
+                        <div>
+                            {% if item.quantity == 0 %}
+                                <span class="badge rounded-pill px-3 py-2" style="background: rgba(220,53,69,0.1); color: #dc3545;">
+                                    <i class="fas fa-times-circle me-1"></i>ناموجود
+                                </span>
+                            {% elif item.quantity <= product.min_stock %}
+                                <span class="badge rounded-pill px-3 py-2" style="background: rgba(255,193,7,0.1); color: #ffc107;">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>کم
+                                </span>
+                            {% else %}
+                                <span class="badge rounded-pill px-3 py-2" style="background: rgba(25,135,84,0.1); color: #198754;">
+                                    <i class="fas fa-check-circle me-1"></i>کافی
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== تاریخچه به شکل کارت (به‌جای جدول) ==================== -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <h6 class="mb-0 fw-bold">
+                <i class="fas fa-history me-2"></i>
+                تاریخچه حرکت (آخرین ۲۰ حرکت)
+            </h6>
+        </div>
+        <div class="card-body p-3">
+            <div class="row g-2">
+                {% for m in product.movement_history|slice:":20" %}
+                <div class="col-12">
+                    <div class="p-3 rounded-3" style="background: #f8fafd; border-right: 4px solid {% if m.movement_type == 'IN' %}#198754{% else %}#dc3545{% endif %};">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="p-2 rounded-3" style="background: {% if m.movement_type == 'IN' %}rgba(25,135,84,0.1){% else %}rgba(220,53,69,0.1){% endif %};">
+                                    <i class="fas {% if m.movement_type == 'IN' %}fa-arrow-down text-success{% else %}fa-arrow-up text-danger{% endif %}"></i>
+                                </div>
+                                <div>
+                                    <code class="text-muted" style="font-size: 0.85rem;">{{ m.reference_number }}</code>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <span class="badge rounded-pill px-2 py-1" style="background: {% if m.location.type == 'shop' %}rgba(25,135,84,0.1){% else %}rgba(79,172,254,0.1){% endif %}; color: {% if m.location.type == 'shop' %}#198754{% else %}#4facfe{% endif %};">
+                                            {% if m.location.type == 'shop' %}<i class="fas fa-store me-1"></i>{% else %}<i class="fas fa-warehouse me-1"></i>{% endif %}
+                                            {{ m.location.name }}
+                                        </span>
+                                        {% if m.movement_type == 'IN' %}
+                                            <span class="badge rounded-pill px-2 py-1" style="background: rgba(25,135,84,0.1); color: #198754;">ورود</span>
+                                        {% else %}
+                                            <span class="badge rounded-pill px-2 py-1" style="background: rgba(220,53,69,0.1); color: #dc3545;">خروج</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="text-end">
+                                    <small class="text-muted d-block">تعداد</small>
+                                    {% if m.quantity > 0 %}
+                                        <span class="fw-bold text-success" style="font-size: 1.1rem;">+{{ m.quantity }}</span>
+                                    {% else %}
+                                        <span class="fw-bold text-danger" style="font-size: 1.1rem;">{{ m.quantity }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">موجودی بعد</small>
+                                    <span class="badge bg-light text-dark rounded-pill px-3 py-2">{{ m.stock_after_movement }}</span>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">تاریخ</small>
+                                    <small class="text-muted">{{ m.created_at|date:"Y/m/d H:i" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-4 text-muted">
+                    <i class="fas fa-history fa-2x mb-2"></i>
+                    <p class="mb-0">هیچ حرکتی ثبت نشده است</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+                                    <div class="modal-footer">
+                                        <a href="{% url 'update_product' product.id %}" class="btn btn-warning rounded-pill px-4">
+                                            <i class="fas fa-edit me-1"></i> ویرایش
+                                        </a>
+                                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                                            بستن
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ==================== END DETAIL MODAL ==================== -->
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="20" class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x mb-3" style="color: #9550fc;"></i>
+                                <h5 class="text-muted">هیچ جنسی یافت نشد</h5>
+                                <p class="text-muted">اولین جنس خود را ایجاد کنید</p>
+                                <a href="{% url 'create_product' %}" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                    <i class="fas fa-plus me-1"></i> ایجاد جنس
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if products.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if products.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                    </li>
+                {% endif %}
+
+                {% for num in products.paginator.page_range %}
+                    {% if products.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); border-color: #450C98;">{{ num }}</span>
+                        </li>
+                    {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <div class="text-center mt-2">
+        <small class="text-muted">
+            نمایش {{ products.start_index }} تا {{ products.end_index }} از {{ paginator.count }} جنس
+        </small>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-trash-alt me-2"></i>حذف کالا
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+                </div>
+                <h5 class="mb-3">آیا مطمئن هستید؟</h5>
+                <p class="text-muted mb-2">کالای "<strong id="deleteProductName"></strong>" حذف خواهد شد.</p>
+                <p class="text-danger small">این عمل قابل برگشت نیست!</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> انصراف
+                </button>
+                <button type="button" class="btn btn-danger rounded-pill px-4" id="confirmDeleteBtn">
+                    <i class="fas fa-check me-1"></i> بله، حذف کن
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let deleteProductId = null;
+
+    function showDeleteModal(productId, productName) {
+        deleteProductId = productId;
+        document.getElementById('deleteProductName').textContent = productName;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (deleteProductId) {
+            const form = document.getElementById('deleteForm-' + deleteProductId);
+            if (form) {
+                form.submit();
+            }
+        }
+    });
+
+    function showDetailModal(productId) {
+        new bootstrap.Modal(document.getElementById('detailModal' + productId)).show();
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,399 @@
+{% extends 'base.html' %}
+
+{% block title %}پشتیبان‌گیری{% endblock %}
+
+{% block content %}
+<style>
+    .bk-wrapper { font-family: 'Vazirmatn', Tahoma, sans-serif; color: #1e293b; }
+
+    .bk-header {
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        border-radius: 24px; padding: 32px 36px; color: #fff;
+        box-shadow: 0 15px 45px rgba(69, 12, 152, 0.3);
+        position: relative; overflow: hidden; margin-bottom: 22px;
+    }
+    .bk-header::before {
+        content: ''; position: absolute; top: -80px; left: -80px;
+        width: 260px; height: 260px; background: rgba(255,255,255,0.08);
+        border-radius: 50%;
+    }
+    .bk-header h1 { font-weight: 800; font-size: 1.8rem; margin: 0; position: relative; z-index: 2; }
+    .bk-header .sub { opacity: 0.92; font-size: 0.95rem; margin-top: 6px; position: relative; z-index: 2; }
+
+    .stats-row {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px; margin-bottom: 22px;
+    }
+    .stat-card {
+        background: #fff; border-radius: 16px; padding: 18px;
+        box-shadow: 0 6px 22px rgba(0,0,0,0.07);
+        border: 1px solid #eef2f7; text-align: center;
+    }
+    .stat-card .val { font-size: 1.6rem; font-weight: 800; line-height: 1.2; }
+    .stat-card .lbl { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+
+    /* کارت تنظیمات بکاپ خودکار */
+    .auto-card {
+        background: linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%);
+        border: 2px solid #e9d5ff;
+        border-radius: 20px; padding: 22px 24px;
+        margin-bottom: 22px;
+    }
+    .auto-card .head {
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #e9d5ff;
+    }
+    .auto-card .head-icon {
+        width: 48px; height: 48px;
+        background: linear-gradient(135deg, #450C98, #9550fc);
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 1.3rem;
+    }
+    .auto-card .head h6 {
+        margin: 0; font-weight: 800; font-size: 1.1rem; color: #450C98;
+    }
+    .auto-card .head p { margin: 2px 0 0; font-size: 0.82rem; color: #64748b; }
+
+    .status-indicator {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 4px 14px; border-radius: 50px;
+        font-size: 0.78rem; font-weight: 700;
+    }
+    .status-on { background: #dcfce7; color: #16a34a; }
+    .status-off { background: #fee2e2; color: #dc2626; }
+
+    .create-section {
+        background: #fff; border-radius: 20px; padding: 22px 24px;
+        box-shadow: 0 6px 22px rgba(0,0,0,0.06);
+        border: 1px solid #eef2f7; margin-bottom: 22px;
+    }
+    .create-section h6 {
+        font-weight: 800; color: #450C98; margin-bottom: 16px;
+        display: flex; align-items: center; gap: 8px;
+        padding-bottom: 12px; border-bottom: 1px solid #f0f4f8;
+    }
+
+    .btn-bk {
+        padding: 10px 24px; border-radius: 50px;
+        border: none; font-weight: 700; cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+        font-size: 0.9rem;
+        display: inline-flex; align-items: center; gap: 8px;
+        text-decoration: none;
+    }
+    .btn-bk:hover { transform: translateY(-2px); }
+    .btn-primary-bk {
+        background: linear-gradient(135deg, #450C98, #9550fc);
+        color: #fff; box-shadow: 0 6px 20px rgba(69, 12, 152, 0.3);
+    }
+    .btn-secondary-bk {
+        background: linear-gradient(135deg, #64748b, #94a3b8);
+        color: #fff; box-shadow: 0 6px 20px rgba(100, 116, 139, 0.3);
+    }
+
+    .table-card {
+        background: #fff; border-radius: 20px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.07);
+        border: 1px solid #eef2f7; overflow: hidden;
+    }
+    .table-card .head {
+        padding: 16px 20px; display: flex;
+        justify-content: space-between; align-items: center;
+        border-bottom: 1px solid #eef2f7;
+    }
+    .table-card .head h6 {
+        margin: 0; font-weight: 800; font-size: 1rem;
+        color: #450C98; display: flex; align-items: center; gap: 8px;
+    }
+    .table-card table { margin: 0; font-size: 0.88rem; }
+    .table-card table thead th {
+        background: #faf5ff; color: #450C98;
+        font-weight: 700; font-size: 0.78rem;
+        border-bottom: 1px solid #e9d5ff;
+        padding: 12px 14px;
+    }
+    .table-card table tbody td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #f5f7fa;
+        vertical-align: middle;
+    }
+    .table-card table tbody tr:hover { background: #faf5ff; }
+
+    .badge-type, .badge-trigger {
+        display: inline-block; padding: 3px 12px;
+        border-radius: 50px; font-size: 0.72rem; font-weight: 700;
+    }
+    .badge-full { background: #f3e8ff; color: #7c3aed; }
+    .badge-db { background: #dbeafe; color: #2563eb; }
+    .badge-manual { background: #e0e7ff; color: #4f46e5; }
+    .badge-auto { background: #fef3c7; color: #d97706; }
+
+    .btn-icon {
+        width: 34px; height: 34px; border-radius: 10px;
+        border: none; display: inline-flex; align-items: center;
+        justify-content: center; cursor: pointer;
+        transition: all 0.25s ease; font-size: 0.85rem;
+        text-decoration: none;
+    }
+    .btn-download { background: #dbeafe; color: #2563eb; }
+    .btn-download:hover { background: #2563eb; color: #fff; }
+    .btn-restore { background: #fef3c7; color: #d97706; }
+    .btn-restore:hover { background: #d97706; color: #fff; }
+    .btn-del { background: #fee2e2; color: #dc2626; }
+    .btn-del:hover { background: #dc2626; color: #fff; }
+</style>
+
+<div class="container-fluid bk-wrapper py-4">
+
+    <!-- HEADER -->
+    <div class="bk-header">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h1><i class="fas fa-database me-2"></i> پشتیبان‌گیری سیستم</h1>
+                <div class="sub">
+                    <i class="fas fa-info-circle me-1"></i>
+                    بکاپ کامل (دیتابیس + عکس‌ها) — دانلود دستی و خودکار روزانه
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="val" style="color: #450C98;">{{ total_count }}</div>
+            <div class="lbl">کل بکاپ‌ها</div>
+        </div>
+        <div class="stat-card">
+            <div class="val" style="color: #7c3aed;">{{ full_count }}</div>
+            <div class="lbl">کامل (با مدیا)</div>
+        </div>
+        <div class="stat-card">
+            <div class="val" style="color: #2563eb;">{{ db_count }}</div>
+            <div class="lbl">فقط دیتابیس</div>
+        </div>
+        <div class="stat-card">
+            <div class="val" style="color: #d97706;">{{ auto_count }}</div>
+            <div class="lbl">خودکار</div>
+        </div>
+        <div class="stat-card">
+            <div class="val" style="color: #9550fc;">{{ total_size_mb }} MB</div>
+            <div class="lbl">حجم کل</div>
+        </div>
+    </div>
+
+    <!-- AUTO BACKUP SETTINGS -->
+    <div class="auto-card">
+        <div class="head">
+            <div class="head-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6>
+                    بکاپ خودکار روزانه
+                    {% if auto_settings.enabled %}
+                        <span class="status-indicator status-on ms-2">
+                            <i class="fas fa-circle" style="font-size: 0.5rem;"></i> فعال
+                        </span>
+                    {% else %}
+                        <span class="status-indicator status-off ms-2">
+                            <i class="fas fa-circle" style="font-size: 0.5rem;"></i> غیرفعال
+                        </span>
+                    {% endif %}
+                </h6>
+                <p>
+                    سیستم هر روز ساعت
+                    <strong>{{ auto_settings.hour|stringformat:"02d" }}:{{ auto_settings.minute|stringformat:"02d" }}</strong>
+                    به‌صورت خودکار بکاپ کامل می‌گیرد.
+                    {% if auto_settings.last_run %}
+                        آخرین اجرا: {{ auto_settings.last_run|date:"Y/m/d H:i" }}
+                    {% else %}
+                        هنوز اجرا نشده.
+                    {% endif %}
+                </p>
+            </div>
+            <form method="POST" action="{% url 'backup_run_now' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-bk" style="background: #fff; color: #450C98; border: 2px solid #e9d5ff;">
+                    <i class="fas fa-play"></i> اجرای فوری (تست)
+                </button>
+            </form>
+        </div>
+
+        <form method="POST" action="{% url 'update_auto_settings' %}">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <label class="form-label small fw-bold">فعال/غیرفعال</label>
+                    <div class="form-check form-switch">
+                        <input type="checkbox" name="enabled" class="form-check-input"
+                               {% if auto_settings.enabled %}checked{% endif %}>
+                        <label class="form-check-label small">فعال</label>
+                    </div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small fw-bold">ساعت</label>
+                    <input type="number" name="hour" class="form-control" min="0" max="23"
+                           value="{{ auto_settings.hour }}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small fw-bold">دقیقه</label>
+                    <input type="number" name="minute" class="form-control" min="0" max="59"
+                           value="{{ auto_settings.minute }}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small fw-bold">نگهداری (روز)</label>
+                    <input type="number" name="keep_days" class="form-control" min="1"
+                           value="{{ auto_settings.keep_days }}">
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small fw-bold">شامل مدیا</label>
+                    <div class="form-check form-switch">
+                        <input type="checkbox" name="include_media" class="form-check-input"
+                               {% if auto_settings.include_media %}checked{% endif %}>
+                        <label class="form-check-label small">بله</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn-bk btn-primary-bk">
+                        <i class="fas fa-save"></i> ذخیره تنظیمات
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- CREATE SECTION -->
+    <div class="create-section">
+        <h6><i class="fas fa-plus-circle"></i> ساخت بکاپ دستی</h6>
+        <div class="row g-3">
+            <div class="col-12 col-lg-6">
+                <form method="POST" action="{% url 'backup_create_full' %}"
+                      style="background: #faf5ff; padding: 16px; border-radius: 12px; border: 2px solid #e9d5ff;">
+                    {% csrf_token %}
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <i class="fas fa-file-archive" style="color: #7c3aed; font-size: 1.2rem;"></i>
+                        <strong style="color: #450C98;">بکاپ کامل (دیتابیس + مدیا)</strong>
+                    </div>
+                    <input type="text" name="prefix" class="form-control mb-2" placeholder="پیشوند" value="poyafar">
+                    <input type="text" name="note" class="form-control mb-2" placeholder="یادداشت (اختیاری)">
+                    <div class="d-flex gap-3 mb-3">
+                        <label class="small"><input type="checkbox" name="include_media" checked> شامل عکس‌ها</label>
+                        <label class="small"><input type="checkbox" name="include_settings"> شامل تنظیمات</label>
+                    </div>
+                    <button type="submit" class="btn-bk btn-primary-bk w-100">
+                        <i class="fas fa-database"></i> ساخت بکاپ کامل
+                    </button>
+                </form>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <form method="POST" action="{% url 'backup_create_db' %}"
+                      style="background: #eff6ff; padding: 16px; border-radius: 12px; border: 2px solid #bfdbfe;">
+                    {% csrf_token %}
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <i class="fas fa-database" style="color: #2563eb; font-size: 1.2rem;"></i>
+                        <strong style="color: #1e40af;">فقط دیتابیس (سریع)</strong>
+                    </div>
+                    <input type="text" name="prefix" class="form-control mb-2" placeholder="پیشوند" value="poyafar">
+                    <input type="text" name="note" class="form-control mb-3" placeholder="یادداشت (اختیاری)">
+                    <button type="submit" class="btn-bk btn-secondary-bk w-100">
+                        <i class="fas fa-save"></i> ساخت بکاپ دیتابیس
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- BACKUPS LIST -->
+    <div class="table-card">
+        <div class="head">
+            <h6><i class="fas fa-list"></i> بکاپ‌های موجود</h6>
+            <span class="badge" style="background: #f3e8ff; color: #450C98; padding: 6px 14px; border-radius: 50px;">
+                {{ total_count }} فایل
+            </span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:50px;">#</th>
+                        <th>نام فایل</th>
+                        <th class="text-center">نوع</th>
+                        <th class="text-center">نحوه ساخت</th>
+                        <th class="text-center">حجم</th>
+                        <th class="text-center">تاریخ</th>
+                        <th>یادداشت</th>
+                        <th class="text-center" style="width:150px;">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in backups %}
+                    <tr>
+                        <td class="text-center">
+                            <span class="badge rounded-pill text-white"
+                                  style="background: linear-gradient(135deg, #450C98, #9550fc);">
+                                {{ forloop.counter }}
+                            </span>
+                        </td>
+                        <td><code class="text-muted small">{{ b.name }}</code></td>
+                        <td class="text-center">
+                            {% if b.backup_type == 'full' %}
+                                <span class="badge-type badge-full"><i class="fas fa-file-archive me-1"></i>کامل</span>
+                            {% else %}
+                                <span class="badge-type badge-db"><i class="fas fa-database me-1"></i>دیتابیس</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if b.trigger == 'auto' %}
+                                <span class="badge-trigger badge-auto"><i class="fas fa-robot me-1"></i>خودکار</span>
+                            {% else %}
+                                <span class="badge-trigger badge-manual"><i class="fas fa-hand me-1"></i>دستی</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center fw-bold">{{ b.file_size_mb }} MB</td>
+                        <td class="text-center text-muted small">{{ b.created_at|date:"Y/m/d H:i" }}</td>
+                        <td class="text-muted small">{{ b.note|default:"—"|truncatechars:50 }}</td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a href="{% url 'backup_download' b.id %}" class="btn-icon btn-download" title="دانلود">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                <form method="POST" action="{% url 'backup_restore' b.id %}" style="display:inline;"
+                                      onsubmit="return confirm('⚠️ بازیابی، دیتابیس فعلی را جایگزین می‌کند. ادامه؟')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="restore_media" value="on">
+                                    <button type="submit" class="btn-icon btn-restore" title="بازیابی">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{% url 'backup_delete' b.id %}" style="display:inline;"
+                                      onsubmit="return confirm('از حذف این بکاپ مطمئن هستید؟')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-icon btn-del" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <i class="fas fa-database" style="font-size: 3rem; color: #cbd5e1;"></i>
+                            <h5 class="mt-3 text-muted">هیچ بکاپی وجود ندارد</h5>
+                            <p class="text-muted small">اولین بکاپ خود را بسازید</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

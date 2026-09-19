@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+
+{% block title %}لیست ضایعات کالاها{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+                <i class="fas fa-trash-alt me-2"></i>
+                لیست ضایعات کالاها
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98">ضایعات کالا</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'create_waste' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white"
+           style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <i class="fas fa-plus-circle me-2"></i>
+            ضایعات جدید
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message|linebreaksbr }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100"
+                 style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-trash-alt fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_wastes }}</h3>
+                    <small>کل ضایعات</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100"
+                 style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-calendar-day fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ today_wastes }}</h3>
+                    <small>ضایعات امروز</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100"
+                 style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-calendar-week fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ recent_wastes }}</h3>
+                    <small>۷ روز اخیر</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100"
+                 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-boxes fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_items }}</h3>
+                    <small>مجموع اقلام</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4 rounded-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-12 col-lg-4 col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search" style="color: #450C98;"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0"
+                               placeholder="جستجو (شماره ضایعات، دلیل، یادداشت)..."
+                               value="{{ request.GET.search }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-3 col-md-6">
+                    <input type="text" name="reason" class="form-control"
+                           placeholder="دلیل ضایعات"
+                           value="{{ reason_filter }}">
+                </div>
+
+                <div class="col-12 col-lg-2 col-md-6">
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+
+                <div class="col-12 col-lg-2 col-md-6">
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+
+                <div class="col-12 col-lg-1 col-md-6">
+                    <button type="submit" class="btn w-100 text-white"
+                            style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <i class="fas fa-filter me-1"></i>
+                    </button>
+                </div>
+            </form>
+
+            {% if request.GET.search or request.GET.reason or request.GET.date_from or request.GET.date_to %}
+            <div class="mt-2">
+                <a href="{{ request.path }}" class="btn btn-dark btn-sm" style="font-size: 0.85rem;">
+                    <i class="fas fa-times-circle me-1"></i> حذف جستجو
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <tr class="text-white">
+                            <th class="text-center" style="width: 50px;">#</th>
+                            <th>شماره ضایعات</th>
+                            <th class="d-none d-md-table-cell">تاریخ</th>
+                            <th>دلیل ضایعات</th>
+                            <th class="d-none d-lg-table-cell text-center">اقلام</th>
+                            <th class="d-none d-xl-table-cell">یادداشت</th>
+                            <th class="text-center" style="width: 130px;">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for w in wastes %}
+                        <tr class="border-bottom" id="waste-row-{{ w.id }}">
+                            <td class="text-center">
+                                <span class="badge rounded-pill text-white"
+                                      style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                    {{ forloop.counter }}
+                                </span>
+                            </td>
+                            <td class="notranslate">
+                                <code class="text-muted">{{ w.waste_number|default:'---' }}</code>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <small class="text-muted" style="font-size: 22px;">{{ w.waste_date|date:"Y/m/d" }}</small>
+                            </td>
+                            <td>
+                                <span class="fw-bold">{{ w.reason }}</span>
+                            </td>
+                            <td class="d-none d-lg-table-cell text-center">
+                                <span class="badge rounded-pill px-3 py-2"
+                                      style="background: rgba(79, 172, 254, 0.1); color: #4facfe; font-size: 1rem; font-weight: 600;">
+                                    {{ w.items|length }} قلم
+                                </span>
+                            </td>
+                            <td class="d-none d-xl-table-cell">
+                                {% if w.note %}
+                                    <small class="text-muted">{{ w.note|truncatechars:40 }}</small>
+                                {% else %}
+                                    <small class="text-muted">-</small>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-info border-0" title="جزئیات"
+                                            onclick="showDetailModal('{{ w.id }}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <a href="{% url 'update_waste' w.id %}"
+                                       class="btn btn-outline-warning border-0" title="ویرایش">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger border-0" title="حذف"
+                                            onclick="event.preventDefault(); showDeleteModal('{{ w.id }}','{{ w.waste_number }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Hidden Delete Form -->
+                        <form id="deleteForm-{{ w.id }}"
+                              method="POST"
+                              action="{% url 'delete_waste' w.id %}"
+                              style="display:none;">
+                            {% csrf_token %}
+                        </form>
+
+                        <!-- ==================== DETAIL MODAL ==================== -->
+                        <div class="modal fade" id="detailModal{{ w.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                        <h5 class="modal-title fs-4">
+                                            <i class="fas fa-trash-alt me-2"></i>
+                                            جزئیات ضایعات: {{ w.waste_number }}
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body p-4">
+
+                                        <!-- اطلاعات ضایعات -->
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <h3 class="fw-bold mb-3">{{ w.reason }}</h3>
+                                                <div class="row g-3">
+                                                    <div class="col-6 col-md-4">
+                                                        <small class="text-muted d-block">شماره ضایعات</small>
+                                                        <code class="fw-bold">{{ w.waste_number }}</code>
+                                                    </div>
+                                                    <div class="col-6 col-md-4">
+                                                        <small class="text-muted d-block">تاریخ ضایعات</small>
+                                                        <span class="fw-bold">{{ w.waste_date|date:"Y/m/d" }}</span>
+                                                    </div>
+                                                    <div class="col-6 col-md-4">
+                                                        <small class="text-muted d-block">تعداد اقلام</small>
+                                                        <span class="fw-bold">{{ w.items|length }}</span>
+                                                    </div>
+                                                </div>
+                                                {% if w.note %}
+                                                <div class="mt-3">
+                                                    <small class="text-muted d-block">یادداشت</small>
+                                                    <p class="mb-0">{{ w.note }}</p>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <!-- اقلام به شکل کارت -->
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                                <h6 class="mb-0 fw-bold">
+                                                    <i class="fas fa-boxes me-2"></i>
+                                                    اقلام ضایعات
+                                                </h6>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="row g-3">
+                                                    {% for item in w.items %}
+                                                    <div class="col-12 col-md-6 col-lg-4">
+                                                        <div class="p-3 rounded-3 h-100" style="background: #f8fafd; border-right: 4px solid #9550fc;">
+                                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                                <div>
+                                                                    <span class="badge rounded-pill text-white mb-2"
+                                                                          style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                                                        #{{ forloop.counter }}
+                                                                    </span>
+                                                                    <h6 class="fw-bold mb-0">
+                                                                        {{ item.product_name|default:item.product_id }}
+                                                                    </h6>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row g-2 mt-2">
+                                                                <div class="col-6">
+                                                                    <small class="text-muted d-block">تعداد</small>
+                                                                    <span class="fw-bold" style="font-size: 1.1rem;">{{ item.quantity }}</span>
+                                                                </div>
+                                                                <div class="col-6">
+                                                                    <small class="text-muted d-block">موقعیت</small>
+                                                                    <span class="badge rounded-pill px-2 py-1" style="background: rgba(79,172,254,0.1); color: #4facfe;">
+                                                                        {{ item.location_name|default:'---' }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% empty %}
+                                                    <div class="col-12 text-center py-4 text-muted">
+                                                        <i class="fas fa-box-open fa-2x mb-2"></i>
+                                                        <p class="mb-0">هیچ قلمی وجود ندارد</p>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a href="{% url 'update_waste' w.id %}" class="btn btn-warning rounded-pill px-4">
+                                            <i class="fas fa-edit me-1"></i> ویرایش
+                                        </a>
+                                        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                                            بستن
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ==================== END DETAIL MODAL ==================== -->
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="fas fa-trash-alt fa-3x mb-3" style="color: #9550fc;"></i>
+                                <h5 class="text-muted">هیچ ضایعاتی یافت نشد</h5>
+                                <p class="text-muted">اولین ضایعات خود را ثبت کنید</p>
+                                <a href="{% url 'create_waste' %}" class="btn rounded-pill px-4 text-white"
+                                   style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                    <i class="fas fa-plus me-1"></i> ثبت ضایعات
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if wastes.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if wastes.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ wastes.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if reason_filter %}&reason={{ reason_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                    </li>
+                {% endif %}
+
+                {% for num in wastes.paginator.page_range %}
+                    {% if wastes.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); border-color: #450C98;">{{ num }}</span>
+                        </li>
+                    {% elif num > wastes.number|add:'-3' and num < wastes.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if reason_filter %}&reason={{ reason_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if wastes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ wastes.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if reason_filter %}&reason={{ reason_filter }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <div class="text-center mt-2">
+        <small class="text-muted">
+            نمایش {{ wastes.start_index }} تا {{ wastes.end_index }} از {{ paginator.count }} ضایعات
+        </small>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-trash-alt me-2"></i>حذف ضایعات
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+                </div>
+                <h5 class="mb-3">آیا مطمئن هستید؟</h5>
+                <p class="text-muted mb-2">ضایعات با شماره "<strong id="deleteWasteName"></strong>" حذف خواهد شد.</p>
+                <p class="text-danger small">موجودی کالا به حالت قبل برمی‌گردد!</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">انصراف</button>
+                <button type="button" class="btn btn-danger rounded-pill px-4" id="confirmDeleteBtn">بله، حذف کن</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let deleteWasteId = null;
+
+    function showDeleteModal(wasteId, wasteNumber) {
+        deleteWasteId = wasteId;
+        document.getElementById('deleteWasteName').textContent = wasteNumber;
+        new bootstrap.Modal(document.getElementById('deleteModal')).show();
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+        if (deleteWasteId) {
+            const form = document.getElementById('deleteForm-' + deleteWasteId);
+            if (form) form.submit();
+        }
+    });
+
+    function showDetailModal(wasteId) {
+        new bootstrap.Modal(document.getElementById('detailModal' + wasteId)).show();
+    }
+</script>
+
+{% endblock %}

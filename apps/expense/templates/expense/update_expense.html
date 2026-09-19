@@ -1,0 +1,485 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_edit %}ویرایش مصرف{% else %}ثبت مصرف جدید{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc; font-size: 2rem;">
+                <i class="fas fa-money-bill-wave me-2"></i>
+                {% if is_edit %}ویرایش مصرف{% else %}ثبت مصرف جدید{% endif %}
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 fs-6">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'expense_list' %}" class="text-decoration-none text-muted">مصارف</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98;">
+                        {% if is_edit %}ویرایش مصرف{% else %}ثبت مصرف{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'expense_list' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
+            <i class="fas fa-arrow-right me-2"></i>
+            بازگشت به لیست
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
+            {% if message.tags == 'success' %}
+            <i class="fas fa-check-circle me-2"></i>
+            {% elif message.tags == 'error' %}
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            {% else %}
+            <i class="fas fa-info-circle me-2"></i>
+            {% endif %}
+            {{ message|linebreaksbr }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Form Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <h5 class="mb-0 fw-bold fs-4">
+                <i class="fas fa-money-bill-wave me-2"></i>
+                {% if is_edit %}فرم ویرایش مصرف{% else %}فرم ثبت مصرف{% endif %}
+            </h5>
+        </div>
+        <div class="card-body p-4 p-md-5">
+
+            <form method="POST" id="expenseForm" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                {{ form.items_json }}
+
+                <!-- Display non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger shadow-sm rounded-3 fs-6">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <!-- اطلاعات اصلی مصرف -->
+                <div class="row">
+                    <!-- Expense Number (Readonly) -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.expense_number.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-hashtag me-1" style="color: #450C98;"></i>
+                            شماره مصرف
+                        </label>
+                        {{ form.expense_number }}
+                        {% if form.expense_number.errors %}
+                        <div class="invalid-feedback d-block fs-6">
+                            {{ form.expense_number.errors.0 }}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>شماره مصرف به صورت خودکار تولید می‌شود
+                        </small>
+                    </div>
+
+                    <!-- Expense Date -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.expense_date.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-calendar me-1" style="color: #450C98;"></i>
+                            تاریخ مصرف <span class="text-danger">*</span>
+                        </label>
+                        {{ form.expense_date }}
+                        {% if form.expense_date.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% for error in form.expense_date.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Title -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.title.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-tag me-1" style="color: #450C98;"></i>
+                            عنوان مصرف <span class="text-danger">*</span>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% for error in form.title.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="far fa-lightbulb me-1"></i>مثال: مصارف روز شنبه
+                        </small>
+                    </div>
+
+                    <!-- Image -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.image.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-image me-1" style="color: #450C98;"></i>
+                            عکس
+                        </label>
+                        {{ form.image }}
+                        {% if form.image.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% for error in form.image.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>اختیاری — عکس رسید یا سند
+                        </small>
+                    </div>
+                </div>
+
+                <!-- اقلام مصرف -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3" style="border-bottom: 2px solid #9550fc;">
+                        <h5 class="mb-0 fw-bold fs-4" style="color: #450C98;">
+                            <i class="fas fa-list me-2"></i>
+                            اقلام مصرف
+                        </h5>
+                        <button type="button" class="btn btn-md rounded-pill text-white px-4" id="addItemBtn" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
+                            <i class="fas fa-plus me-1"></i>
+                            افزودن
+                        </button>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle" id="itemsTable">
+                                <thead class="table-light">
+                                    <tr class="text-center">
+                                        <th style="width: 5%">#</th>
+                                        <th class="text-end" style="width: 40%">نام مصرف</th>
+                                        <th class="text-end" style="width: 15%">تعداد</th>
+                                        <th class="text-end" style="width: 20%">مبلغ فی واحد</th>
+                                        <th class="text-end" style="width: 15%">مجموع</th>
+                                        <th style="width: 5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsBody">
+                                    <!-- اقلام اینجا اضافه می‌شوند -->
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-info">
+                                        <td colspan="4" class="text-end fw-bold fs-5">مجموع کل:</td>
+                                        <td class="text-end fw-bold fs-5" id="grandTotal">0.00</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="alert alert-warning mt-3 rounded-3" id="noItemsMessage" style="display: none;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            لطفاً حداقل یک قلم مصرف اضافه کنید
+                        </div>
+                        {% if form.items_json.errors %}
+                        <div class="alert alert-danger mt-3 rounded-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {{ form.items_json.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- یادداشت -->
+                <div class="mb-4">
+                    <label for="{{ form.note.id_for_label }}" class="form-label fw-bold fs-5">
+                        <i class="fas fa-align-left me-1" style="color: #450C98;"></i>
+                        یادداشت
+                    </label>
+                    {{ form.note }}
+                    {% if form.note.errors %}
+                    <div class="text-danger mt-2 fs-6">
+                        {% for error in form.note.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <small class="text-muted d-block mt-2 fs-6">
+                        <i class="far fa-file-alt me-1"></i>اختیاری – توضیح مختصر درباره مصرف
+                    </small>
+                </div>
+
+                <!-- دکمه‌های فرم -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-5 pt-4 border-top">
+                    <div class="d-flex gap-2 mb-3 mb-sm-0">
+                        <button type="submit" class="btn btn-lg rounded-pill text-white px-4 fs-5" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                            <i class="fas fa-save me-2"></i>
+                            {% if is_edit %}به‌روزرسانی مصرف{% else %}ثبت{% endif %}
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary rounded-pill px-4 fs-5">
+                            <i class="fas fa-undo me-2"></i>
+                        </button>
+                    </div>
+                    <a href="{% url 'expense_list' %}" class="btn btn-outline-danger rounded-pill px-4 fs-5">
+                        <i class="fas fa-times me-2"></i> انصراف
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- یادداشت پایین -->
+    <div class="text-center mt-4 text-muted fs-6">
+        <i class="fas fa-info-circle me-1"></i>
+        فیلدهای ستاره‌دار اجباری هستند | شماره مصرف به صورت خودکار تولید می‌شود
+    </div>
+
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+// تعریف توابع قبل از استفاده
+function updateItemNumbers() {
+    $('.item-number').each(function(index) {
+        $(this).text(index + 1);
+    });
+}
+
+function calculateRowTotal(row) {
+    const quantity = parseFloat(row.find('.quantity-input').val()) || 0;
+    const price = parseFloat(row.find('.price-input').val()) || 0;
+    const total = quantity * price;
+
+    row.find('.item-total').text(total.toFixed(2));
+    updateGrandTotal();
+}
+
+function updateGrandTotal() {
+    let total = 0;
+    $('.item-total').each(function() {
+        total += parseFloat($(this).text()) || 0;
+    });
+
+    $('#grandTotal').text(total.toFixed(2));
+}
+
+function updateItemsJson() {
+    const items = [];
+
+    $('.item-row').each(function() {
+        const name = $(this).find('.name-input').val();
+        const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+        const unit_price = parseFloat($(this).find('.price-input').val()) || 0;
+
+        if (name && quantity > 0) {
+            items.push({
+                name: name,
+                quantity: quantity,
+                unit_price: unit_price,
+            });
+        }
+    });
+
+    $('#id_items_json').val(JSON.stringify(items));
+}
+
+function checkNoItems() {
+    if ($('.item-row').length === 0) {
+        $('#noItemsMessage').show();
+    } else {
+        $('#noItemsMessage').hide();
+    }
+}
+
+function addItem(itemData = null) {
+    const newRow = $('<tr class="item-row"></tr>');
+
+    newRow.html(`
+        <td class="item-number text-center fw-bold">1</td>
+        <td>
+            <input type="text"
+                   class="form-control form-control-sm text-end name-input"
+                   data-field="name"
+                   placeholder="نام مصرف (مثلاً کرایه موتر)"
+                   value="">
+        </td>
+        <td>
+            <input type="number"
+                   class="form-control form-control-sm text-end quantity-input"
+                   data-field="quantity"
+                   min="1"
+                   value="1"
+                   placeholder="تعداد">
+        </td>
+        <td>
+            <input type="number"
+                   class="form-control form-control-sm text-end price-input"
+                   data-field="unit_price"
+                   min="0"
+                   step="0.01"
+                   value="0"
+                   placeholder="مبلغ فی واحد">
+        </td>
+        <td class="item-total text-end fw-bold">0.00</td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-danger remove-item-btn">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `);
+
+    // مقداردهی اگر داده وجود دارد
+    if (itemData) {
+        newRow.find('.name-input').val(itemData.name || '');
+        newRow.find('.quantity-input').val(itemData.quantity || 1);
+        newRow.find('.price-input').val(itemData.unit_price || 0);
+    }
+
+    $('#itemsBody').append(newRow);
+    updateItemNumbers();
+    calculateRowTotal(newRow);
+    checkNoItems();
+}
+
+function validateForm() {
+    const title = $('#{{ form.title.id_for_label }}').val().trim();
+    if (!title) {
+        alert('لطفاً عنوان مصرف را وارد کنید!');
+        $('#{{ form.title.id_for_label }}').focus();
+        return false;
+    }
+
+    const items = JSON.parse($('#id_items_json').val() || '[]');
+    if (items.length === 0) {
+        alert('حداقل یک قلم مصرف باید اضافه شود!');
+        $('#noItemsMessage').show();
+        return false;
+    }
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (!item.name) {
+            alert('قلم ' + (i + 1) + ': لطفاً نام مصرف را وارد کنید!');
+            return false;
+        }
+        if (item.quantity <= 0) {
+            alert('قلم ' + (i + 1) + ': تعداد باید بزرگتر از صفر باشد!');
+            return false;
+        }
+        if (item.unit_price <= 0) {
+            alert('قلم ' + (i + 1) + ': مبلغ فی واحد باید بزرگتر از صفر باشد!');
+            return false;
+        }
+    }
+
+    return true;
+}
+
+$(document).ready(function() {
+
+    // داده‌های اولیه برای ویرایش
+    {% if is_edit and expense.items %}
+    const existingItems = {{ expense.items|safe }};
+    existingItems.forEach(function(item) {
+        addItem(item);
+    });
+    {% else %}
+    // افزودن اولین قلم خالی
+    addItem();
+    {% endif %}
+
+    updateGrandTotal();
+
+    // افزودن قلم جدید
+    $('#addItemBtn').click(function() {
+        addItem();
+    });
+
+    // حذف قلم
+    $(document).on('click', '.remove-item-btn', function() {
+        if (confirm('آیا مطمئن هستید که می‌خواهید این قلم را حذف کنید؟')) {
+            $(this).closest('tr').remove();
+            updateItemNumbers();
+            updateGrandTotal();
+            updateItemsJson();
+            checkNoItems();
+        }
+    });
+
+    // تغییر تعداد
+    $(document).on('input', '.quantity-input', function() {
+        calculateRowTotal($(this).closest('tr'));
+        updateItemsJson();
+    });
+
+    // تغییر قیمت
+    $(document).on('input', '.price-input', function() {
+        calculateRowTotal($(this).closest('tr'));
+        updateItemsJson();
+    });
+
+    // تغییر نام
+    $(document).on('input', '.name-input', function() {
+        updateItemsJson();
+    });
+
+    // ارسال فرم
+    $('#expenseForm').submit(function(e) {
+        e.preventDefault();
+
+        updateItemsJson();
+
+        if (!validateForm()) {
+            return false;
+        }
+
+        this.submit();
+    });
+
+    // پاک کردن فرم
+    $('button[type="reset"]').click(function() {
+        setTimeout(function() {
+            $('#itemsBody').empty();
+            addItem();
+            updateGrandTotal();
+            updateItemsJson();
+        }, 100);
+    });
+});
+</script>
+
+<style>
+.form-control:focus,
+.form-select:focus {
+    border-color: #9550fc;
+    box-shadow: 0 0 0 0.25rem rgba(149, 80, 252, 0.25);
+}
+
+.item-total {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #450C98;
+}
+
+.table-info {
+    background-color: #e7f3ff !important;
+}
+
+.table-warning {
+    background-color: #fff3cd !important;
+}
+
+.table-danger {
+    background-color: #f8d7da !important;
+}
+
+#id_expense_number {
+    background-color: #f8f9fa !important;
+    cursor: not-allowed !important;
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+
+{% block title %}ایجاد جنس جدید{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc; font-size: 2rem;">
+                <i class="fas fa-plus-circle me-2"></i>
+                {% if product %}ویرایش جنس{% else %}ایجاد جنس جدید{% endif %}
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 fs-6">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}" class="text-decoration-none text-muted">اجناس</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98;">{% if product %}ویرایش{% else %}ایجاد جدید{% endif %}</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'product_list' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
+            <i class="fas fa-arrow-right me-2"></i>
+            بازگشت به لیست
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Form Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <h5 class="mb-0 fw-bold fs-4">
+                <i class="fas fa-box me-2"></i>
+                فرم {% if product %}ویرایش{% else %}ایجاد{% endif %} اجناس
+            </h5>
+        </div>
+        <div class="card-body p-4 p-md-5">
+            
+            <form method="POST" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger shadow-sm rounded-3 fs-6">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <!-- اطلاعات اصلی -->
+                <div class="row g-4">
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-tag me-1" style="color: #450C98;"></i>
+                            نام جنس <span class="text-danger">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% for error in form.name.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="far fa-lightbulb me-1"></i>مثال: لپتاپ ایسوس، برنج هندی، تیشرت نخی
+                        </small>
+                    </div>
+
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-folder me-1" style="color: #450C98;"></i>
+                            دسته‌بندی <span class="text-danger">*</span>
+                        </label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.category.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-sitemap me-1"></i>دسته‌بندی مربوط به جنس را انتخاب کنید
+                        </small>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-2">
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="{{ form.unit.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-balance-scale me-1" style="color: #450C98;"></i>
+                            واحد <span class="text-danger">*</span>
+                        </label>
+                        {{ form.unit }}
+                        {% if form.unit.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.unit.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-ruler me-1"></i>واحد اندازه‌گیری جنس را انتخاب کنید
+                        </small>
+                    </div>
+
+                    <div class="col-12 col-md-6 mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-toggle-on me-1" style="color: #450C98;"></i>
+                            وضعیت
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.status.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>جنس فعال در سیستم قابل استفاده است
+                        </small>
+                    </div>
+                </div>
+
+                <!-- تصویر جنس -->
+                <div class="row g-4 mt-2">
+                    <div class="col-12 mb-3">
+                        <label for="{{ form.image.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-image me-1" style="color: #450C98;"></i>
+                            تصویر جنس
+                        </label>
+                        {{ form.image }}
+                        {% if form.image.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.image.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-camera me-1"></i>اختیاری – تصویر جنس را آپلود کنید
+                        </small>
+                    </div>
+                </div>
+
+                <!-- قیمت‌ها -->
+                <div class="row g-4 mt-3">
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="{{ form.purchase_price.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-shopping-cart me-1" style="color: #450C98;"></i>
+                            قیمت خرید
+                        </label>
+                        {{ form.purchase_price }}
+                        {% if form.purchase_price.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.purchase_price.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">به افغانی</small>
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="{{ form.wholesale_price.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-boxes me-1" style="color: #450C98;"></i>
+                            قیمت عمده
+                        </label>
+                        {{ form.wholesale_price }}
+                        {% if form.wholesale_price.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.wholesale_price.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">به افغانی</small>
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="{{ form.sale_price.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-money-bill-wave me-1" style="color: #450C98;"></i>
+                            قیمت فروش
+                        </label>
+                        {{ form.sale_price }}
+                        {% if form.sale_price.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.sale_price.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">به افغانی</small>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- موجودی اولیه هر موقعیت                                        -->
+                <!-- در حالت ایجاد: قابل ویرایش                                    -->
+                <!-- در حالت ویرایش: فقط خواندنی (برای تغییر از حرکات کالا استفاده کن) -->
+                <!-- ============================================================ -->
+                <div class="row g-4 mt-3">
+                    <div class="col-12">
+                        <h5 class="fw-bold mb-3" style="color: #450C98;">
+                            <i class="fas fa-cubes me-2"></i>
+                            {% if product %}موجودی فعلی موقعیت‌ها{% else %}موجودی اولیه موقعیت‌ها{% endif %}
+                        </h5>
+                        {% if product %}
+                        <div class="alert alert-info rounded-3 fs-6 mb-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            برای تغییر موجودی، از بخش <a href="{% url 'stock_movement_list' %}" class="fw-bold">حرکات کالا</a> استفاده کنید.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- دوکان -->
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="{{ form.initial_shop.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-store me-1" style="color: #450C98;"></i>
+                            {{ form.initial_shop.label }}
+                        </label>
+                        {{ form.initial_shop }}
+                        {% if form.initial_shop.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.initial_shop.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if form.initial_A %}
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="{{ form.initial_A.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-warehouse me-1" style="color: #450C98;"></i>
+                            {{ form.initial_A.label }}
+                        </label>
+                        {{ form.initial_A }}
+                        {% if form.initial_A.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.initial_A.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if form.initial_B %}
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="{{ form.initial_B.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-warehouse me-1" style="color: #450C98;"></i>
+                            {{ form.initial_B.label }}
+                        </label>
+                        {{ form.initial_B }}
+                        {% if form.initial_B.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.initial_B.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if form.initial_C %}
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="{{ form.initial_C.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-warehouse me-1" style="color: #450C98;"></i>
+                            {{ form.initial_C.label }}
+                        </label>
+                        {{ form.initial_C }}
+                        {% if form.initial_C.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.initial_C.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if form.initial_D %}
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="{{ form.initial_D.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-warehouse me-1" style="color: #450C98;"></i>
+                            {{ form.initial_D.label }}
+                        </label>
+                        {{ form.initial_D }}
+                        {% if form.initial_D.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.initial_D.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if form.initial_E %}
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="{{ form.initial_E.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-warehouse me-1" style="color: #450C98;"></i>
+                            {{ form.initial_E.label }}
+                        </label>
+                        {{ form.initial_E }}
+                        {% if form.initial_E.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.initial_E.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- حداقل موجودی -->
+                <div class="row g-4 mt-3">
+                    <div class="col-12 col-md-4 mb-3">
+                        <label for="{{ form.min_stock.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-exclamation-triangle me-1" style="color: #450C98;"></i>
+                            حداقل موجودی
+                        </label>
+                        {{ form.min_stock }}
+                        {% if form.min_stock.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.min_stock.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-bell me-1"></i>هشدار کمبود موجودی در این مقدار
+                        </small>
+                    </div>
+                </div>
+
+                <!-- توضیحات -->
+                <div class="row g-4 mt-3">
+                    <div class="col-12 mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-align-left me-1" style="color: #450C98;"></i>
+                            توضیحات
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.description.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="far fa-file-alt me-1"></i>اختیاری – توضیح مختصر درباره جنس
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="row g-2 mt-5 pt-4 border-top">
+
+                    <div class="col-lg-4 col-md-6">
+                        <button type="submit" class="btn btn-sm rounded-pill text-white px-4 fs-6 fw-bold w-100" 
+                                style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                            <i class="fas fa-save "></i> ذخیره اطلاعات
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-4 col-md-6">
+                        <button type="reset" class="btn btn-sm btn-outline-secondary rounded-pill px-4 fs-6 w-100">
+                            <i class="fas fa-undo "></i> پاک کردن فرم
+                        </button>
+                    </div>
+                    
+                    <div class="col-lg-4 col-md-12">
+                        <a href="{% url 'product_list' %}" class="btn btn-sm btn-outline-danger rounded-pill px-4 fs-6 w-100">
+                            <i class="fas fa-times "></i> انصراف
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Subtle footer note -->
+    <div class="text-center mt-4 text-muted fs-6">
+        <i class="fas fa-info-circle me-1"></i> فیلدهای ستاره‌دار اجباری هستند | کد جنس (SKU) به صورت خودکار تولید می‌شود
+    </div>
+
+</div>
+{% endblock %}

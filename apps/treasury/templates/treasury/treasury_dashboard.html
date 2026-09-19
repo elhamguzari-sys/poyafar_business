@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}داشبورد خزانه{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+                <i class="fas fa-wallet me-2"></i>
+                داشبورد خزانه
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98">خزانه</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'create_transaction' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <i class="fas fa-plus-circle me-2"></i>
+            تراکنش جدید
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Balance Card -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <div class="card-body py-5">
+                    <div class="row align-items-center">
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            <i class="fas fa-wallet fa-4x opacity-50"></i>
+                        </div>
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            <h6 class="mb-2">موجودی فعلی خزانه</h6>
+                            <h2 class="fw-bold mb-0 display-4">{{ treasury.balance_afg|floatformat:2 }}</h2>
+                            <small class="opacity-75">افغانی</small>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <small class="d-block mb-2">آخرین بروزرسانی</small>
+                            <span class="badge bg-white text-dark px-4 py-2">
+                                {{ treasury.updated_at|date:"Y/m/d H:i" }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="card border-0 shadow-sm mb-4 rounded-3">
+        <div class="card-body">
+            <form method="GET" class="d-flex flex-wrap gap-2 align-items-center">
+                <label class="fw-bold me-2">
+                    <i class="fas fa-filter me-1"></i>فیلتر تاریخ:
+                </label>
+                <select name="date_filter" class="form-select w-auto" onchange="this.form.submit()">
+                    <option value="today" {% if date_filter == 'today' %}selected{% endif %}>امروز</option>
+                    <option value="week" {% if date_filter == 'week' %}selected{% endif %}>۷ روز اخیر</option>
+                    <option value="month" {% if date_filter == 'month' %}selected{% endif %}>۳۰ روز اخیر</option>
+                    <option value="all" {% if date_filter == 'all' %}selected{% endif %}>همه</option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-arrow-down fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_in|floatformat:2 }}</h3>
+                    <small>مجموع واریز (افغانی)</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_out|floatformat:2 }}</h3>
+                    <small>مجموع برداشت (افغانی)</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ net_change|floatformat:2 }}</h3>
+                    <small>تغییر خالص (افغانی)</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-exchange-alt fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_transactions }}</h3>
+                    <small>کل تراکنش‌ها</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions and Top Sources -->
+    <div class="row g-4 mb-4">
+        <!-- Recent Transactions -->
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-clock me-2" style="color: #9550fc;"></i>
+                        تراکنش‌های اخیر
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead style="background: #f8f9fa;">
+                                <tr>
+                                    <th class="text-center">#</th>
+                                    <th>شماره</th>
+                                    <th>تاریخ</th>
+                                    <th class="text-center">نوع</th>
+                                    <th class="text-center">مبلغ</th>
+                                  
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in recent_transactions %}
+                                <tr>
+                                    <td class="text-center">{{ forloop.counter }}</td>
+                                    <td><code>{{ transaction.transaction_number }}</code></td>
+                                    <td>{{ transaction.date|date:"Y/m/d" }}</td>
+                                    <td class="text-center">
+                                        {% if transaction.transaction_type == 'IN' %}
+                                            <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
+                                                واریز
+                                            </span>
+                                        {% else %}
+                                            <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">
+                                                برداشت
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if transaction.transaction_type == 'IN' %}
+                                            <span class="text-success fw-bold">+{{ transaction.amount|floatformat:2 }}</span>
+                                        {% else %}
+                                            <span class="text-danger fw-bold">-{{ transaction.amount|floatformat:2 }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        هیچ تراکنشی ثبت نشده است
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-center py-3">
+                    <a href="{% url 'transaction_list' %}" class="text-decoration-none" style="color: #9550fc;">
+                        مشاهده همه تراکنش‌ها <i class="fas fa-arrow-left me-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Sources -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-users me-2" style="color: #9550fc;"></i>
+                        منابع برتر
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for source in top_sources %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="p-2 rounded-circle me-2" style="background: rgba(149, 80, 252, 0.1);">
+                                <i class="fas fa-user" style="color: #9550fc;"></i>
+                            </div>
+                            <span>{{ source.from_who }}</span>
+                        </div>
+                        <span class="fw-bold">{{ source.total_amount|floatformat:2 }}</span>
+                    </div>
+                    {% if not forloop.last %}
+                    <hr class="my-2">
+                    {% endif %}
+                    {% empty %}
+                    <p class="text-muted text-center py-4">هنوز داده‌ای ثبت نشده است</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mt-4">
+                <div class="card-header bg-white py-3 border-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-chart-pie me-2" style="color: #9550fc;"></i>
+                        آمار سریع
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>واریز‌ها:</span>
+                        <span class="badge bg-success rounded-pill px-3">{{ in_count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>برداشت‌ها:</span>
+                        <span class="badge bg-danger rounded-pill px-3">{{ out_count }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>تراکنش‌های امروز:</span>
+                        <span class="badge bg-info rounded-pill px-3">{{ today_transactions }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}ثبت حرکت کالا{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc; font-size: 2rem;">
+                <i class="fas fa-exchange-alt me-2"></i>
+                ثبت حرکت کالا
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 fs-6">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'stock_movement_list' %}" class="text-decoration-none text-muted">حرکات کالا</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98;">ثبت حرکت</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'stock_movement_list' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
+            <i class="fas fa-arrow-right me-2"></i>
+            بازگشت به لیست
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Form Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <h5 class="mb-0 fw-bold fs-4">
+                <i class="fas fa-exchange-alt me-2"></i>
+                فرم ثبت حرکت کالا
+            </h5>
+        </div>
+        <div class="card-body p-4 p-md-5">
+            
+            <form method="POST" novalidate>
+                {% csrf_token %}
+
+                <!-- Display non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger shadow-sm rounded-3 fs-6">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <!-- Product Field -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.product.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-box me-1" style="color: #450C98;"></i>
+                            کالا <span class="text-danger">*</span>
+                        </label>
+                        {{ form.product }}
+                        {% if form.product.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>
+                            {% for error in form.product.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="far fa-lightbulb me-1"></i>کالای مورد نظر را انتخاب کنید
+                        </small>
+                    </div>
+
+                    <!-- Location Field -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.location.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-map-marker-alt me-1" style="color: #450C98;"></i>
+                            موقعیت <span class="text-danger">*</span>
+                        </label>
+                        {{ form.location }}
+                        {% if form.location.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.location.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-store me-1"></i>موقعیت را انتخاب کنید (دوکان یا گدام)
+                        </small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Movement Type Field -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.movement_type.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-arrows-alt-h me-1" style="color: #450C98;"></i>
+                            نوع حرکت <span class="text-danger">*</span>
+                        </label>
+                        {{ form.movement_type }}
+                        {% if form.movement_type.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.movement_type.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-sitemap me-1"></i>نوع حرکت کالا را مشخص کنید
+                        </small>
+                    </div>
+
+                    <!-- Quantity Field -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.quantity.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-cubes me-1" style="color: #450C98;"></i>
+                            تعداد <span class="text-danger">*</span>
+                        </label>
+                        {{ form.quantity }}
+                        {% if form.quantity.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.quantity.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info me-1"></i>تعداد را مثبت وارد کنید؛ نوع حرکت (ورود/خروج) علامت را تعیین می‌کند
+                        </small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Reference Number Field -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.reference_number.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-hashtag me-1" style="color: #450C98;"></i>
+                            شماره مرجع
+                        </label>
+                        {{ form.reference_number }}
+                        {% if form.reference_number.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.reference_number.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-magic me-1"></i>به صورت خودکار تولید می‌شود
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Note Field -->
+                <div class="mb-4">
+                    <label for="{{ form.note.id_for_label }}" class="form-label fw-bold fs-5">
+                        <i class="fas fa-align-left me-1" style="color: #450C98;"></i>
+                        یادداشت
+                    </label>
+                    {{ form.note }}
+                    {% if form.note.errors %}
+                    <div class="text-danger mt-2 fs-6">
+                        {% for error in form.note.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    <small class="text-muted d-block mt-2 fs-6">
+                        <i class="far fa-file-alt me-1"></i>اختیاری – توضیح مختصر درباره حرکت کالا
+                    </small>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="row g-2 mt-5 pt-4 border-top">
+
+                    <div class="col-lg-4 col-md-6">
+                        <button type="submit" class="btn btn-sm rounded-pill text-white px-4 fs-6 fw-bold w-100" 
+                                style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                            <i class="fas fa-save "></i> ذخیره اطلاعات
+                        </button>
+                    </div>
+                    
+                    <!-- دکمه پاک کردن -->
+                    <div class="col-lg-4 col-md-6">
+                        <button type="reset" class="btn btn-sm btn-outline-secondary rounded-pill px-4 fs-6 w-100">
+                            <i class="fas fa-undo "></i> پاک کردن فرم
+                        </button>
+                    </div>
+                    
+                    <!-- دکمه انصراف -->
+                    <div class="col-lg-4 col-md-12">
+                        <a href="{% url 'stock_movement_list' %}" class="btn btn-sm btn-outline-danger rounded-pill px-4 fs-6 w-100">
+                            <i class="fas fa-times "></i> انصراف
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Subtle footer note -->
+    <div class="text-center mt-4 text-muted fs-6">
+        <i class="fas fa-info-circle me-1"></i> فیلدهای ستاره‌دار اجباری هستند | شماره مرجع به صورت خودکار تولید می‌شود
+    </div>
+
+</div>
+
+{% endblock %}

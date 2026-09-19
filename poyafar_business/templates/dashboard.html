@@ -1,0 +1,1349 @@
+{% extends 'base.html' %}
+
+
+{% block title %}داشبورد عمومی{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #450C98;
+        --primary-light: #9550fc;
+        --success: #11998e;
+        --success-light: #38ef7d;
+        --danger: #f5576c;
+        --info: #4facfe;
+        --warning: #f6a821;
+        --dark: #1e293b;
+        --muted: #64748b;
+        --bg-soft: #f8fafc;
+    }
+
+    .dash-wrapper {
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+        color: var(--dark);
+    }
+
+    /* ---------- Header ---------- */
+    .dash-header {
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 60%, #b57cff 100%);
+        border-radius: 22px;
+        padding: 28px 32px;
+        color: #fff;
+        box-shadow: 0 12px 40px rgba(69, 12, 152, 0.28);
+        position: relative;
+        overflow: hidden;
+    }
+    .dash-header::before {
+        content: '';
+        position: absolute;
+        top: -60px; left: -60px;
+        width: 220px; height: 220px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 50%;
+    }
+    .dash-header::after {
+        content: '';
+        position: absolute;
+        bottom: -80px; right: -40px;
+        width: 260px; height: 260px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 50%;
+    }
+    .dash-header h1 {
+        font-weight: 800;
+        font-size: 1.8rem;
+        margin: 0;
+        position: relative;
+        z-index: 2;
+    }
+    .dash-header .subtitle {
+        opacity: 0.9;
+        font-size: 0.95rem;
+        margin-top: 6px;
+        position: relative;
+        z-index: 2;
+    }
+    .header-badge {
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.25);
+        padding: 8px 18px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        backdrop-filter: blur(8px);
+        position: relative;
+        z-index: 2;
+    }
+
+    /* ---------- KPI Cards ---------- */
+    .kpi-card {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+        box-shadow: 0 6px 22px rgba(0,0,0,0.07);
+        height: 100%;
+    }
+    .kpi-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 18px 40px rgba(0,0,0,0.15);
+    }
+    .kpi-card .kpi-body {
+        padding: 24px 20px;
+        text-align: center;
+        color: #fff;
+        position: relative;
+        z-index: 2;
+    }
+    .kpi-card .kpi-icon {
+        font-size: 2.2rem;
+        margin-bottom: 12px;
+        opacity: 0.95;
+    }
+    .kpi-card .kpi-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin: 0;
+        line-height: 1.2;
+        letter-spacing: -0.5px;
+    }
+    .kpi-card .kpi-label {
+        font-size: 0.85rem;
+        opacity: 0.92;
+        margin-top: 4px;
+    }
+    .kpi-card .kpi-sub {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 4px 14px;
+        background: rgba(255,255,255,0.22);
+        border-radius: 50px;
+        font-size: 0.78rem;
+        backdrop-filter: blur(6px);
+    }
+    .kpi-treasury { background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); }
+    .kpi-sales    { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+    .kpi-purchase { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .kpi-expense  { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+
+    /* ---------- Stat Cards (small) ---------- */
+    .stat-card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 20px 18px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+        border: 1px solid #eef2f7;
+        transition: all 0.3s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 32px rgba(0,0,0,0.1);
+        border-color: #e0e7ef;
+    }
+    .stat-card .stat-icon {
+        width: 52px; height: 52px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.4rem;
+        margin-bottom: 14px;
+    }
+    .stat-card .stat-value {
+        font-size: 1.35rem;
+        font-weight: 800;
+        margin: 0;
+        line-height: 1.2;
+    }
+    .stat-card .stat-label {
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin-top: 4px;
+    }
+    .stat-card .stat-extra {
+        font-size: 0.75rem;
+        margin-top: 8px;
+        color: var(--muted);
+    }
+
+    .icon-purple { background: #f3e8ff; color: #7c3aed; }
+    .icon-green  { background: #dcfce7; color: #16a34a; }
+    .icon-red    { background: #fee2e2; color: #dc2626; }
+    .icon-blue   { background: #dbeafe; color: #2563eb; }
+    .icon-orange { background: #ffedd5; color: #ea580c; }
+    .icon-teal   { background: #ccfbf1; color: #0d9488; }
+    .icon-pink   { background: #fce7f3; color: #db2777; }
+
+    /* ---------- Section Title ---------- */
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: var(--primary);
+        margin: 34px 0 18px;
+    }
+    .section-title .bar {
+        width: 5px;
+        height: 22px;
+        background: linear-gradient(180deg, var(--primary), var(--primary-light));
+        border-radius: 50px;
+    }
+
+    /* ---------- Detail Cards ---------- */
+    .detail-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+        border: 1px solid #eef2f7;
+        overflow: hidden;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    .detail-card:hover {
+        box-shadow: 0 14px 36px rgba(0,0,0,0.1);
+    }
+    .detail-card .detail-head {
+        padding: 16px 20px;
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .head-sales    { background: linear-gradient(135deg, #11998e, #38ef7d); }
+    .head-purchase { background: linear-gradient(135deg, #f093fb, #f5576c); }
+    .head-expense  { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+    .head-treasury { background: linear-gradient(135deg, #450C98, #9550fc); }
+    .head-purple   { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+    .head-dark     { background: linear-gradient(135deg, #334155, #64748b); }
+
+    .detail-card .detail-body {
+        padding: 18px 20px;
+    }
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 9px 0;
+        border-bottom: 1px dashed #eef2f7;
+        font-size: 0.88rem;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row .lbl { color: var(--muted); }
+    .detail-row .val { font-weight: 700; }
+
+    /* ---------- Chart Card ---------- */
+    .chart-card {
+        background: #fff;
+        border-radius: 22px;
+        padding: 26px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.07);
+        border: 1px solid #eef2f7;
+    }
+    .chart-card .chart-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .chart-card .chart-title {
+        font-weight: 800;
+        font-size: 1.05rem;
+        color: var(--primary);
+        display: flex; align-items: center; gap: 8px;
+    }
+    .chart-canvas-wrap {
+        position: relative;
+        height: 340px;
+        width: 100%;
+    }
+
+    /* ---------- Tables ---------- */
+    .table-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+        border: 1px solid #eef2f7;
+        overflow: hidden;
+        height: 100%;
+    }
+    .table-card .table-head {
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eef2f7;
+    }
+    .table-card .table-head h6 {
+        margin: 0;
+        font-weight: 800;
+        font-size: 0.95rem;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .table-card .table-head .view-tag {
+        font-size: 0.72rem;
+        color: var(--muted);
+        background: var(--bg-soft);
+        padding: 3px 10px;
+        border-radius: 50px;
+    }
+    .table-card table {
+        margin: 0;
+        font-size: 0.85rem;
+    }
+    .table-card table thead th {
+        background: #fafbfd;
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border-bottom: 1px solid #eef2f7;
+        padding: 12px 14px;
+        white-space: nowrap;
+    }
+    .table-card table tbody td {
+        padding: 11px 14px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f5f7fa;
+    }
+    .table-card table tbody tr:hover {
+        background: #fafbfd;
+    }
+    .table-card table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .code-badge {
+        background: #f1f5f9;
+        color: var(--primary);
+        padding: 3px 9px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        font-family: monospace;
+    }
+
+    /* ---------- Progress Bars ---------- */
+    .progress-soft {
+        height: 8px;
+        background: #eef2f7;
+        border-radius: 50px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+    .progress-soft .bar {
+        height: 100%;
+        border-radius: 50px;
+        transition: width 0.8s ease;
+    }
+
+    /* ---------- Info Grid (returns/waste/employees/stock) ---------- */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 14px;
+    }
+    .info-tile {
+        background: var(--bg-soft);
+        border-radius: 14px;
+        padding: 14px;
+        text-align: center;
+        border: 1px solid #eef2f7;
+        transition: all 0.25s ease;
+    }
+    .info-tile:hover {
+        background: #fff;
+        border-color: #dbe4ee;
+        transform: translateY(-2px);
+    }
+    .info-tile .tile-icon {
+        font-size: 1.3rem;
+        margin-bottom: 6px;
+    }
+    .info-tile .tile-value {
+        font-weight: 800;
+        font-size: 1.05rem;
+        color: var(--dark);
+        line-height: 1.2;
+    }
+    .info-tile .tile-label {
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    /* ---------- Empty State ---------- */
+    .empty-state {
+        text-align: center;
+        padding: 28px 12px;
+        color: #94a3b8;
+        font-size: 0.85rem;
+    }
+    .empty-state i {
+        font-size: 1.8rem;
+        margin-bottom: 8px;
+        display: block;
+        opacity: 0.5;
+    }
+
+    /* ---------- Divider ---------- */
+    .soft-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+        margin: 36px 0;
+    }
+
+    /* ---------- Responsive tweaks ---------- */
+    @media (max-width: 576px) {
+        .dash-header { padding: 20px; }
+        .dash-header h1 { font-size: 1.35rem; }
+        .kpi-card .kpi-value { font-size: 1.4rem; }
+        .chart-canvas-wrap { height: 260px; }
+    }
+</style>
+
+<div class="container-fluid dash-wrapper py-4">
+
+    <!-- ============================================================ -->
+    <!-- HEADER -->
+    <!-- ============================================================ -->
+    <div class="dash-header mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h1>
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    داشبورد عمومی
+                </h1>
+                <div class="subtitle">
+                    <i class="fas fa-chart-pie me-1"></i>
+                    نمای کلی از تمام بخش‌های سیستم — فقط مشاهده
+                </div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="header-badge">
+                    <i class="fas fa-calendar-day me-1"></i>
+                    {{ today|date:"Y/m/d" }}
+                </span>
+                <span class="header-badge">
+                    <i class="fas fa-clock me-1"></i>
+                    {% now "H:i" %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- KPI CARDS — Treasury / Sales / Purchases / Expenses -->
+    <!-- ============================================================ -->
+    <div class="row g-3 mb-2">
+
+        <!-- Treasury -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="kpi-card kpi-treasury">
+                <div class="kpi-body">
+                    <div class="kpi-icon"><i class="fas fa-wallet"></i></div>
+                    <p class="kpi-value">{{ treasury.balance_afg|default:0|floatformat:0 }}</p>
+                    <div class="kpi-label">موجودی خزانه (افغانی)</div>
+                    {% if treasury.balance_usd %}
+                        <span class="kpi-sub">
+                            <i class="fas fa-dollar-sign me-1"></i>
+                            {{ treasury.balance_usd|floatformat:2 }} دالر
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="kpi-card kpi-sales">
+                <div class="kpi-body">
+                    <div class="kpi-icon"><i class="fas fa-shopping-bag"></i></div>
+                    <p class="kpi-value">{{ total_sales|default:0 }}</p>
+                    <div class="kpi-label">کل فروش‌ها</div>
+                    <span class="kpi-sub">
+                        <i class="fas fa-calendar-check me-1"></i>
+                        امروز: {{ sales_today|default:0 }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchases -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="kpi-card kpi-purchase">
+                <div class="kpi-body">
+                    <div class="kpi-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <p class="kpi-value">{{ total_purchases|default:0 }}</p>
+                    <div class="kpi-label">کل خریدها</div>
+                    <span class="kpi-sub">
+                        <i class="fas fa-calendar-check me-1"></i>
+                        امروز: {{ purchases_today|default:0 }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="kpi-card kpi-expense">
+                <div class="kpi-body">
+                    <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
+                    <p class="kpi-value">{{ total_expenses|default:0 }}</p>
+                    <div class="kpi-label">کل مصارف</div>
+                    <span class="kpi-sub">
+                        <i class="fas fa-calendar-check me-1"></i>
+                        امروز: {{ expenses_today|default:0 }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- QUICK STATS — Profit / Debts / Salaries / Products -->
+    <!-- ============================================================ -->
+    <div class="row g-3 mb-2">
+
+        <!-- Profit -->
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon {% if sales_profit_month >= 0 %}icon-green{% else %}icon-red{% endif %}">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <p class="stat-value {% if sales_profit_month >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {% if sales_profit_month >= 0 %}+{% endif %}{{ sales_profit_month|default:0|floatformat:0 }}
+                </p>
+                <div class="stat-label">سود ۳۰ روز اخیر</div>
+                <div class="stat-extra">
+                    <i class="fas fa-coins me-1"></i> افغانی
+                </div>
+            </div>
+        </div>
+
+        <!-- Debts -->
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon icon-orange">
+                    <i class="fas fa-hand-holding-usd"></i>
+                </div>
+                <p class="stat-value text-warning">{{ purchase_debts_total|default:0|floatformat:0 }}</p>
+                <div class="stat-label">قروض خرید (افغانی)</div>
+                <div class="stat-extra">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    قروض فروش: {{ sale_debts_total|default:0|floatformat:0 }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Salaries -->
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon icon-purple">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <p class="stat-value" style="color: var(--primary);">
+                    {{ salaries_month_amount|default:0|floatformat:0 }}
+                </p>
+                <div class="stat-label">معاشات ۳۰ روز اخیر</div>
+                <div class="stat-extra">
+                    <i class="fas fa-file-invoice me-1"></i>
+                    اسناد: {{ salaries_count|default:0 }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Products -->
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon icon-teal">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <p class="stat-value" style="color: var(--success);">{{ total_products|default:0 }}</p>
+                <div class="stat-label">کل کالاها</div>
+                <div class="stat-extra text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    کم‌موجود: {{ low_stock_products|default:0 }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TREASURY / TRANSACTIONS SUMMARY -->
+    <!-- ============================================================ -->
+    <div class="section-title">
+        <span class="bar"></span>
+        <i class="fas fa-vault me-1"></i>
+        خلاصه خزانه و تراکنش‌ها
+    </div>
+
+    <div class="row g-3 mb-2">
+        <div class="col-12 col-lg-4">
+            <div class="detail-card">
+                <div class="detail-head head-treasury">
+                    <i class="fas fa-wallet"></i>
+                    موجودی خزانه
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <span class="lbl">موجودی افغانی</span>
+                        <span class="val text-primary">
+                            {{ treasury.balance_afg|default:0|floatformat:2 }}
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">موجودی دالر</span>
+                        <span class="val text-success">
+                            {{ treasury.balance_usd|default:0|floatformat:2 }} $
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">تراکنش امروز</span>
+                        <span class="val">{{ today_txs|default:0 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">کل تراکنش‌ها</span>
+                        <span class="val">{{ txs|length|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="detail-card">
+                <div class="detail-head head-sales">
+                    <i class="fas fa-arrow-down"></i>
+                    واریزی ۳۰ روز اخیر
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <span class="lbl">مجموع واریزی</span>
+                        <span class="val text-success">{{ month_in|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">مجموع برداشت</span>
+                        <span class="val text-danger">{{ month_out|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">خالص جریان</span>
+                        <span class="val {% if month_in >= month_out %}text-success{% else %}text-danger{% endif %}">
+                            {{ month_in|default:0|floatformat:0 }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="detail-card">
+                <div class="detail-head head-dark">
+                    <i class="fas fa-balance-scale"></i>
+                    وضعیت کلی
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <span class="lbl">سود ۳۰ روز</span>
+                        <span class="val {% if sales_profit_month >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ sales_profit_month|default:0|floatformat:0 }}
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">مصارف ۳۰ روز</span>
+                        <span class="val text-info">
+                            {{ expenses_month_amount|default:0|floatformat:0 }}
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">فروش ۳۰ روز</span>
+                        <span class="val text-success">
+                            {{ sales_month_amount|default:0|floatformat:0 }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- CHART -->
+    <!-- ============================================================ -->
+    <div class="section-title">
+        <span class="bar"></span>
+        <i class="fas fa-chart-bar me-1"></i>
+        خرید / فروش / مصارف ۷ روز اخیر
+    </div>
+
+    <div class="chart-card mb-2">
+        <div class="chart-head">
+            <div class="chart-title">
+                <i class="fas fa-chart-column"></i>
+                نمودار مقایسه‌ای روزانه
+            </div>
+            <span class="view-tag" style="font-size:0.75rem;color:var(--muted);background:var(--bg-soft);padding:5px 14px;border-radius:50px;">
+                <i class="fas fa-eye me-1"></i> فقط مشاهده
+            </span>
+        </div>
+        <div class="chart-canvas-wrap">
+            <canvas id="mainChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SALES / PURCHASES / EXPENSES DETAILS -->
+    <!-- ============================================================ -->
+    <div class="section-title">
+        <span class="bar"></span>
+        <i class="fas fa-list-alt me-1"></i>
+        خلاصه تفصیلی فروش، خرید و مصارف
+    </div>
+
+    <div class="row g-3 mb-2">
+
+        <!-- Sales Detail -->
+        <div class="col-12 col-lg-4">
+            <div class="detail-card">
+                <div class="detail-head head-sales">
+                    <i class="fas fa-shopping-bag"></i>
+                    خلاصه فروش
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <span class="lbl">مجموع فروش</span>
+                        <span class="val">{{ sales_total_amount|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">دریافتی</span>
+                        <span class="val text-success">{{ sales_total_received|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">باقی‌مانده</span>
+                        <span class="val text-danger">{{ sales_total_remaining|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">۳۰ روز اخیر</span>
+                        <span class="val text-primary">{{ sales_month_amount|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">تعداد کل</span>
+                        <span class="val">{{ total_sales|default:0 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">امروز</span>
+                        <span class="val">{{ sales_today|default:0 }}</span>
+                    </div>
+
+                    {% if sales_total_amount > 0 %}
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>درصد وصولی</span>
+                            <span>
+                                {% widthratio sales_total_received sales_total_amount 100 %}%
+                            </span>
+                        </div>
+                        <div class="progress-soft">
+                            <div class="bar" style="width: {% widthratio sales_total_received sales_total_amount 100 %}%; background: linear-gradient(90deg, #11998e, #38ef7d);"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchases Detail -->
+        <div class="col-12 col-lg-4">
+            <div class="detail-card">
+                <div class="detail-head head-purchase">
+                    <i class="fas fa-shopping-cart"></i>
+                    خلاصه خرید
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <span class="lbl">مجموع خرید</span>
+                        <span class="val">{{ purchases_total_amount|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">پرداختی</span>
+                        <span class="val text-success">{{ purchases_total_paid|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">باقی‌مانده</span>
+                        <span class="val text-danger">{{ purchases_total_remaining|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">۳۰ روز اخیر</span>
+                        <span class="val text-primary">{{ purchases_month_amount|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">تعداد کل</span>
+                        <span class="val">{{ total_purchases|default:0 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">امروز</span>
+                        <span class="val">{{ purchases_today|default:0 }}</span>
+                    </div>
+
+                    {% if purchases_total_amount > 0 %}
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>درصد پرداخت</span>
+                            <span>
+                                {% widthratio purchases_total_paid purchases_total_amount 100 %}%
+                            </span>
+                        </div>
+                        <div class="progress-soft">
+                            <div class="bar" style="width: {% widthratio purchases_total_paid purchases_total_amount 100 %}%; background: linear-gradient(90deg, #f093fb, #f5576c);"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses Detail -->
+        <div class="col-12 col-lg-4">
+            <div class="detail-card">
+                <div class="detail-head head-expense">
+                    <i class="fas fa-receipt"></i>
+                    خلاصه مصارف
+                </div>
+                <div class="detail-body">
+                    <div class="detail-row">
+                        <span class="lbl">کل مصارف</span>
+                        <span class="val">{{ expenses_total_amount|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">۳۰ روز اخیر</span>
+                        <span class="val text-primary">{{ expenses_month_amount|default:0|floatformat:2 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">امروز</span>
+                        <span class="val">{{ expenses_today|default:0 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">تعداد کل</span>
+                        <span class="val">{{ total_expenses|default:0 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="lbl">میانگین هر مصرف</span>
+                        <span class="val">
+                            {% if total_expenses > 0 %}
+                                {{ expenses_total_amount|default:0|floatformat:0 }}
+                            {% else %}0{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- RETURNS / WASTE / EMPLOYEES / STOCK -->
+    <!-- ============================================================ -->
+    <div class="section-title">
+        <span class="bar"></span>
+        <i class="fas fa-cubes me-1"></i>
+        مرجوعی‌ها، ضایعات، کارمندان و انبار
+    </div>
+
+    <div class="row g-3 mb-2">
+
+        <!-- Returns -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="detail-card">
+                <div class="detail-head head-purple">
+                    <i class="fas fa-undo-alt"></i>
+                    مرجوعی‌ها
+                </div>
+                <div class="detail-body">
+                    <div class="info-grid">
+                        <div class="info-tile">
+                            <div class="tile-icon text-info"><i class="fas fa-user-undo"></i></div>
+                            <div class="tile-value">{{ customer_returns_count|default:0 }}</div>
+                            <div class="tile-label">مرجوعی مشتری</div>
+                        </div>
+                        <div class="info-tile">
+                            <div class="tile-icon text-danger"><i class="fas fa-money-bill-transfer"></i></div>
+                            <div class="tile-value text-danger">{{ customer_returns_amount|default:0|floatformat:0 }}</div>
+                            <div class="tile-label">بازپرداخت</div>
+                        </div>
+                        <div class="info-tile">
+                            <div class="tile-icon text-primary"><i class="fas fa-truck-arrow-right"></i></div>
+                            <div class="tile-value">{{ supplier_returns_count|default:0 }}</div>
+                            <div class="tile-label">مرجوعی تأمین‌کننده</div>
+                        </div>
+                        <div class="info-tile">
+                            <div class="tile-icon text-success"><i class="fas fa-hand-holding-dollar"></i></div>
+                            <div class="tile-value text-success">{{ supplier_returns_amount|default:0|floatformat:0 }}</div>
+                            <div class="tile-label">دریافتی</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Waste -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="detail-card">
+                <div class="detail-head head-purchase">
+                    <i class="fas fa-trash-alt"></i>
+                    ضایعات
+                </div>
+                <div class="detail-body">
+                    <div class="info-grid">
+                        <div class="info-tile">
+                            <div class="tile-icon text-danger"><i class="fas fa-dumpster"></i></div>
+                            <div class="tile-value">{{ wastes_count|default:0 }}</div>
+                            <div class="tile-label">کل اسناد ضایعات</div>
+                        </div>
+                        <div class="info-tile">
+                            <div class="tile-icon text-warning"><i class="fas fa-calendar-day"></i></div>
+                            <div class="tile-value">{{ wastes_today|default:0 }}</div>
+                            <div class="tile-label">امروز</div>
+                        </div>
+                    </div>
+                    {% if wastes_count > 0 %}
+                    <div class="mt-3 text-center small text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        میانگین روزانه ثبت ضایعات
+                    </div>
+                    {% else %}
+                    <div class="empty-state mt-3">
+                        <i class="fas fa-check-circle text-success"></i>
+                        ضایعاتی ثبت نشده
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Employees -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="detail-card">
+                <div class="detail-head head-treasury">
+                    <i class="fas fa-users"></i>
+                    کارمندان و معاشات
+                </div>
+                <div class="detail-body">
+                    <div class="info-grid">
+                        <div class="info-tile">
+                            <div class="tile-icon text-primary"><i class="fas fa-user-group"></i></div>
+                            <div class="tile-value">{{ total_employees|default:0 }}</div>
+                            <div class="tile-label">کل کارمندان</div>
+                        </div>
+                        <div class="info-tile">
+                            <div class="tile-icon text-success"><i class="fas fa-user-check"></i></div>
+                            <div class="tile-value text-success">{{ active_employees|default:0 }}</div>
+                            <div class="tile-label">فعال</div>
+                        </div>
+                        <div class="info-tile">
+                            <div class="tile-icon text-purple" style="color:#7c3aed;"><i class="fas fa-file-invoice-dollar"></i></div>
+                            <div class="tile-value">{{ salaries_count|default:0 }}</div>
+                            <div class="tile-label">اسناد معاش</div>
+                        </div>
+                        <div class="info-tile">
+                            <div class="tile-icon text-orange" style="color:#ea580c;"><i class="fas fa-money-bill-wave"></i></div>
+                            <div class="tile-value">{{ salaries_month_amount|default:0|floatformat:0 }}</div>
+                            <div class="tile-label">معاش ۳۰ روز</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock -->
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="detail-card">
+                <div class="detail-head head-expense">
+                    <i class="fas fa-warehouse"></i>
+                    انبار و کالاها
+                </div>
+                <div class="detail-body">
+                    <div class="info-grid">
+                        <div class="info-tile">
+                            <div class="tile-icon text-info"><i class="fas fa-boxes"></i></div>
+                            <div class="tile-value">{{ total_products|default:0 }}</div>
+                            <div class="tile-label">کل کالاها</div>
+                        </div>
+                        <div class="info-tile">
+                            <div class="tile-icon text-primary"><i class="fas fa-tags"></i></div>
+                            <div class="tile-value">{{ total_categories|default:0 }}</div>
+                            <div class="tile-label">دسته‌بندی</div>
+                        </div>
+                        <div class="info-tile">
+                            <div class="tile-icon text-teal" style="color:#0d9488;"><i class="fas fa-map-marker-alt"></i></div>
+                            <div class="tile-value">{{ total_locations|default:0 }}</div>
+                            <div class="tile-label">موقعیت‌ها</div>
+                        </div>
+                        <div class="info-tile">
+                            <div class="tile-icon text-danger"><i class="fas fa-times-circle"></i></div>
+                            <div class="tile-value text-danger">{{ out_of_stock|default:0 }}</div>
+                            <div class="tile-label">ناموجود</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- RECENT SALES & PURCHASES -->
+    <!-- ============================================================ -->
+    <div class="section-title">
+        <span class="bar"></span>
+        <i class="fas fa-history me-1"></i>
+        آخرین فعالیت‌ها
+    </div>
+
+    <div class="row g-3 mb-2">
+
+        <!-- Recent Sales -->
+        <div class="col-12 col-lg-6">
+            <div class="table-card">
+                <div class="table-head">
+                    <h6 style="color: #11998e;">
+                        <i class="fas fa-clock"></i>
+                        آخرین فروش‌ها
+                    </h6>
+                    <span class="view-tag"><i class="fas fa-eye me-1"></i> فقط مشاهده</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>مشتری</th>
+                                <th>تاریخ</th>
+                                <th class="text-end">مجموع</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td><span class="code-badge">{{ sale.sale_number }}</span></td>
+                                <td>{{ sale.customer_name|default:"—" }}</td>
+                                <td class="text-muted small">{{ sale.sale_date|date:"Y/m/d" }}</td>
+                                <td class="text-end fw-bold">{{ sale.total_amount|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        فروشی ثبت نشده است
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Purchases -->
+        <div class="col-12 col-lg-6">
+            <div class="table-card">
+                <div class="table-head">
+                    <h6 style="color: #f5576c;">
+                        <i class="fas fa-clock"></i>
+                        آخرین خریدها
+                    </h6>
+                    <span class="view-tag"><i class="fas fa-eye me-1"></i> فقط مشاهده</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>تأمین‌کننده</th>
+                                <th>تاریخ</th>
+                                <th class="text-end">مجموع</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for purchase in recent_purchases %}
+                            <tr>
+                                <td><span class="code-badge">{{ purchase.purchase_number }}</span></td>
+                                <td>{{ purchase.supplier_name|default:"—" }}</td>
+                                <td class="text-muted small">{{ purchase.purchase_date|date:"Y/m/d" }}</td>
+                                <td class="text-end fw-bold">{{ purchase.total_amount|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        خریدی ثبت نشده است
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Expenses -->
+        <div class="col-12 col-lg-6">
+            <div class="table-card">
+                <div class="table-head">
+                    <h6 style="color: #4facfe;">
+                        <i class="fas fa-clock"></i>
+                        آخرین مصارف
+                    </h6>
+                    <span class="view-tag"><i class="fas fa-eye me-1"></i> فقط مشاهده</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>عنوان</th>
+                                <th>تاریخ</th>
+                                <th class="text-end">مجموع</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in recent_expenses %}
+                            <tr>
+                                <td><span class="code-badge">{{ expense.expense_number }}</span></td>
+                                <td>{{ expense.title|default:"—" }}</td>
+                                <td class="text-muted small">{{ expense.expense_date|date:"Y/m/d" }}</td>
+                                <td class="text-end fw-bold">{{ expense.total_amount|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        مصرفی ثبت نشده است
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Salaries -->
+        <div class="col-12 col-lg-6">
+            <div class="table-card">
+                <div class="table-head">
+                    <h6 style="color: #9550fc;">
+                        <i class="fas fa-clock"></i>
+                        آخرین معاشات
+                    </h6>
+                    <span class="view-tag"><i class="fas fa-eye me-1"></i> فقط مشاهده</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>کارمند</th>
+                                <th>ماه</th>
+                                <th class="text-end">مبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for salary in recent_salaries %}
+                            <tr>
+                                <td><span class="code-badge">#{{ salary.id }}</span></td>
+                                <td>{{ salary.employee.full_name|default:"—" }}</td>
+                                <td class="text-muted small">{{ salary.salary_month|default:"—" }}</td>
+                                <td class="text-end fw-bold">{{ salary.amount|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        معاشی ثبت نشده است
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SUMMARY FOOTER -->
+    <!-- ============================================================ -->
+    <div class="soft-divider"></div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="detail-card">
+                <div class="detail-head head-dark">
+                    <i class="fas fa-chart-pie"></i>
+                    خلاصه نهایی سیستم
+                </div>
+                <div class="detail-body">
+                    <div class="row g-3 text-center">
+                        <div class="col-6 col-md-3">
+                            <div class="info-tile">
+                                <div class="tile-icon text-success"><i class="fas fa-arrow-trend-up"></i></div>
+                                <div class="tile-value text-success">{{ sales_total_received|default:0|floatformat:0 }}</div>
+                                <div class="tile-label">کل دریافتی فروش</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="info-tile">
+                                <div class="tile-icon text-danger"><i class="fas fa-arrow-trend-down"></i></div>
+                                <div class="tile-value text-danger">{{ purchases_total_paid|default:0|floatformat:0 }}</div>
+                                <div class="tile-label">کل پرداختی خرید</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="info-tile">
+                                <div class="tile-icon text-warning"><i class="fas fa-scale-unbalanced"></i></div>
+                                <div class="tile-value text-warning">{{ purchase_debts_total|default:0|floatformat:0 }}</div>
+                                <div class="tile-label">قروض خرید</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="info-tile">
+                                <div class="tile-icon text-info"><i class="fas fa-scale-balanced"></i></div>
+                                <div class="tile-value text-info">{{ sale_debts_total|default:0|floatformat:0 }}</div>
+                                <div class="tile-label">قروض فروش</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- Chart.js -->
+<!-- ============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const canvas = document.getElementById('mainChart');
+        if (!canvas) return;
+
+        const labels       = {{ chart_labels|safe }};
+        const salesData    = {{ chart_sales|safe }};
+        const purchasesData= {{ chart_purchases|safe }};
+        const expensesData = {{ chart_expenses|safe }};
+
+        const ctx = canvas.getContext('2d');
+
+        // Gradient helpers
+        function makeGradient(color1, color2) {
+            const g = ctx.createLinearGradient(0, 0, 0, 340);
+            g.addColorStop(0, color1);
+            g.addColorStop(1, color2);
+            return g;
+        }
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'فروش',
+                        data: salesData,
+                        backgroundColor: makeGradient('rgba(17, 153, 142, 0.9)', 'rgba(56, 239, 125, 0.5)'),
+                        borderColor: '#11998e',
+                        borderWidth: 1.5,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 38,
+                    },
+                    {
+                        label: 'خرید',
+                        data: purchasesData,
+                        backgroundColor: makeGradient('rgba(245, 87, 108, 0.9)', 'rgba(240, 147, 251, 0.5)'),
+                        borderColor: '#f5576c',
+                        borderWidth: 1.5,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 38,
+                    },
+                    {
+                        label: 'مصارف',
+                        data: expensesData,
+                        backgroundColor: makeGradient('rgba(79, 172, 254, 0.9)', 'rgba(0, 242, 254, 0.5)'),
+                        borderColor: '#4facfe',
+                        borderWidth: 1.5,
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 38,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                animation: { duration: 1100, easing: 'easeOutQuart' },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: { family: 'Vazirmatn, Tahoma', size: 13, weight: '600' },
+                            color: '#450C98',
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            padding: 18,
+                        }
+                    },
+                    tooltip: {
+                        rtl: true,
+                        backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                        titleFont: { family: 'Vazirmatn, Tahoma', size: 13 },
+                        bodyFont: { family: 'Vazirmatn, Tahoma', size: 13 },
+                        padding: 12,
+                        cornerRadius: 10,
+                        callbacks: {
+                            label: function (ctx) {
+                                return ' ' + ctx.dataset.label + ': ' +
+                                    Number(ctx.parsed.y).toLocaleString('fa-AF') +
+                                    ' افغانی';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: { family: 'Vazirmatn, Tahoma' },
+                            color: '#64748b',
+                            callback: function (v) {
+                                return Number(v).toLocaleString('fa-AF');
+                            }
+                        },
+                        grid: { color: 'rgba(148, 163, 184, 0.12)', drawBorder: false }
+                    },
+                    x: {
+                        ticks: {
+                            font: { family: 'Vazirmatn, Tahoma' },
+                            color: '#64748b'
+                        },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock %}

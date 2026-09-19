@@ -1,0 +1,339 @@
+<!-- ============================================================ -->
+<!-- templates/sidebar.html                                       -->
+<!-- این فایل در base.html هم برای Desktop و هم برای Mobile       -->
+<!-- include می‌شود. ظاهر خودکار تطبیق می‌کند.                    -->
+<!-- ============================================================ -->
+
+<!-- ============================================================ -->
+<!-- User Info                                                     -->
+<!-- ============================================================ -->
+<div class="sidebar-user text-center p-3">
+    <div class="user-avatar mb-2">
+        <i class="fas fa-user-circle"></i>
+    </div>
+    <h6 class="mb-1 fw-bold">کاربر مدیریت</h6>
+    <small class="user-email">admin@example.com</small>
+</div>
+
+<!-- ============================================================ -->
+<!-- Menu Title                                                    -->
+<!-- ============================================================ -->
+<div class="sidebar-title">
+    <i class="fas fa-th-large me-1"></i> منوی اصلی
+</div>
+
+<!-- ============================================================ -->
+<!-- Menu Items                                                    -->
+<!-- ============================================================ -->
+<ul class="nav flex-column sidebar-nav">
+
+    <!-- داشبورد -->
+    <li class="nav-item">
+        <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+            <i class="fas fa-home fa-fw"></i>
+            <span>داشبورد</span>
+        </a>
+    </li>
+
+    <!-- دسته بندی اجناس -->
+    <li class="nav-item">
+        <a href="{% url 'category_list' %}"
+           class="nav-link {% if 'category' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-tags fa-fw"></i>
+            <span>دسته بندی اجناس</span>
+        </a>
+    </li>
+
+    <!-- مدیریت اجناس -->
+    <li class="nav-item">
+        <a href="{% url 'product_list' %}"
+           class="nav-link {% if 'product' in request.resolver_match.url_name and 'category' not in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-boxes fa-fw"></i>
+            <span>مدیریت اجناس</span>
+        </a>
+    </li>
+
+    <!-- موقعیت گدام‌ها -->
+    <li class="nav-item">
+        <a href="{% url 'location_list' %}"
+           class="nav-link {% if 'location' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-map-marker-alt fa-fw"></i>
+            <span>موقعیت گدام‌ها</span>
+        </a>
+    </li>
+
+    <!-- گدام -->
+    <li class="nav-item">
+        <a href="{% url 'stock_movement_list' %}"
+           class="nav-link {% if 'stock' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-warehouse fa-fw"></i>
+            <span>گدام</span>
+        </a>
+    </li>
+
+    <!-- خریداری کالا -->
+    <li class="nav-item">
+        <a href="{% url 'purchase_list' %}"
+           class="nav-link {% if 'purchase_list' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-shopping-cart fa-fw"></i>
+            <span>خریداری کالا</span>
+        </a>
+    </li>
+
+    <!-- فروش کالا -->
+    <li class="nav-item">
+        <a href="{% url 'sale_list' %}"
+           class="nav-link {% if 'sale_list' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-shopping-bag fa-fw"></i>
+            <span>فروش کالا</span>
+        </a>
+    </li>
+
+    <!-- قروض خریدها -->
+    <li class="nav-item">
+        <a href="{% url 'purchase_debt_list' %}"
+           class="nav-link {% if 'purchase_debt' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-file-invoice-dollar fa-fw"></i>
+            <span>قروض خریدها</span>
+        </a>
+    </li>
+
+    <!-- قروض فروش‌ها -->
+    <li class="nav-item">
+        <a href="{% url 'sale_debt_list' %}"
+           class="nav-link {% if 'sale_debt' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-hand-holding-usd fa-fw"></i>
+            <span>قروض فروش‌ها</span>
+        </a>
+    </li>
+
+    <!-- بازگشت فروشات -->
+   
+
+    <!-- بازگشت خریدها -->
+    <li class="nav-item">
+        <a href="{% url 'supplier_return_list' %}"
+           class="nav-link {% if 'supplier_return' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-truck-arrow-right fa-fw"></i>
+            <span>بازگشت خریدها</span>
+        </a>
+    </li>
+     <li class="nav-item">
+        <a href="{% url 'customer_return_list' %}"
+           class="nav-link {% if 'customer_return' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-undo-alt fa-fw"></i>
+            <span>بازگشت فروشات</span>
+        </a>
+    </li>
+
+    <!-- ضایعات کالا -->
+    <li class="nav-item">
+        <a href="{% url 'waste_list' %}"
+           class="nav-link {% if 'waste' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-trash-alt fa-fw"></i>
+            <span>ضایعات کالا</span>
+        </a>
+    </li>
+
+    <!-- کارمندان -->
+    <li class="nav-item">
+        <a href="{% url 'employee_list' %}"
+           class="nav-link {% if 'employee' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-users fa-fw"></i>
+            <span>کارمندان</span>
+        </a>
+    </li>
+
+    <!-- معاشات -->
+    <li class="nav-item">
+        <a href="{% url 'salary_list' %}"
+           class="nav-link {% if 'salary' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-money-bill-wave fa-fw"></i>
+            <span>معاشات</span>
+        </a>
+    </li>
+
+    <!-- مصارف -->
+    <li class="nav-item">
+        <a href="{% url 'expense_list' %}"
+           class="nav-link {% if 'expense' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-receipt fa-fw"></i>
+            <span>مصارف</span>
+        </a>
+    </li>
+
+    <!-- خزانه -->
+    <li class="nav-item">
+        <a href="{% url 'treasury_dashboard' %}"
+           class="nav-link {% if 'treasury' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-vault fa-fw"></i>
+            <span>خزانه</span>
+        </a>
+    </li>
+
+    <!-- تراکنش‌ها -->
+    <li class="nav-item">
+        <a href="{% url 'transaction_list' %}"
+           class="nav-link {% if 'transaction' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-exchange-alt fa-fw"></i>
+            <span>تراکنش‌ها</span>
+        </a>
+    </li>
+    <li class="nav-item">
+    <a href="{% url 'report_overview' %}"
+       class="nav-link {% if 'report_' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-chart-line fa-fw"></i>
+        <span>راپورها</span>
+    </a>
+</li>
+<li class="nav-item">
+    <a href="{% url 'backup_list' %}"
+       class="nav-link {% if 'backup' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-database fa-fw"></i>
+        <span>بکاپ</span>
+    </a>
+</li>
+</ul>
+
+<!-- ============================================================ -->
+<!-- Styles — Shared by Desktop & Mobile                          -->
+<!-- ============================================================ -->
+<style>
+    /* ---------- User Info ---------- */
+    .sidebar-user {
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        border-bottom: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .sidebar-user .user-avatar {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto;
+        background: rgba(255,255,255,0.15);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sidebar-user .user-avatar i {
+        font-size: 3rem;
+        color: #ffffff;
+    }
+
+    .sidebar-user h6 {
+        color: #ffffff;
+        font-weight: 700;
+        margin-top: 8px;
+    }
+
+    .sidebar-user .user-email {
+        color: rgba(255,255,255,0.7);
+        font-size: 0.8rem;
+    }
+
+    /* ---------- Menu Title ---------- */
+    .sidebar-title {
+        color: #94a3b8;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        padding: 0.75rem 1rem;
+    }
+
+    /* ---------- Nav Items ---------- */
+    .sidebar-nav {
+        padding: 0.5rem;
+        gap: 4px;
+    }
+
+    .sidebar-nav .nav-item {
+        width: 100%;
+    }
+
+    .sidebar-nav .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 11px 14px;
+        border-radius: 10px;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+
+    .sidebar-nav .nav-link i {
+        width: 22px;
+        text-align: center;
+        margin-left: 10px;
+        font-size: 1rem;
+        color: #9550fc;
+        transition: color 0.2s ease;
+    }
+
+    .sidebar-nav .nav-link span {
+        flex: 1;
+    }
+
+    .sidebar-nav .nav-link:hover {
+        background: #f1f5f9;
+        color: #450C98;
+        transform: translateX(-3px);
+    }
+
+    .sidebar-nav .nav-link:hover i {
+        color: #450C98;
+    }
+
+    /* Active State */
+    .sidebar-nav .nav-link.active {
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(69, 12, 152, 0.25);
+    }
+
+    .sidebar-nav .nav-link.active i {
+        color: #ffffff !important;
+    }
+
+    /* ---------- Mobile (offcanvas) Overrides ---------- */
+    .offcanvas .sidebar-user {
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .offcanvas .sidebar-title {
+        color: rgba(255,255,255,0.7);
+    }
+
+    .offcanvas .sidebar-nav .nav-link {
+        color: #ffffff;
+        background: transparent;
+    }
+
+    .offcanvas .sidebar-nav .nav-link i {
+        color: rgba(255,255,255,0.85);
+    }
+
+    .offcanvas .sidebar-nav .nav-link:hover {
+        background: rgba(255,255,255,0.1);
+        color: #ffffff;
+        transform: translateX(-3px);
+    }
+
+    .offcanvas .sidebar-nav .nav-link:hover i {
+        color: #ffffff;
+    }
+
+    .offcanvas .sidebar-nav .nav-link.active {
+        background: rgba(255,255,255,0.2);
+        color: #ffffff !important;
+        box-shadow: none;
+    }
+
+    .offcanvas .sidebar-nav .nav-link.active i {
+        color: #ffffff !important;
+    }
+</style>

@@ -1,0 +1,559 @@
+{% extends 'base.html' %}
+
+{% block title %}لیست کارمندان{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+                <i class="fas fa-users me-2"></i>
+                لیست کارمندان
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98">کارمندان</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'create_employee' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <i class="fas fa-plus-circle me-2"></i>
+            ایجاد کارمند جدید
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_employees_count }}</h3>
+                    <small>کل کارمندان</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-user-check fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ active_employees_count }}</h3>
+                    <small>کارمندان فعال</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-user-slash fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ terminated_employees_count }}</h3>
+                    <small>کارمندان منفک</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_salary|floatformat:0 }}</h3>
+                    <small>مجموع معاشات فعال</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4 rounded-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-12 col-lg-8 col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search" style="color: #450C98;"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0"
+                               placeholder="جستجو در کارمندان..."
+                               value="{{ request.GET.search }}">
+                    </div>
+                </div>
+                <div class="col-12 col-lg-2 col-md-6">
+                    <select name="status" class="form-select">
+                        <option value="">همه وضعیت‌ها</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>فعال</option>
+                        <option value="terminated" {% if request.GET.status == 'terminated' %}selected{% endif %}>منفک</option>
+                    </select>
+                </div>
+                <div class="col-12 col-lg-2 col-md-6">
+                    <button type="submit" class="btn w-100 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <i class="fas fa-filter me-1"></i>
+                    </button>
+                </div>
+            </form>
+
+            {% if request.GET.search or request.GET.status %}
+            <div class="mt-2">
+                <a href="{{ request.path }}" class="btn btn-dark btn-sm" style="font-size: 0.85rem;">
+                    <i class="fas fa-times-circle me-1"></i> حذف جستجو
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <tr class="text-white">
+                            <th class="text-center" style="width: 50px;">#</th>
+                            <th>نام کارمند</th>
+                            <th class="d-none d-md-table-cell">نام پدر</th>
+                            <th class="d-none d-lg-table-cell">شماره تماس</th>
+                            <th class="d-none d-lg-table-cell">وظیفه</th>
+                            <th class="text-center">تاریخ شمولیت</th>
+                            <th class="text-center">معاش</th>
+                            <th class="text-center">وضعیت</th>
+                            <th class="text-center" style="width: 140px;">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in employees %}
+                        <tr class="border-bottom">
+                            <td class="text-center">
+                                <span class="badge rounded-pill text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">{{ forloop.counter }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if employee.image %}
+                                        <img src="{{ employee.image.url }}" alt="{{ employee.full_name }}"
+                                             class="rounded-circle me-2 employee-avatar"
+                                             style="width: 40px; height: 40px; object-fit: cover; cursor: pointer;"
+                                             data-bs-toggle="modal" data-bs-target="#imageModal"
+                                             data-img="{{ employee.image.url }}"
+                                             data-caption="{{ employee.full_name }}">
+                                    {% else %}
+                                        <div class="p-2 rounded-circle me-2" style="background: rgba(149, 80, 252, 0.1); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-user" style="color: #9550fc;"></i>
+                                        </div>
+                                    {% endif %}
+                                    <a href="#" class="fw-bold text-decoration-none text-dark"
+                                       data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                       data-id="{{ employee.id }}"
+                                       data-full-name="{{ employee.full_name }}"
+                                       data-father-name="{{ employee.father_name }}"
+                                       data-tazkera="{{ employee.tazkera_number|default:'-' }}"
+                                       data-phone="{{ employee.phone_number }}"
+                                       data-address="{{ employee.address|default:'-' }}"
+                                       data-position="{{ employee.position|default:'-' }}"
+                                       data-join-date="{{ employee.join_date|date:'Y/m/d' }}"
+                                       data-leave-date="{{ employee.leave_date|date:'Y/m/d'|default:'-' }}"
+                                       data-salary="{{ employee.base_salary|floatformat:0 }}"
+                                       data-note="{{ employee.note|default:'-' }}"
+                                       data-duration="{{ employee.work_duration_display }}"
+                                       data-status="{% if employee.is_active %}فعال{% else %}منفک{% endif %}"
+                                       data-image="{% if employee.image %}{{ employee.image.url }}{% endif %}"
+                                       data-tazkera-image="{% if employee.tazkera_image %}{{ employee.tazkera_image.url }}{% endif %}">
+                                        {{ employee.full_name }}
+                                    </a>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">{{ employee.father_name }}</td>
+                            <td class="d-none d-lg-table-cell">
+                                <a href="tel:{{ employee.phone_number }}" class="text-decoration-none">
+                                    <i class="fas fa-phone me-1" style="color: #450C98;"></i>
+                                    {{ employee.phone_number }}
+                                </a>
+                            </td>
+                            <td class="d-none d-lg-table-cell">
+                                {% if employee.position %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2">{{ employee.position }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center"><small class="text-muted">{{ employee.join_date|date:"Y/m/d" }}</small></td>
+                            <td class="text-center"><span class="fw-bold">{{ employee.base_salary|floatformat:0 }} افغانی</span></td>
+                            <td class="text-center">
+                                {% if employee.is_active %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1rem;">
+                                        <i class="fas fa-circle me-1"></i>فعال
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: #fceaec; color: #dc3545; font-size: 1rem;">
+                                        <i class="fas fa-circle me-1"></i>منفک
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-info border-0" title="جزئیات"
+                                            data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                            data-id="{{ employee.id }}"
+                                            data-full-name="{{ employee.full_name }}"
+                                            data-father-name="{{ employee.father_name }}"
+                                            data-tazkera="{{ employee.tazkera_number|default:'-' }}"
+                                            data-phone="{{ employee.phone_number }}"
+                                            data-address="{{ employee.address|default:'-' }}"
+                                            data-position="{{ employee.position|default:'-' }}"
+                                            data-join-date="{{ employee.join_date|date:'Y/m/d' }}"
+                                            data-leave-date="{{ employee.leave_date|date:'Y/m/d'|default:'-' }}"
+                                            data-salary="{{ employee.base_salary|floatformat:0 }}"
+                                            data-note="{{ employee.note|default:'-' }}"
+                                            data-duration="{{ employee.work_duration_display }}"
+                                            data-status="{% if employee.is_active %}فعال{% else %}منفک{% endif %}"
+                                            data-image="{% if employee.image %}{{ employee.image.url }}{% endif %}"
+                                            data-tazkera-image="{% if employee.tazkera_image %}{{ employee.tazkera_image.url }}{% endif %}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <a href="{% url 'update_employee' employee.id %}" class="btn btn-outline-warning border-0" title="ویرایش">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger border-0" title="حذف"
+                                            data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                            data-id="{{ employee.id }}"
+                                            data-name="{{ employee.full_name }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x mb-3" style="color: #9550fc;"></i>
+                                <h5 class="text-muted">هیچ کارمندی یافت نشد</h5>
+                                <p class="text-muted">اولین کارمند خود را ایجاد کنید</p>
+                                <a href="{% url 'create_employee' %}" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                    <i class="fas fa-plus me-1"></i> ایجاد کارمند
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if employees.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if employees.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ employees.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">&laquo;</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                {% endif %}
+
+                {% for num in employees.paginator.page_range %}
+                    {% if employees.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); border-color: #450C98;">{{ num }}</span>
+                        </li>
+                    {% elif num > employees.number|add:'-3' and num < employees.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if employees.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ employees.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">&raquo;</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    <div class="text-center mt-2">
+        <small class="text-muted">نمایش {{ employees.start_index }} تا {{ employees.end_index }} از {{ paginator.count }} کارمند</small>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- ============================================================== -->
+<!-- Image Lightbox Modal -->
+<!-- ============================================================== -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-body text-center p-0 position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
+                        data-bs-dismiss="modal"
+                        style="z-index: 10; background-color: rgba(0,0,0,0.5); border-radius: 50%; padding: 12px;"></button>
+                <img id="lightboxImage" src="" alt="" class="img-fluid rounded-3 shadow-lg" style="max-height: 85vh;">
+                <p id="lightboxCaption" class="text-white mt-3 mb-0 fw-bold fs-5"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- Employee Details Modal -->
+<!-- ============================================================== -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <h5 class="modal-title"><i class="fas fa-user-circle me-2"></i>جزئیات کارمند</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <img id="d-avatar" src="" class="rounded-circle border border-3" style="width:100px; height:100px; object-fit:cover; border-color:#9550fc !important; display:none; cursor:pointer;">
+
+                    <h5 id="d-name" class="mt-3 mb-1 fw-bold"></h5>
+                    <p id="d-position" class="text-muted mb-2"></p>
+                    <span id="d-status" class="badge"></span>
+                </div>
+
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong class="text-primary">نام پدر:</strong> <span id="d-father"></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong class="text-primary">شماره تذکره:</strong> <span id="d-tazkera"></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong class="text-primary">شماره تماس:</strong> <a id="d-phone" href=""></a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong class="text-primary">آدرس:</strong> <span id="d-address"></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong class="text-primary">وظیفه:</strong> <span id="d-position-2"></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong class="text-primary">تاریخ شمولیت:</strong> <span id="d-join"></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between" id="d-leave-row" style="display:none;">
+                        <strong class="text-primary">تاریخ منفکی:</strong> <span id="d-leave" class="text-danger"></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong class="text-primary">مدت کار:</strong> <span id="d-duration"></span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <strong class="text-primary">معاش پایه:</strong> <span id="d-salary" class="text-success fw-bold"></span>
+                    </li>
+
+                    <!-- عکس تذکره با دکمه دانلود -->
+                    <li class="list-group-item" id="d-tazkera-img-row" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong class="text-primary">
+                                <i class="fas fa-id-card me-1"></i>
+                                عکس تذکره:
+                            </strong>
+                            <button type="button"
+                                    id="d-tazkera-download"
+                                    class="btn btn-sm rounded-pill text-white"
+                                    style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);"
+                                    title="دانلود عکس تذکره">
+                                <i class="fas fa-download me-1"></i>
+                                دانلود
+                            </button>
+                        </div>
+                        <div class="text-center">
+                            <img id="d-tazkera-img" src=""
+                                 class="rounded border shadow-sm"
+                                 style="max-width:220px; max-height:160px; object-fit:cover; cursor:pointer;"
+                                 data-bs-toggle="modal" data-bs-target="#imageModal">
+                        </div>
+                    </li>
+
+                    <li class="list-group-item" id="d-note-row" style="display:none;">
+                        <strong class="text-primary d-block mb-2">یادداشت:</strong>
+                        <span id="d-note"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-trash-alt me-2"></i>حذف کارمند</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-4x text-warning mb-3"></i>
+                <h5 class="mb-3">آیا مطمئن هستید؟</h5>
+                <p class="text-muted mb-2">کارمند "<strong id="deleteEmployeeName"></strong>" حذف خواهد شد.</p>
+                <p class="text-danger small">این عمل قابل برگشت نیست!</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">انصراف</button>
+                <form id="deleteForm" method="POST" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">بله، حذف کن</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================== -->
+<!-- Styles -->
+<!-- ============================================================== -->
+<style>
+    .employee-avatar:hover {
+        box-shadow: 0 0 15px rgba(149, 80, 252, 0.6);
+        border: 2px solid #9550fc;
+    }
+</style>
+
+<!-- ============================================================== -->
+<!-- Scripts -->
+<!-- ============================================================== -->
+<script>
+// وقتی مودال جزئیات باز می‌شود، مقادیر را از data-* پر می‌کنیم
+document.getElementById('detailsModal').addEventListener('show.bs.modal', function (event) {
+    const b = event.relatedTarget;
+    const d = (id) => document.getElementById(id);
+    const set = (id, val) => { d(id).textContent = val; };
+
+    set('d-name', b.dataset.fullName);
+    set('d-father', b.dataset.fatherName);
+    set('d-tazkera', b.dataset.tazkera);
+    set('d-address', b.dataset.address);
+    set('d-position', b.dataset.position);
+    set('d-position-2', b.dataset.position);
+    set('d-join', b.dataset.joinDate);
+    set('d-duration', b.dataset.duration);
+    set('d-salary', b.dataset.salary + ' افغانی');
+
+    // تلفن
+    const phoneEl = d('d-phone');
+    phoneEl.textContent = b.dataset.phone;
+    phoneEl.href = 'tel:' + b.dataset.phone;
+
+    // وضعیت
+    const st = d('d-status');
+    if (b.dataset.status === 'فعال') {
+        st.textContent = 'فعال';
+        st.className = 'badge bg-success';
+    } else {
+        st.textContent = 'منفک';
+        st.className = 'badge bg-danger';
+    }
+
+    // آواتار
+    const img = d('d-avatar');
+    if (b.dataset.image) {
+        img.src = b.dataset.image;
+        img.style.display = 'inline-block';
+        img.setAttribute('data-img', b.dataset.image);
+        img.setAttribute('data-caption', b.dataset.fullName);
+    } else {
+        img.style.display = 'none';
+    }
+
+    // تاریخ منفکی
+    const leaveRow = d('d-leave-row');
+    if (b.dataset.leaveDate && b.dataset.leaveDate !== '-') {
+        set('d-leave', b.dataset.leaveDate);
+        leaveRow.style.display = 'flex';
+    } else {
+        leaveRow.style.display = 'none';
+    }
+
+    // عکس تذکره + دکمه دانلود
+    const tzRow = d('d-tazkera-img-row');
+    if (b.dataset.tazkeraImage) {
+        const tzImg = d('d-tazkera-img');
+        tzImg.src = b.dataset.tazkeraImage;
+        tzImg.setAttribute('data-img', b.dataset.tazkeraImage);
+        tzImg.setAttribute('data-caption', 'تذکره ' + b.dataset.fullName);
+        tzRow.style.display = 'block';
+
+        // دکمه دانلود
+        const dlBtn = d('d-tazkera-download');
+        if (dlBtn) {
+            const safeName = (b.dataset.fullName || 'employee').replace(/\s+/g, '_');
+            const ext = b.dataset.tazkeraImage.split('.').pop().split('?')[0] || 'jpg';
+            const downloadName = 'tazkera_' + safeName + '.' + ext;
+
+            dlBtn.onclick = function () {
+                downloadFile(b.dataset.tazkeraImage, downloadName);
+            };
+        }
+    } else {
+        tzRow.style.display = 'none';
+    }
+
+    // یادداشت
+    const noteRow = d('d-note-row');
+    if (b.dataset.note && b.dataset.note !== '-') {
+        set('d-note', b.dataset.note);
+        noteRow.style.display = 'block';
+    } else {
+        noteRow.style.display = 'none';
+    }
+});
+
+// وقتی روی عکس کلیک شد، مودال عکس را پر کن
+document.getElementById('imageModal').addEventListener('show.bs.modal', function (event) {
+    const t = event.relatedTarget;
+    document.getElementById('lightboxImage').src = t.dataset.img;
+    document.getElementById('lightboxCaption').textContent = t.dataset.caption || '';
+});
+
+// وقتی روی حذف کلیک شد، فرم را آماده کن
+document.getElementById('deleteModal').addEventListener('show.bs.modal', function (event) {
+    const b = event.relatedTarget;
+    document.getElementById('deleteEmployeeName').textContent = b.dataset.name;
+    document.getElementById('deleteForm').action = '/employee/delete_employee/' + b.dataset.id + '/';
+});
+
+/* ============================================================== */
+/* دانلود فایل — با پشتیبانی از همان دامنه */
+/* ============================================================== */
+function downloadFile(url, filename) {
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error('فایل پیدا نشد');
+            return response.blob();
+        })
+        .then(blob => {
+            const link = document.createElement('a');
+            const blobUrl = URL.createObjectURL(blob);
+            link.href = blobUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
+        })
+        .catch(err => {
+            console.error('Download error:', err);
+            // Fallback: باز کردن در تب جدید
+            window.open(url, '_blank');
+        });
+}
+</script>
+
+{% endblock %}

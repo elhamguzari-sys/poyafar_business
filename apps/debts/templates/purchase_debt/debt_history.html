@@ -1,0 +1,673 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}سابقه پرداخت بدهی{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #450C98;">
+                <i class="fas fa-history me-2"></i>
+                سابقه پرداخت بدهی
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_debt_list' %}" class="text-decoration-none text-muted">بدهی‌ها</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98">سابقه پرداخت</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2 mt-3 mt-md-0">
+            <button onclick="showBillModal()" class="btn btn-lg rounded-pill shadow text-white" style="background: linear-gradient(135deg, #28a745 0%, #38ef7d 100%);">
+                <i class="fas fa-file-invoice me-2"></i> بل 
+            </button>
+            <a href="{% url 'purchase_debt_list' %}" class="btn btn-lg rounded-pill shadow text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <i class="fas fa-arrow-right me-2"></i> بازگشت  
+            </a>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Purchase Info Card -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-4">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <small class="text-muted d-block">شماره خرید</small>
+                    <strong class="notranslate">{{ purchase.purchase_number }}</strong>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <small class="text-muted d-block">تأمین‌کننده</small>
+                    <strong>{{ purchase.supplier_name }}</strong>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <small class="text-muted d-block">مجموع خرید</small>
+                    <strong>{{ purchase.total_amount|floatformat:2 }} افغانی</strong>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <small class="text-muted d-block">پرداخت شده</small>
+                    <strong class="text-success">{{ purchase.paid_amount|floatformat:2 }} افغانی</strong>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <small class="text-muted d-block">باقی‌مانده</small>
+                    <strong class="text-danger">{{ purchase.remaining_amount|floatformat:2 }} افغانی</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_paid|floatformat:2 }}</h3>
+                    <small>مجموع پرداخت‌ها (افغانی)</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-list fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ payments_count }}</h3>
+                    <small>تعداد پرداخت‌ها</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h5 class="fw-bold mb-0">
+                        {% if last_payment %}
+                            {{ last_payment.payment_date|date:"Y/m/d" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h5>
+                    <small>آخرین پرداخت</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="card border-0 shadow-sm mb-4 rounded-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-12 col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search" style="color: #450C98;"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0"
+                               placeholder="جستجو در یادداشت‌ها..."
+                               value="{{ search_query }}">
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <button type="submit" class="btn w-100 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <i class="fas fa-filter me-1"></i> اعمال
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <tr class="text-white">
+                            <th class="text-center" style="width: 50px;">#</th>
+                            <th>مبلغ پرداخت</th>
+                            <th>تاریخ پرداخت</th>
+                            <th>یادداشت</th>
+                            <th class="text-center" style="width: 100px;">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for debt in debts %}
+                        <tr class="border-bottom" id="debt-payment-row-{{ debt.id }}">
+                            <td class="text-center">
+                                <span class="badge rounded-pill text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">{{ forloop.counter }}</span>
+                            </td>
+                            <td>
+                                <span class="text-success fw-bold fs-6">{{ debt.amount|floatformat:2 }} افغانی</span>
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ debt.payment_date|date:"Y/m/d H:i" }}</span>
+                            </td>
+                            <td>
+                                {% if debt.note %}
+                                    <span>{{ debt.note }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-warning border-0" title="ویرایش"
+                                       onclick="showEditModal('{{ debt.id }}', '{{ debt.amount }}', '{{ debt.payment_date }}', '{{ debt.note}}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger border-0" title="حذف"
+                                       onclick="event.preventDefault(); showDeleteModal('{{ debt.id }}', '{{ debt.amount }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Hidden Delete Form -->
+                        <form id="deleteForm-{{ debt.id }}"
+                              method="POST"
+                              action="{% url 'delete_purchase_debt' debt.id %}"
+                              style="display:none;">
+                            {% csrf_token %}
+                        </form>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x mb-3" style="color: #9550fc;"></i>
+                                <h5 class="text-muted">هیچ پرداختی ثبت نشده است</h5>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if debts.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if debts.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ debts.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                    </li>
+                {% endif %}
+
+                {% for num in debts.paginator.page_range %}
+                    {% if debts.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); border-color: #450C98;">{{ num }}</span>
+                        </li>
+                    {% elif num > debts.number|add:'-3' and num < debts.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if debts.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ debts.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <div class="text-center mt-2">
+        <small class="text-muted">
+            نمایش {{ debts.start_index }} تا {{ debts.end_index }} از {{ paginator.count }} پرداخت
+        </small>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-trash-alt me-2"></i>حذف پرداخت
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+                </div>
+                <h5 class="mb-3">آیا مطمئن هستید؟</h5>
+                <p class="text-muted mb-2">پرداخت "<strong id="deletePaymentAmount"></strong>" حذف خواهد شد.</p>
+                <p class="text-danger small">مبلغ به بدهی برمی‌گردد!</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> انصراف
+                </button>
+                <button type="button" class="btn btn-danger rounded-pill px-4" id="confirmDeleteBtn">
+                    <i class="fas fa-check me-1"></i> بله، حذف کن
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #450C98; color: white;">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>ویرایش پرداخت
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">مبلغ پرداخت *</label>
+                        <input type="number" name="amount" id="editAmount" class="form-control"
+                               min="1" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">تاریخ پرداخت</label>
+                        <input type="date" name="payment_date" id="editPaymentDate" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">یادداشت</label>
+                        <textarea name="note" id="editNote" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                    <button type="submit" class="btn text-white" style="background: #450C98;">ویرایش</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== BILL MODAL (payment breakdown) ==================== -->
+<div class="modal fade" id="billModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #450C98; color: white; padding: 10px 15px;">
+                <h5 class="modal-title" style="font-size: 1rem;">
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <i class="fas fa-file-invoice me-2 notranslate"></i> بل بدهی #{{ purchase.purchase_number }}
+                </h5>
+            </div>
+
+            <!-- PDF Download Button -->
+            <div style="display: flex; justify-content: center; margin: 10px 0;">
+                <button onclick="downloadBillPDF()" style="
+                    background: linear-gradient(135deg, #450C98, #9550fc);
+                    color: white;
+                    border: none;
+                    padding: 8px 20px;
+                    border-radius: 30px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 5px;
+                    box-shadow: 0 5px 15px rgba(69, 12, 152, 0.3);
+                    transition: all 0.3s ease;
+                ">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    📥 دانلود PDF
+                </button>
+            </div>
+
+            <!-- ========== BILL CONTENT ========== -->
+            <div class="modal-body" id="debt-bill-content" style="padding: 8px;">
+                <div style="font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; direction: rtl; background: #fff; padding: 20px;">
+
+                    <!-- Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #450C98; padding-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 45px; height: 45px; background: #450C98; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-file-invoice-dollar" style="color: white; font-size: 1.2rem;"></i>
+                            </div>
+                            <div>
+                                <h5 style="margin: 0; color: #450C98; font-size: 1rem; font-weight: 800;">شرکت پویافر تجارت</h5>
+                                <small style="color: #888; font-size: 0.7rem;">بل بدهی و سابقه پرداخت</small>
+                            </div>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="font-size: 0.75rem; color: #888;">شماره خرید</div>
+                            <div style="font-size: 0.9rem; font-weight: 700; color: #333;" class="notranslate">{{ purchase.purchase_number }}</div>
+                            <small style="color: #888; font-size: 0.7rem;">{{ purchase.purchase_date|date:"Y/m/d" }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Supplier Info -->
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding: 12px; background: #f8fafd; border-radius: 6px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <small style="color: #999; font-size: 0.7rem; display: block;">تأمین‌کننده</small>
+                            <strong style="font-size: 0.9rem; color: #333;">{{ purchase.supplier_name }}</strong>
+                        </div>
+                        <div>
+                            <small style="color: #999; font-size: 0.7rem; display: block;">تاریخ خرید</small>
+                            <strong style="font-size: 0.9rem; color: #333;">{{ purchase.purchase_date|date:"Y/m/d" }}</strong>
+                        </div>
+                        <div>
+                            <small style="color: #999; font-size: 0.7rem; display: block;">تعداد اقلام</small>
+                            <strong style="font-size: 0.9rem; color: #333;">{{ purchase.items|length }} قلم</strong>
+                        </div>
+                    </div>
+
+                    <!-- ===== SUMMARY (card style, no table) ===== -->
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+
+                        <!-- Total -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f8fafd; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 32px; height: 32px; background: #e2e8f0; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-shopping-cart" style="color: #555; font-size: 0.85rem;"></i>
+                                </div>
+                                <span style="font-size: 0.9rem; color: #333; font-weight: 600;">مجموع خرید</span>
+                            </div>
+                            <span style="font-size: 1rem; font-weight: 700; color: #333;">
+                                {{ purchase.total_amount|floatformat:2 }} <small style="color: #aaa; font-size: 0.75rem;">افغانی</small>
+                            </span>
+                        </div>
+
+                        <!-- Paid -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #e7f9ee; border: 1px solid #28a745; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 32px; height: 32px; background: #28a745; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-check-circle" style="color: white; font-size: 0.85rem;"></i>
+                                </div>
+                                <span style="font-size: 0.95rem; color: #28a745; font-weight: 700;">مبلغ پرداخت شده</span>
+                            </div>
+                            <span style="font-size: 1.05rem; font-weight: 800; color: #28a745;">
+                                {{ purchase.paid_amount|floatformat:2 }} <small style="color: #6aa77f; font-size: 0.75rem;">افغانی</small>
+                            </span>
+                        </div>
+
+                        <!-- Remaining -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #fef2f2; border: 1.5px solid #dc3545; border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 32px; height: 32px; background: #dc3545; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-exclamation-circle" style="color: white; font-size: 0.85rem;"></i>
+                                </div>
+                                <span style="font-size: 0.95rem; color: #dc3545; font-weight: 700;">مبلغ باقی‌مانده بدهی</span>
+                            </div>
+                            <span style="font-size: 1.15rem; font-weight: 800; color: #dc3545;">
+                                {{ purchase.remaining_amount|floatformat:2 }} <small style="color: #d98080; font-size: 0.75rem;">افغانی</small>
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <!-- ===== PAYMENT BREAKDOWN (each payment) ===== -->
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                            <div style="width: 4px; height: 20px; background: #450C98; border-radius: 2px;"></div>
+                            <h6 style="margin: 0; color: #450C98; font-size: 0.95rem; font-weight: 800;">سابقه پرداخت‌ها</h6>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            {% for debt in debts %}
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #fff; border: 1px solid #e2e8f0; border-right: 3px solid #28a745; border-radius: 8px;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="width: 26px; height: 26px; background: linear-gradient(135deg, #28a745, #38ef7d); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.7rem;">
+                                        {{ forloop.counter }}
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 0.72rem; color: #888;">پرداخت {{ forloop.counter }}</div>
+                                        <div style="font-size: 0.82rem; color: #333; font-weight: 600;">
+                                            {{ debt.payment_date|date:"Y/m/d" }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="text-align: left;">
+                                    <div style="font-size: 0.72rem; color: #888;">مبلغ پرداخت</div>
+                                    <div style="font-size: 0.95rem; font-weight: 700; color: #28a745;">
+                                        {{ debt.amount|floatformat:2 }} <small style="color: #aaa; font-size: 0.7rem;">افغانی</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if debt.note %}
+                            <div style="padding: 4px 14px 4px 44px; font-size: 0.75rem; color: #666;">
+                                <i class="fas fa-comment-alt" style="color: #bbb; font-size: 0.7rem; margin-left: 4px;"></i>
+                                {{ debt.note }}
+                            </div>
+                            {% endif %}
+                            {% empty %}
+                            <div style="text-align: center; padding: 20px; color: #999; font-size: 0.85rem; background: #fafafa; border-radius: 8px; border: 1px dashed #ddd;">
+                                <i class="fas fa-inbox fa-2x mb-2" style="color: #ccc;"></i>
+                                <div>هیچ پرداختی ثبت نشده است</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- ===== TOTALS OF PAYMENTS ===== -->
+                    {% if debts %}
+                    <div style="padding: 14px 16px; background: linear-gradient(135deg, #f4efff, #faf5ff); border: 1.5px solid #450C98; border-radius: 8px; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px dashed #d0b8f5;">
+                            <span style="font-size: 0.85rem; color: #555;">تعداد پرداخت‌ها</span>
+                            <span style="font-size: 0.9rem; font-weight: 700; color: #450C98;">{{ payments_count }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px;">
+                            <span style="font-size: 0.95rem; color: #450C98; font-weight: 700;">مجموع پرداخت‌ها</span>
+                            <span style="font-size: 1.05rem; font-weight: 800; color: #450C98;">
+                                {{ total_paid|floatformat:2 }} <small style="color: #8a5cd1; font-size: 0.75rem;">افغانی</small>
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Status -->
+                    {% if purchase.remaining_amount <= 0 %}
+                    <div style="padding: 12px; background: #e7f9ee; border: 1px solid #28a745; border-radius: 6px; text-align: center; margin-bottom: 15px;">
+                        <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.2rem;"></i>
+                        <strong style="color: #28a745; font-size: 0.95rem; margin-right: 8px;">بدهی این خرید به‌طور کامل پرداخت شد.</strong>
+                    </div>
+                    {% else %}
+                    <div style="padding: 12px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; text-align: center; margin-bottom: 15px;">
+                        <i class="fas fa-clock" style="color: #b8860b; font-size: 1.2rem;"></i>
+                        <strong style="color: #b8860b; font-size: 0.95rem; margin-right: 8px;">باقی‌مانده بدهی: {{ purchase.remaining_amount|floatformat:2 }} افغانی</strong>
+                    </div>
+                    {% endif %}
+
+                    <!-- Signatures -->
+                    <div style="display: flex; justify-content: space-between; margin-top: 30px; padding: 0 30px;">
+                        <div style="text-align: center;">
+                            <div style="border-top: 1px solid #ccc; width: 140px; margin-bottom: 3px;"></div>
+                            <small style="color: #888; font-size: 0.7rem;">امضای تأمین‌کننده</small>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="border-top: 1px solid #ccc; width: 140px; margin-bottom: 3px;"></div>
+                            <small style="color: #888; font-size: 0.7rem;">امضای خریدار</small>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="background: #f8fafc; border-radius: 8px; padding: 8px; border: 1px solid #e2e8f0; margin-top: 25px;">
+                        <div style="display: flex; flex-direction: column; gap: 3px;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-envelope" style="color: #4361ee; font-size: 0.6rem;"></i>
+                                <span style="font-size: 0.6rem;">poyafar@yahoo.com</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-phone" style="color: #10b981; font-size: 0.6rem;"></i>
+                                <span style="font-size: 0.6rem;">+93794483138</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-map-marker-alt" style="color: #f97316; font-size: 0.6rem;"></i>
+                                <span style="font-size: 0.6rem;">کابل، افغانستان</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding: 8px;">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="font-size: 0.8rem; padding: 5px 15px;">بستن</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ==================== END BILL MODAL ==================== -->
+
+<!-- html2pdf -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+    let deleteDebtId = null;
+
+    function showDeleteModal(debtId, amount) {
+        deleteDebtId = debtId;
+        document.getElementById('deletePaymentAmount').textContent = amount + ' افغانی';
+
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (deleteDebtId) {
+            const form = document.getElementById('deleteForm-' + deleteDebtId);
+            if (form) {
+                form.submit();
+            }
+        }
+    });
+
+    function showEditModal(debtId, amount, paymentDate, note) {
+        document.getElementById('editAmount').value = amount;
+        document.getElementById('editPaymentDate').value = paymentDate || '';
+        document.getElementById('editNote').value = note || '';
+        document.getElementById('editForm').action = '/debts/update_purchase_debt/' + debtId + '/';
+
+        const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        editModal.show();
+    }
+
+    function showBillModal() {
+        const modal = new bootstrap.Modal(document.getElementById('billModal'));
+        modal.show();
+    }
+
+    function downloadBillPDF() {
+        const element = document.getElementById('debt-bill-content');
+
+        if (!element) {
+            alert('خطا: عنصر بل یافت نشد');
+            return;
+        }
+
+        const btn = event?.target;
+        let originalText = '';
+        if (btn) {
+            originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ در حال ایجاد PDF...';
+            btn.disabled = true;
+        }
+
+        const clone = element.cloneNode(true);
+
+        // گرادیانت‌ها را به رنگ ثابت تبدیل می‌کنیم
+        clone.querySelectorAll('*').forEach(el => {
+            const bg = window.getComputedStyle(el).backgroundImage;
+            if (bg && bg.includes('gradient')) {
+                el.style.background = '#450C98';
+                el.style.color = '#ffffff';
+            }
+        });
+
+        clone.style.width = '780px';
+        clone.style.maxWidth = '780px';
+        clone.style.background = '#ffffff';
+        clone.style.padding = '25px';
+        clone.style.margin = '0 auto';
+        clone.style.fontFamily = "'Vazirmatn', Tahoma, Arial, sans-serif";
+        clone.style.direction = 'rtl';
+        clone.style.boxSizing = 'border-box';
+
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'fixed';
+        wrapper.style.left = '-9999px';
+        wrapper.style.top = '0';
+        wrapper.style.width = '800px';
+        wrapper.style.background = '#ffffff';
+        wrapper.appendChild(clone);
+        document.body.appendChild(wrapper);
+
+        const opt = {
+            margin: [0, -30, 0, -30],
+            filename: 'debt_bill_{{ purchase.purchase_number }}.pdf',
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: {
+                scale: 2,
+                letterRendering: true,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                scrollY: 0,
+                scrollX: 0
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'a4',
+                orientation: 'portrait'
+            },
+            pagebreak: { mode: ['css', 'legacy'] }
+        };
+
+        html2pdf().set(opt).from(clone).save().then(() => {
+            document.body.removeChild(wrapper);
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }).catch((err) => {
+            console.error('PDF error:', err);
+            document.body.removeChild(wrapper);
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+            alert('خطا در ایجاد PDF');
+        });
+    }
+</script>
+
+{% endblock %}

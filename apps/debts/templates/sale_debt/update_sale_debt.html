@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}ویرایش دریافت بدهی{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #0d6efd; font-size: 2rem;">
+                <i class="fas fa-edit me-2"></i>
+                ویرایش دریافت بدهی
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 fs-6">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sale_debt_list' %}" class="text-decoration-none text-muted">بدهی‌ها</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'sale_debt_history' debt.sale.id %}" class="text-decoration-none text-muted">سابقه دریافت</a></li>
+                    <li class="breadcrumb-item active" style="color: #0d6efd;">ویرایش</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'sale_debt_history' debt.sale.id %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6" style="background: #0d6efd;">
+            <i class="fas fa-arrow-right me-2"></i>
+            بازگشت
+        </a>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-header text-white py-3" style="background: #0d6efd;">
+            <h5 class="mb-0 fw-bold fs-4">
+                <i class="fas fa-edit me-2"></i>
+                فرم ویرایش دریافت
+            </h5>
+        </div>
+        <div class="card-body p-4 p-md-5">
+            
+            <!-- Sale Info -->
+            <div class="alert alert-info shadow-sm rounded-3 fs-6 mb-4">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <strong>شماره فروش:</strong><br>
+                        {{ debt.sale.sale_number }}
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <strong>مشتری:</strong><br>
+                        {{ debt.sale.customer_name }}
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <strong>مبلغ فعلی:</strong><br>
+                        <span class="fw-bold text-primary">{{ debt.amount|floatformat:2 }} افغانی</span>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" novalidate>
+                {% csrf_token %}
+
+                <div class="row">
+                    <!-- Amount Field -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="amount" class="form-label fw-bold fs-5">
+                            <i class="fas fa-money-bill me-1" style="color: #0d6efd;"></i>
+                            مبلغ دریافت جدید <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" name="amount" id="amount" 
+                               class="form-control form-control-lg text-end" 
+                               min="1"
+                               step="0.01" 
+                               value="{{ debt.amount }}"
+                               required>
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>
+                            مبلغ جدید نباید بیشتر از بدهی باقی‌مانده باشد
+                        </small>
+                    </div>
+
+                    <!-- Payment Date Field -->
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="payment_date" class="form-label fw-bold fs-5">
+                            <i class="fas fa-calendar me-1" style="color: #0d6efd;"></i>
+                            تاریخ دریافت <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" name="payment_date" id="payment_date" 
+                               class="form-control form-control-lg text-end" 
+                               value="{{ debt.payment_date|date:'Y-m-d' }}" required>
+                    </div>
+                </div>
+
+                <!-- Note Field -->
+                <div class="mb-4">
+                    <label for="note" class="form-label fw-bold fs-5">
+                        <i class="fas fa-align-left me-1" style="color: #0d6efd;"></i>
+                        یادداشت
+                    </label>
+                    <textarea name="note" id="note" 
+                              class="form-control text-end" 
+                              rows="3" 
+                              placeholder="یادداشت (اختیاری)">{{ debt.note|default:'' }}</textarea>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-5 pt-4 border-top">
+                    <div class="d-flex gap-2 mb-3 mb-sm-0">
+                        <button type="submit" class="btn btn-lg rounded-pill text-white px-4 fs-5" style="background: #0d6efd;">
+                            <i class="fas fa-check-circle me-2"></i> ذخیره تغییرات
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary rounded-pill px-4 fs-5">
+                            <i class="fas fa-undo me-2"></i> بازنشانی
+                        </button>
+                    </div>
+                    <a href="{% url 'sale_debt_history' debt.sale.id %}" class="btn btn-outline-secondary rounded-pill px-4 fs-5">
+                        <i class="fas fa-times me-2"></i> انصراف
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

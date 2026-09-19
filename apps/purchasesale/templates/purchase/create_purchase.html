@@ -1,0 +1,629 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if is_edit %}ویرایش خرید{% else %}ثبت خرید جدید{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc; font-size: 2rem;">
+                <i class="fas fa-shopping-cart me-2"></i>
+                {% if is_edit %}ویرایش خرید{% else %}ثبت خرید جدید{% endif %}
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 fs-6">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_list' %}" class="text-decoration-none text-muted">خریدها</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98;">
+                        {% if is_edit %}ویرایش خرید{% else %}ثبت خرید{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'purchase_list' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
+            <i class="fas fa-arrow-right me-2"></i>
+            بازگشت به لیست
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            {{ message|linebreaksbr }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Form Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <h5 class="mb-0 fw-bold fs-4">
+                <i class="fas fa-shopping-cart me-2"></i>
+                {% if is_edit %}فرم ویرایش خرید{% else %}فرم ثبت خرید{% endif %}
+            </h5>
+        </div>
+        <div class="card-body p-4 p-md-5">
+            
+            <form method="POST" id="purchaseForm" novalidate>
+                {% csrf_token %}
+
+                {{ form.items_json }}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger shadow-sm rounded-3 fs-6">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <!-- ردیف اول -->
+                <div class="row">
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.purchase_number.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-hashtag me-1" style="color: #450C98;"></i>
+                            شماره خرید
+                        </label>
+                        {{ form.purchase_number }}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>شماره خرید به صورت خودکار تولید می‌شود
+                        </small>
+                    </div>
+
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.purchase_date.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-calendar me-1" style="color: #450C98;"></i>
+                            تاریخ خرید <span class="text-danger">*</span>
+                        </label>
+                        {{ form.purchase_date }}
+                        {% if form.purchase_date.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.purchase_date.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- ردیف دوم -->
+                <div class="row">
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.supplier_name.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-user-tie me-1" style="color: #450C98;"></i>
+                            نام تأمین‌کننده <span class="text-danger">*</span>
+                        </label>
+                        {{ form.supplier_name }}
+                        {% if form.supplier_name.errors %}
+                        <div class="text-danger mt-2 fs-6">
+                            {% for error in form.supplier_name.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="far fa-lightbulb me-1"></i>مثال: شرکت تجارتی احمد
+                        </small>
+                    </div>
+
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.supplier_number.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-phone me-1" style="color: #450C98;"></i>
+                            شماره خریدار
+                        </label>
+                        {{ form.supplier_number }}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info me-1"></i>شماره تماس خریدار (اختیاری)
+                        </small>
+                    </div>
+                </div>
+
+                <!-- نرخ دالر + پرداخت -->
+                <div class="row">
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.dollar_rate.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-dollar-sign me-1" style="color: #450C98;"></i>
+                            نرخ امروز دالر <span class="text-danger" id="dollarRateRequired" style="display:none;">*</span>
+                        </label>
+                        {{ form.dollar_rate }}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info-circle me-1"></i>هر ۱ دالر = چند افغانی
+                        </small>
+                    </div>
+
+                    <div class="col-12 col-md-6 mb-4">
+                        <label for="{{ form.paid_amount.id_for_label }}" class="form-label fw-bold fs-5">
+                            <i class="fas fa-money-bill-wave me-1" style="color: #450C98;"></i>
+                            مبلغ پرداخت‌شده (افغانی)
+                        </label>
+                        {{ form.paid_amount }}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="fas fa-info me-1"></i>چقدر پرداخت کرده‌اید (اختیاری)
+                        </small>
+                    </div>
+                </div>
+
+                <!-- اقلام خرید -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3" style="border-bottom: 2px solid #9550fc;">
+                        <h5 class="mb-0 fw-bold fs-4" style="color: #450C98;">
+                            <i class="fas fa-boxes me-2"></i>
+                            اقلام خرید
+                        </h5>
+                        <button type="button" class="btn btn-md rounded-pill text-white px-4" id="addItemBtn" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
+                            <i class="fas fa-plus me-1"></i>
+                            افزودن
+                        </button>
+                    </div>
+                    <div class="card-body p-3">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle" id="itemsTable">
+                                <thead class="table-light">
+                                    <tr class="text-center">
+                                        <th style="width: 4%">#</th>
+                                        <th class="text-end" style="width: 24%">محصول</th>
+                                        <th class="text-end" style="width: 10%">تعداد</th>
+                                        <th class="text-end" style="width: 13%">قیمت</th>
+                                        <th class="text-end" style="width: 10%">ارز</th>
+                                        <th class="text-end" style="width: 15%">مجموع (افغانی)</th>
+                                        <th class="text-end" style="width: 19%">موقعیت</th>
+                                        <th style="width: 5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsBody">
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-info">
+                                        <td colspan="5" class="text-end fw-bold fs-5">مجموع کل:</td>
+                                        <td class="text-end fw-bold fs-5" id="grandTotal">0.00 افغانی</td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                    <tr class="table-warning" id="dollarRow" style="display:none;">
+                                        <td colspan="5" class="text-end fw-bold">
+                                            <i class="fas fa-dollar-sign me-1"></i>معادل دالری:
+                                        </td>
+                                        <td class="text-end fw-bold" id="totalDollar">0.00 دالر</td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                    <tr class="table-warning">
+                                        <td colspan="5" class="text-end fw-bold">پرداخت شده:</td>
+                                        <td class="text-end fw-bold" id="totalPaid">0.00 افغانی</td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                    <tr class="table-danger">
+                                        <td colspan="5" class="text-end fw-bold">باقی‌مانده:</td>
+                                        <td class="text-end fw-bold" id="remainingAmount">0.00 افغانی</td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div class="alert alert-warning mt-3 rounded-3" id="noItemsMessage" style="display: none;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            لطفاً حداقل یک قلم به خرید اضافه کنید
+                        </div>
+                        {% if form.items_json.errors %}
+                        <div class="alert alert-danger mt-3 rounded-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {{ form.items_json.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- یادداشت -->
+                <div class="mb-4">
+                    <label for="{{ form.note.id_for_label }}" class="form-label fw-bold fs-5">
+                        <i class="fas fa-align-left me-1" style="color: #450C98;"></i>
+                        یادداشت
+                    </label>
+                    {{ form.note }}
+                    <small class="text-muted d-block mt-2 fs-6">
+                        <i class="far fa-file-alt me-1"></i>اختیاری – توضیح مختصر درباره خرید
+                    </small>
+                </div>
+
+                <!-- دکمه‌ها -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-5 pt-4 border-top">
+                    <div class="d-flex gap-2 mb-3 mb-sm-0">
+                        <button type="submit" class="btn btn-lg rounded-pill text-white px-4 fs-5" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                            <i class="fas fa-save me-2"></i>
+                            {% if is_edit %}به‌روزرسانی خرید{% else %}ثبت{% endif %}
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary rounded-pill px-4 fs-5">
+                            <i class="fas fa-undo me-2"></i>
+                        </button>
+                    </div>
+                    <a href="{% url 'purchase_list' %}" class="btn btn-outline-danger rounded-pill px-4 fs-5">
+                        <i class="fas fa-times me-2"></i> انصراف
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+const stockData = {{ stock_data|safe }};
+
+function updateItemNumbers() {
+    $('.item-number').each(function(index) {
+        $(this).text(index + 1);
+    });
+}
+
+function getDollarRate() {
+    return parseFloat($('#id_dollar_rate').val()) || 0;
+}
+
+// ==================== چک موجودی (فقط نمایشی برای خرید) ====================
+function checkStockAvailability(row) {
+    const productId = row.find('.product-select').val();
+    const locationId = row.find('.location-select').val();
+
+    // حذف هشدار قبلی
+    row.find('.stock-warning').remove();
+
+    if (!productId || !locationId) {
+        return true;
+    }
+
+    const key = productId + '_' + locationId;
+    const available = stockData[key] || 0;
+
+    // برای خرید، موجودی فعلی رو نشون بده (فقط اطلاعاتی)
+    row.find('.location-select').closest('td').append(`
+        <div class="stock-warning" style="color: #0ea5e9; font-size: 0.7rem; margin-top: 3px;">
+            <i class="fas fa-info-circle me-1"></i>
+            موجودی: ${available}
+        </div>
+    `);
+    return true;
+}
+
+function calculateRowTotal(row) {
+    const quantity = parseFloat(row.find('.quantity-input').val()) || 0;
+    const price = parseFloat(row.find('.price-input').val()) || 0;
+    const currency = row.find('.currency-select').val() || 'AFN';
+    const dollarRate = getDollarRate();
+
+    let total = 0;
+
+    if (currency === 'USD') {
+        if (dollarRate <= 0) {
+            row.find('.item-total').html('<span class="text-danger" style="font-size:0.8rem;">نرخ دالر!</span>');
+            return;
+        }
+        total = quantity * price * dollarRate;
+    } else {
+        total = quantity * price;
+    }
+
+    row.find('.item-total').text(total.toFixed(2));
+    updateGrandTotal();
+}
+
+function updateGrandTotal() {
+    let totalAfn = 0;
+    let totalUsd = 0;
+    const dollarRate = getDollarRate();
+
+    $('.item-row').each(function() {
+        const quantity = parseFloat($(this).find('.quantity-input').val()) || 0;
+        const price = parseFloat($(this).find('.price-input').val()) || 0;
+        const currency = $(this).find('.currency-select').val() || 'AFN';
+
+        if (currency === 'USD') {
+            totalUsd += quantity * price;
+            if (dollarRate > 0) {
+                totalAfn += quantity * price * dollarRate;
+            }
+        } else {
+            totalAfn += quantity * price;
+        }
+    });
+
+    const paidAmount = parseFloat($('#id_paid_amount').val()) || 0;
+    const remaining = totalAfn - paidAmount;
+
+    $('#grandTotal').text(totalAfn.toFixed(2) + ' افغانی');
+    $('#totalPaid').text(paidAmount.toFixed(2) + ' افغانی');
+    $('#remainingAmount').text(remaining.toFixed(2) + ' افغانی');
+
+    if (totalUsd > 0) {
+        $('#totalDollar').text(totalUsd.toFixed(2) + ' دالر');
+        $('#dollarRow').show();
+    } else {
+        $('#dollarRow').hide();
+    }
+}
+
+function updateItemsJson() {
+    const items = [];
+
+    $('.item-row').each(function() {
+        const productId = $(this).find('.product-select').val();
+        const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+        const price = parseFloat($(this).find('.price-input').val()) || 0;
+        const currency = $(this).find('.currency-select').val() || 'AFN';
+        const locationId = $(this).find('.location-select').val();
+
+        if (productId && quantity > 0 && locationId) {
+            items.push({
+                product_id: parseInt(productId),
+                quantity: quantity,
+                purchase_price: price,
+                currency: currency,
+                location_id: parseInt(locationId),
+            });
+        }
+    });
+
+    $('#id_items_json').val(JSON.stringify(items));
+}
+
+function checkNoItems() {
+    if ($('.item-row').length === 0) {
+        $('#noItemsMessage').show();
+    } else {
+        $('#noItemsMessage').hide();
+    }
+}
+
+function addItem(itemData = null) {
+    const newRow = $('<tr class="item-row"></tr>');
+
+    newRow.html(`
+        <td class="item-number text-center fw-bold">1</td>
+        <td>
+            <select class="form-select form-select-sm text-end product-select" data-field="product_id">
+                <option value="">انتخاب محصول...</option>
+                {% for product in products %}
+                <option value="{{ product.id }}" data-price="{{ product.purchase_price }}">
+                    {{ product.name }} ({{ product.sku }})
+                </option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="number"
+                   class="form-control form-control-sm text-end quantity-input"
+                   data-field="quantity"
+                   min="1"
+                   value="1"
+                   placeholder="تعداد">
+        </td>
+        <td>
+            <input type="number"
+                   class="form-control form-control-sm text-end price-input"
+                   data-field="purchase_price"
+                   min="0"
+                   step="0.01"
+                   value="0"
+                   placeholder="قیمت">
+        </td>
+        <td>
+            <select class="form-select form-select-sm text-end currency-select" data-field="currency">
+                <option value="AFN">افغانی</option>
+                <option value="USD">دالر</option>
+            </select>
+        </td>
+        <td class="item-total text-end fw-bold">0.00</td>
+        <td>
+            <select class="form-select form-select-sm text-end location-select" data-field="location_id">
+                <option value="">انتخاب موقعیت...</option>
+                {% for loc in locations %}
+                <option value="{{ loc.id }}">{{ loc.name }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-danger remove-item-btn">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `);
+
+    if (itemData) {
+        newRow.find('.product-select').val(itemData.product_id);
+        newRow.find('.quantity-input').val(itemData.quantity);
+        newRow.find('.price-input').val(itemData.purchase_price);
+        newRow.find('.currency-select').val(itemData.currency || 'AFN');
+        newRow.find('.location-select').val(itemData.location_id);
+    }
+
+    $('#itemsBody').append(newRow);
+    updateItemNumbers();
+    calculateRowTotal(newRow);
+    checkNoItems();
+    updateItemsJson();
+
+    setTimeout(function() {
+        checkStockAvailability(newRow);
+    }, 50);
+}
+
+function validateForm() {
+    const supplierName = $('#id_supplier_name').val().trim();
+    if (!supplierName) {
+        alert('لطفاً نام تأمین‌کننده را وارد کنید!');
+        $('#id_supplier_name').focus();
+        return false;
+    }
+
+    const items = JSON.parse($('#id_items_json').val() || '[]');
+    if (items.length === 0) {
+        alert('حداقل یک قلم جنس باید اضافه شود!');
+        $('#noItemsMessage').show();
+        return false;
+    }
+
+    const hasDollar = items.some(it => it.currency === 'USD');
+    if (hasDollar && getDollarRate() <= 0) {
+        alert('لطفاً نرخ امروز دالر را در بالای فرم وارد کنید!');
+        $('#id_dollar_rate').focus();
+        return false;
+    }
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (!item.product_id) {
+            alert('قلم ' + (i + 1) + ': لطفاً محصول را انتخاب کنید!');
+            return false;
+        }
+        if (item.quantity <= 0) {
+            alert('قلم ' + (i + 1) + ': تعداد باید بزرگتر از صفر باشد!');
+            return false;
+        }
+        if (item.purchase_price <= 0) {
+            alert('قلم ' + (i + 1) + ': قیمت باید بزرگتر از صفر باشد!');
+            return false;
+        }
+        if (!item.location_id) {
+            alert('قلم ' + (i + 1) + ': لطفاً موقعیت را انتخاب کنید!');
+            return false;
+        }
+    }
+
+    const totalAmount = parseFloat($('#grandTotal').text().replace(/[^\d.]/g, '')) || 0;
+    const paidAmount = parseFloat($('#id_paid_amount').val()) || 0;
+    if (paidAmount > totalAmount) {
+        alert('مبلغ پرداختی نمی‌تواند بیشتر از مجموع خرید باشد!');
+        return false;
+    }
+
+    return true;
+}
+
+$(document).ready(function() {
+
+    {% if is_edit and purchase.items %}
+    const existingItems = {{ purchase.items|safe }};
+    existingItems.forEach(function(item) {
+        addItem(item);
+    });
+    {% else %}
+    addItem();
+    {% endif %}
+
+    updateGrandTotal();
+
+    $('#addItemBtn').click(function() {
+        addItem();
+    });
+
+    $(document).on('click', '.remove-item-btn', function() {
+        if (confirm('آیا مطمئن هستید؟')) {
+            $(this).closest('tr').remove();
+            updateItemNumbers();
+            updateGrandTotal();
+            updateItemsJson();
+            checkNoItems();
+        }
+    });
+
+    $(document).on('input', '#id_dollar_rate', function() {
+        const rate = parseFloat($(this).val()) || 0;
+        const hasDollar = $('.item-row').toArray().some(function(r) {
+            return $(r).find('.currency-select').val() === 'USD';
+        });
+        $('#dollarRateRequired').toggle(hasDollar && rate <= 0);
+
+        $('.item-row').each(function() {
+            calculateRowTotal($(this));
+        });
+        updateGrandTotal();
+    });
+
+    $(document).on('change', '.currency-select', function() {
+        const row = $(this).closest('tr');
+        const currency = $(this).val();
+        const dollarRate = getDollarRate();
+
+        if (currency === 'USD' && dollarRate <= 0) {
+            alert('لطفاً ابتدا نرخ امروز دالر را وارد کنید!');
+            $('#id_dollar_rate').focus();
+            $(this).val('AFN');
+            return;
+        }
+
+        const hasDollar = $('.item-row').toArray().some(function(r) {
+            return $(r).find('.currency-select').val() === 'USD';
+        });
+        $('#dollarRateRequired').toggle(hasDollar);
+
+        calculateRowTotal(row);
+        updateItemsJson();
+    });
+
+    $(document).on('change', '.product-select', function() {
+        const row = $(this).closest('tr');
+        const price = $(this).find('option:selected').data('price');
+        if (price) {
+            row.find('.price-input').val(price);
+        }
+        calculateRowTotal(row);
+        checkStockAvailability(row);
+        updateItemsJson();
+    });
+
+    $(document).on('input', '.quantity-input', function() {
+        calculateRowTotal($(this).closest('tr'));
+        updateItemsJson();
+    });
+
+    $(document).on('input', '.price-input', function() {
+        calculateRowTotal($(this).closest('tr'));
+        updateItemsJson();
+    });
+
+    $(document).on('change', '.location-select', function() {
+        const row = $(this).closest('tr');
+        checkStockAvailability(row);
+        updateItemsJson();
+    });
+
+    $('#id_paid_amount').on('input', function() {
+        updateGrandTotal();
+    });
+
+    $('#purchaseForm').submit(function(e) {
+        e.preventDefault();
+        updateItemsJson();
+        if (!validateForm()) {
+            return false;
+        }
+        this.submit();
+    });
+
+    $('button[type="reset"]').click(function() {
+        setTimeout(function() {
+            $('#itemsBody').empty();
+            addItem();
+            updateGrandTotal();
+            updateItemsJson();
+        }, 100);
+    });
+});
+</script>
+
+<style>
+.form-control:focus,
+.form-select:focus {
+    border-color: #9550fc;
+    box-shadow: 0 0 0 0.25rem rgba(149, 80, 252, 0.25);
+}
+.item-total { background-color: #f8f9fa; font-weight: bold; color: #450C98; }
+.table-info { background-color: #e7f3ff !important; }
+.table-warning { background-color: #fff3cd !important; }
+.table-danger { background-color: #f8d7da !important; }
+#id_purchase_number { background-color: #f8f9fa !important; cursor: not-allowed !important; }
+#id_dollar_rate { background-color: #fff8e1 !important; font-weight: 700; font-size: 1.1rem; color: #450C98; }
+</style>
+
+{% endblock %}

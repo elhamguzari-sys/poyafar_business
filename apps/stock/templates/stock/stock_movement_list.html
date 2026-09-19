@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+
+{% block title %}لیست حرکات کالا{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+                <i class="fas fa-exchange-alt me-2"></i>
+                لیست حرکات کالا
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
+                    <li class="breadcrumb-item active" style="color: #450C98">حرکات کالا</li>
+                </ol>
+            </nav>
+        </div>
+        <a href="{% url 'create_stock_movement' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <i class="fas fa-plus-circle me-2"></i>
+            حرکت جدید
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+            <i class="fas fa-info-circle me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-exchange-alt fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ total_movements_count }}</h3>
+                    <small>کل حرکات</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-arrow-down fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ stock_in_count }}</h3>
+                    <small>ورود کالا</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ stock_out_count }}</h3>
+                    <small>خروج کالا</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-store fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ shop_movements_count }}</h3>
+                    <small>حرکات دوکان</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4 rounded-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-12 col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search" style="color: #450C98;"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0" 
+                               placeholder="جستجو در حرکات..." 
+                               value="{{ request.GET.search }}">
+                    </div>
+                </div>
+                <div class="col-12 col-md-2">
+                    <select name="product" class="form-select">
+                        <option value="">همه کالاها</option>
+                        {% for product in products %}
+                            <option value="{{ product.id }}" {% if request.GET.product == product.id|stringformat:"s" %}selected{% endif %}>
+                                {{ product.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-2">
+                    <select name="type" class="form-select">
+                        <option value="">همه انواع</option>
+                        <option value="IN" {% if request.GET.type == 'IN' %}selected{% endif %}>ورود</option>
+                        <option value="OUT" {% if request.GET.type == 'OUT' %}selected{% endif %}>خروج</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2">
+                    <select name="location" class="form-select">
+                        <option value="">همه موقعیت‌ها</option>
+                        {% for loc in locations %}
+                            <option value="{{ loc.id }}" {% if request.GET.location == loc.id|stringformat:"s" %}selected{% endif %}>
+                                {{ loc.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <button type="submit" class="btn w-100 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <i class="fas fa-filter me-1"></i>  
+                    </button>
+                </div>
+            </form>
+
+            <!-- Clear Search Button -->
+            {% if request.GET.search or request.GET.product or request.GET.type or request.GET.location %}
+            <div class="mt-2">
+                <a href="{{ request.path }}" 
+                   class="btn btn-dark btn-sm" 
+                   style="font-size: 0.85rem;">
+                    <i class="fas fa-times-circle me-1"></i> حذف جستجو
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <tr class="text-white">
+                            <th class="text-center" style="width: 50px;">#</th>
+                            <th>شماره مرجع</th>
+                            <th>کالا</th>
+                            <th class="d-none d-md-table-cell">موقعیت</th>
+                            <th class="d-none d-md-table-cell">نوع حرکت</th>
+                            <th class="text-center">تعداد</th>
+                            <th class="d-none d-lg-table-cell text-center">موجودی بعد</th>
+                            <th class="d-none d-md-table-cell">تاریخ</th>
+                            <th class="text-center" style="width: 100px;">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for movement in movements %}
+                        <tr class="border-bottom" id="movement-row-{{ movement.id }}">
+                            <td class="text-center">
+                                <span class="badge rounded-pill text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">{{ forloop.counter }}</span>
+                            </td>
+                            <td>
+                                <code class="text-muted">{{ movement.reference_number }}</code>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if movement.product.image %}
+                                        <img src="{{ movement.product.image.url }}" alt="{{ movement.product.name }}" 
+                                             class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="p-2 rounded me-2" style="background: rgba(149, 80, 252, 0.1);">
+                                            <i class="fas fa-box" style="color: #9550fc;"></i>
+                                        </div>
+                                    {% endif %}
+                                    <span class="fw-bold">{{ movement.product.name }}</span>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                {% if movement.location.type == 'shop' %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
+                                        <i class="fas fa-store me-1"></i>{{ movement.location.name }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(79, 172, 254, 0.1); color: #4facfe;">
+                                        <i class="fas fa-warehouse me-1"></i>{{ movement.location.name }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                {% if movement.movement_type == 'IN' %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
+                                        <i class="fas fa-arrow-down me-1"></i>ورود
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">
+                                        <i class="fas fa-arrow-up me-1"></i>خروج
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if movement.quantity > 0 %}
+                                    <span class="fw-bold text-success" style="font-size: 1.1rem;">+{{ movement.quantity }}</span>
+                                {% else %}
+                                    <span class="fw-bold text-danger" style="font-size: 1.1rem;">{{ movement.quantity }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="d-none d-lg-table-cell text-center">
+                                <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 1.1rem; font-weight: 600;">
+                                    {{ movement.stock_after_movement }}
+                                </span>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <span class="text-muted" style="font-size: 1rem; font-weight: 500;">
+                                    {{ movement.created_at|date:"Y/m/d H:i" }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'update_stock_movement' movement.id %}" 
+                                       class="btn btn-outline-warning border-0" title="ویرایش">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger border-0" title="حذف"
+                                       onclick="event.preventDefault(); showDeleteModal('{{ movement.id }}','{{ movement.reference_number }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Hidden Delete Form -->
+                        <form id="deleteForm-{{ movement.id }}"
+                              method="POST"
+                              action="{% url 'delete_stock_movement' movement.id %}"
+                              style="display:none;">
+                            {% csrf_token %}
+                        </form>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <i class="fas fa-exchange-alt fa-3x mb-3" style="color: #9550fc;"></i>
+                                <h5 class="text-muted">هیچ حرکتی ثبت نشده است</h5>
+                                <p class="text-muted">اولین حرکت کالا را ثبت کنید</p>
+                                <a href="{% url 'create_stock_movement' %}" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                    <i class="fas fa-plus me-1"></i> ثبت حرکت
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if movements.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if movements.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ movements.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                    </li>
+                {% endif %}
+
+                {% for num in movements.paginator.page_range %}
+                    {% if movements.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); border-color: #450C98;">{{ num }}</span>
+                        </li>
+                    {% elif num > movements.number|add:'-3' and num < movements.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if movements.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ movements.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <div class="text-center mt-2">
+        <small class="text-muted">
+            نمایش {{ movements.start_index }} تا {{ movements.end_index }} از {{ paginator.count }} حرکت
+        </small>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-trash-alt me-2"></i>حذف حرکت کالا
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
+                </div>
+                <h5 class="mb-3">آیا مطمئن هستید؟</h5>
+                <p class="text-muted mb-2">حرکت با شماره "<strong id="deleteMovementName"></strong>" حذف خواهد شد.</p>
+                <p class="text-danger small">موجودی کالا به حالت قبل برمی‌گردد!</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> انصراف
+                </button>
+                <button type="button" class="btn btn-danger rounded-pill px-4" id="confirmDeleteBtn">
+                    <i class="fas fa-check me-1"></i> بله، حذف کن
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let deleteMovementId = null;
+    
+    function showDeleteModal(movementId, referenceNumber) {
+        deleteMovementId = movementId;
+        document.getElementById('deleteMovementName').textContent = referenceNumber;
+        
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+    
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (deleteMovementId) {
+            const form = document.getElementById('deleteForm-' + deleteMovementId);
+            if (form) {
+                form.submit();
+            }
+        }
+    });
+</script>
+
+{% endblock %}

@@ -150,9 +150,6 @@
                             <th class="d-none d-lg-table-cell">دسته‌بندی</th>
                             <th>قیمت فروش</th>
                             <th class="text-center">دوکان</th>
-
-                          
-
                             <th class="text-center">جمع گدام‌ها</th>
                             <th class="text-center">کل</th>
                             <th class="text-center">وضعیت</th>
@@ -194,7 +191,6 @@
                                 <span class="fw-bold">{{ product.sale_price }} افغانی</span>
                             </td>
 
-                            <!-- دوکان -->
                             <td class="text-center">
                                 {% if product.shop_stock <= product.min_stock and product.shop_stock > 0 %}
                                     <span class="badge rounded-pill px-3 py-2" style="background: rgba(255, 193, 7, 0.1); color: #ffc107; font-size: 1.1rem; font-weight: 600;">
@@ -211,8 +207,6 @@
                                 {% endif %}
                             </td>
 
-                         
-                            <!-- جمع گدام‌ها -->
                             <td class="text-center">
                                 {% if product.stock_stock <= product.min_stock and product.stock_stock > 0 %}
                                     <span class="badge rounded-pill px-3 py-2" style="background: rgba(255, 193, 7, 0.1); color: #ffc107; font-size: 1.1rem; font-weight: 600;">
@@ -229,7 +223,6 @@
                                 {% endif %}
                             </td>
 
-                            <!-- کل -->
                             <td class="text-center">
                                 {% if product.current_stock <= product.min_stock %}
                                     <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; font-size: 1.1rem; font-weight: 600;">
@@ -242,7 +235,6 @@
                                 {% endif %}
                             </td>
 
-                            <!-- وضعیت -->
                             <td class="text-center">
                                 {% if product.status == 'active' %}
                                     <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1rem;">
@@ -259,7 +251,6 @@
                                 {% endif %}
                             </td>
 
-                            <!-- عملیات -->
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-outline-info border-0" title="جزئیات"
@@ -278,7 +269,6 @@
                             </td>
                         </tr>
 
-                        <!-- Hidden Delete Form -->
                         <form id="deleteForm-{{ product.id }}"
                               method="POST"
                               action="{% url 'delete_product' product.id %}"
@@ -299,7 +289,6 @@
                                     </div>
                                    <div class="modal-body p-4">
 
-    <!-- اطلاعات محصول -->
                     <div class="row mb-4">
                         <div class="col-md-3 text-center mb-3 mb-md-0">
                             {% if product.image %}
@@ -360,7 +349,6 @@
                         </div>
                     </div>
 
-    <!-- کارت‌های جمع -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
@@ -400,9 +388,6 @@
         </div>
     </div>
 
-   
-
-    <!-- ==================== موجودی به شکل کارت (به‌جای جدول) ==================== -->
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
             <h6 class="mb-0 fw-bold">
@@ -455,7 +440,6 @@
         </div>
     </div>
 
-    <!-- ==================== تاریخچه به شکل کارت (به‌جای جدول) ==================== -->
     <div class="card border-0 shadow-sm">
         <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
             <h6 class="mb-0 fw-bold">
@@ -627,13 +611,18 @@
                     <i class="fas fa-times me-1"></i> انصراف
                 </button>
                 <button type="button" class="btn btn-danger rounded-pill px-4" id="confirmDeleteBtn">
-                    <i class="fas fa-check me-1"></i> بله، حذف کن
-                </button>
+                    <i class="fas fa-check me-1"></i> بله، حذف کن                </button>
             </div>
         </div>
     </div>
 </div>
 
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
     let deleteProductId = null;
 
@@ -656,5 +645,4 @@
         new bootstrap.Modal(document.getElementById('detailModal' + productId)).show();
     }
 </script>
-
 {% endblock %}

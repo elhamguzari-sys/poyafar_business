@@ -1,40 +1,50 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}لیست موجودی‌ها{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    
-    <!-- Header -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+<div class="container-fluid inv-wrapper py-4">
+
+    <!-- ============ HEADER ============ -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+            <h2 class="fw-bold mb-1" style="color: #9550fc; font-size: 2rem;">
                 <i class="fas fa-cubes me-2"></i>
                 لیست موجودی‌ها
             </h2>
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
-                    <li class="breadcrumb-item active" style="color: #450C98">موجودی‌ها</li>
+                <ol class="breadcrumb mb-0 fs-6">
+                    <li class="breadcrumb-item">
+                        <a href="/" class="text-decoration-none text-muted">داشبورد</a>
+                    </li>
+                    <li class="breadcrumb-item active" style="color: #450C98;">موجودی‌ها</li>
                 </ol>
             </nav>
         </div>
+        <a href="{% url 'create_stock_movement' %}"
+           class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6"
+           style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <i class="fas fa-plus me-2"></i>
+            ثبت حرکت کالا
+        </a>
     </div>
 
-    <!-- Messages -->
+    <!-- ============ MESSAGES ============ -->
     {% if messages %}
         {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
             <i class="fas fa-info-circle me-2"></i>{{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         {% endfor %}
     {% endif %}
 
-    <!-- Stats Cards -->
+    <!-- ============ STATS CARDS ============ -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 inv-stat-card"
+                 style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-cubes fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ total_inventories_count }}</h3>
@@ -43,7 +53,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 inv-stat-card"
+                 style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-store fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ shop_inventories_count }}</h3>
@@ -52,7 +63,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 inv-stat-card"
+                 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-warehouse fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ warehouse_inventories_count }}</h3>
@@ -61,7 +73,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 inv-stat-card"
+                 style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ out_of_stock_count }}</h3>
@@ -71,7 +84,7 @@
         </div>
     </div>
 
-    <!-- Search and Filters -->
+    <!-- ============ FILTER TOOLBAR ============ -->
     <div class="card border-0 shadow-sm mb-4 rounded-3">
         <div class="card-body">
             <form method="GET" class="row g-3">
@@ -80,38 +93,48 @@
                         <span class="input-group-text bg-white border-end-0">
                             <i class="fas fa-search" style="color: #450C98;"></i>
                         </span>
-                        <input type="text" name="search" class="form-control border-start-0" 
-                               placeholder="جستجو در موجودی‌ها..." 
-                               value="{{ request.GET.search }}">
+                        <input type="text" name="search" class="form-control border-start-0"
+                               placeholder="جستجو در موجودی‌ها..."
+                               value="{{ request.GET.search|default:'' }}">
                     </div>
                 </div>
+
                 <div class="col-12 col-md-3">
                     <select name="location" class="form-select">
                         <option value="">همه موقعیت‌ها</option>
                         {% for loc in locations %}
-                            <option value="{{ loc.id }}" {% if request.GET.location == loc.id|stringformat:"s" %}selected{% endif %}>
+                            <option value="{{ loc.id }}"
+                                {% if request.GET.location == loc.id|stringformat:"s" %}selected{% endif %}>
                                 {{ loc.name }}
                             </option>
                         {% endfor %}
                     </select>
                 </div>
+
                 <div class="col-12 col-md-2">
                     <select name="stock_filter" class="form-select">
                         <option value="">همه</option>
-                        <option value="available" {% if request.GET.stock_filter == 'available' %}selected{% endif %}>موجود</option>
-                        <option value="out" {% if request.GET.stock_filter == 'out' %}selected{% endif %}>ناموجود</option>
+                        <option value="available" {% if request.GET.stock_filter == 'available' %}selected{% endif %}>
+                            موجود
+                        </option>
+                        <option value="out" {% if request.GET.stock_filter == 'out' %}selected{% endif %}>
+                            ناموجود
+                        </option>
                     </select>
                 </div>
+
                 <div class="col-12 col-md-3">
-                    <button type="submit" class="btn w-100 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
-                        <i class="fas fa-filter me-1"></i>
+                    <button type="submit"
+                            class="btn w-100 text-white"
+                            style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <i class="fas fa-filter me-1"></i> اعمال فیلتر
                     </button>
                 </div>
             </form>
 
             {% if request.GET.search or request.GET.location or request.GET.stock_filter %}
-            <div class="mt-2">
-                <a href="{{ request.path }}" class="btn btn-dark btn-sm" style="font-size: 0.85rem;">
+            <div class="mt-3">
+                <a href="{{ request.path }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
                     <i class="fas fa-times-circle me-1"></i> حذف جستجو
                 </a>
             </div>
@@ -119,104 +142,109 @@
         </div>
     </div>
 
-    <!-- Table Card -->
+    <!-- ============ TABLE CARD ============ -->
     <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
-                        <tr class="text-white">
-                            <th class="text-center" style="width: 50px;">#</th>
-                            <th>کالا</th>
-                            <th class="d-none d-md-table-cell">کد کالا</th>
-                            <th>موقعیت</th>
-                            <th class="text-center">موجودی</th>
-                            <th class="d-none d-lg-table-cell">آخرین ویرایش</th>
-                            <th class="text-center" style="width: 100px;">عملیات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for inv in inventories %}
-                        <tr class="border-bottom">
-                            <td class="text-center">
-                                <span class="badge rounded-pill text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">{{ forloop.counter }}</span>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    {% if inv.product.image %}
-                                        <img src="{{ inv.product.image.url }}" alt="{{ inv.product.name }}" 
-                                             class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
-                                    {% else %}
-                                        <div class="p-2 rounded me-2" style="background: rgba(149, 80, 252, 0.1);">
-                                            <i class="fas fa-box" style="color: #9550fc;"></i>
-                                        </div>
-                                    {% endif %}
-                                    <span class="fw-bold">{{ inv.product.name }}</span>
-                                </div>
-                            </td>
-                            <td class="d-none d-md-table-cell">
-                                <code class="text-muted">{{ inv.product.sku }}</code>
-                            </td>
-                            <td>
-                                {% if inv.location.type == 'shop' %}
-                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
-                                        <i class="fas fa-store me-1"></i>{{ inv.location.name }}
-                                    </span>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 inv-table">
+                <thead>
+                    <tr>
+                        <th class="text-center" style="width: 60px;">#</th>
+                        <th>کالا</th>
+                        <th class="d-none d-md-table-cell">کد کالا</th>
+                        <th>موقعیت</th>
+                        <th class="text-center">موجودی</th>
+                        <th class="d-none d-lg-table-cell">آخرین ویرایش</th>
+                        <th class="text-center" style="width: 100px;">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in inventories %}
+                    <tr>
+                        <td class="text-center">
+                            <span class="inv-rank">{{ forloop.counter }}</span>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if inv.product.image %}
+                                    <img src="{{ inv.product.image.url }}"
+                                         alt="{{ inv.product.name }}"
+                                         class="rounded me-2 inv-row-thumb">
                                 {% else %}
-                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(79, 172, 254, 0.1); color: #4facfe;">
-                                        <i class="fas fa-warehouse me-1"></i>{{ inv.location.name }}
-                                    </span>
+                                    <div class="inv-row-thumb inv-row-thumb-placeholder me-2">
+                                        <i class="fas fa-box" style="color: #9550fc;"></i>
+                                    </div>
                                 {% endif %}
-                            </td>
-                            <td class="text-center">
-                                {% if inv.quantity > 0 %}
-                                    <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 1.1rem; font-weight: 600;">
-                                        {{ inv.quantity }}
-                                    </span>
-                                {% else %}
-                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545; font-size: 1.1rem; font-weight: 600;">
-                                        {{ inv.quantity }}
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="d-none d-lg-table-cell">
-                                <span class="text-muted" style="font-size: 1rem; font-weight: 500;">
-                                    {{ inv.updated_at|date:"Y/m/d H:i" }}
+                                <span class="fw-bold">{{ inv.product.name }}</span>
+                            </div>
+                        </td>
+
+                        <td class="d-none d-md-table-cell">
+                            <code class="text-muted">{{ inv.product.sku }}</code>
+                        </td>
+
+                        <td>
+                            {% if inv.location.type == 'shop' %}
+                                <span class="inv-loc-badge inv-loc-shop">
+                                    <i class="fas fa-store me-1"></i>{{ inv.location.name }}
                                 </span>
-                            </td>
-                            <td class="text-center">
-                                <a href="{% url 'inventory_detail' inv.id %}" 
-                                   class="btn btn-sm btn-outline-primary border-0" title="جزئیات">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center py-5">
-                                <i class="fas fa-cubes fa-3x mb-3" style="color: #9550fc;"></i>
-                                <h5 class="text-muted">هیچ موجودی ثبت نشده است</h5>
-                                <p class="text-muted">برای ثبت موجودی، از بخش حرکات کالا استفاده کنید</p>
-                                <a href="{% url 'create_stock_movement' %}" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
-                                    <i class="fas fa-plus me-1"></i> ثبت حرکت
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                            {% else %}
+                                <span class="inv-loc-badge inv-loc-warehouse">
+                                    <i class="fas fa-warehouse me-1"></i>{{ inv.location.name }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            {% if inv.quantity > 0 %}
+                                <span class="inv-qty inv-qty-ok">{{ inv.quantity }}</span>
+                            {% else %}
+                                <span class="inv-qty inv-qty-out">{{ inv.quantity }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="d-none d-lg-table-cell">
+                            <span class="text-muted small">{{ inv.updated_at|date:"Y/m/d H:i" }}</span>
+                        </td>
+
+                        <td class="text-center">
+                            <a href="{% url 'inventory_detail' inv.id %}"
+                               class="btn btn-sm btn-outline-primary border-0"
+                               title="جزئیات">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="fas fa-cubes fa-3x mb-3" style="color: #9550fc;"></i>
+                            <h5 class="text-muted">هیچ موجودی ثبت نشده است</h5>
+                            <p class="text-muted mb-3">برای ثبت موجودی، از بخش حرکات کالا استفاده کنید</p>
+                            <a href="{% url 'create_stock_movement' %}"
+                               class="btn rounded-pill px-4 text-white"
+                               style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                <i class="fas fa-plus me-1"></i> ثبت حرکت
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Pagination -->
+    <!-- ============ PAGINATION ============ -->
     {% if inventories.has_other_pages %}
     <div class="d-flex justify-content-center mt-4">
         <nav aria-label="Page navigation">
             <ul class="pagination">
                 {% if inventories.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ inventories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}" aria-label="Previous">
+                        <a class="page-link"
+                           href="?page={{ inventories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}"
+                           aria-label="Previous">
                             <span aria-hidden="true">&laquo;</span>
                         </a>
                     </li>
@@ -229,18 +257,23 @@
                 {% for num in inventories.paginator.page_range %}
                     {% if inventories.number == num %}
                         <li class="page-item active">
-                            <span class="page-link" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); border-color: #450C98;">{{ num }}</span>
+                            <span class="page-link inv-page-active">{{ num }}</span>
                         </li>
                     {% elif num > inventories.number|add:'-3' and num < inventories.number|add:'3' %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}">{{ num }}</a>
+                            <a class="page-link"
+                               href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}">
+                                {{ num }}
+                            </a>
                         </li>
                     {% endif %}
                 {% endfor %}
 
                 {% if inventories.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ inventories.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}" aria-label="Next">
+                        <a class="page-link"
+                           href="?page={{ inventories.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if stock_filter %}&stock_filter={{ stock_filter }}{% endif %}"
+                           aria-label="Next">
                             <span aria-hidden="true">&raquo;</span>
                         </a>
                     </li>
@@ -261,5 +294,168 @@
     {% endif %}
 
 </div>
+{% endblock %}
 
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE STYLES — follows your base.html pattern                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_head %}
+<style>
+    .inv-wrapper {
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+        color: #1e293b;
+    }
+
+    /* ---------- Stat cards ---------- */
+    .inv-stat-card {
+        border-radius: 16px;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .inv-stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    /* ---------- Filter controls ---------- */
+    .inv-wrapper .form-control,
+    .inv-wrapper .form-select,
+    .inv-wrapper .input-group-text,
+    .inv-wrapper .btn {
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+    }
+    .inv-wrapper .form-control:focus,
+    .inv-wrapper .form-select:focus {
+        border-color: #9550fc;
+        box-shadow: 0 0 0 0.2rem rgba(149, 80, 252, 0.15);
+    }
+    .inv-wrapper .input-group-text {
+        background: #fff;
+        border-color: #e2e8f0;
+    }
+
+    /* ---------- Table ---------- */
+    .inv-table {
+        font-size: 0.9rem;
+    }
+    .inv-table thead th {
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border: none;
+        padding: 14px 16px;
+        white-space: nowrap;
+    }
+    .inv-table tbody td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f5f7fa;
+        vertical-align: middle;
+    }
+    .inv-table tbody tr:last-child td { border-bottom: none; }
+    .inv-table tbody tr:hover { background: #faf5ff; }
+
+    /* Row number badge */
+    .inv-rank {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        color: #fff;
+    }
+
+    /* Row product thumbnail */
+    .inv-row-thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+    }
+    .inv-row-thumb-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(149, 80, 252, 0.1);
+        border-radius: 8px;
+    }
+
+    /* Location badges */
+    .inv-loc-badge {
+        display: inline-block;
+        padding: 5px 14px;
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .inv-loc-shop {
+        background: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+    .inv-loc-warehouse {
+        background: rgba(79, 172, 254, 0.1);
+        color: #4facfe;
+    }
+
+    /* Quantity badges */
+    .inv-qty {
+        display: inline-block;
+        padding: 5px 16px;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 700;
+        min-width: 60px;
+    }
+    .inv-qty-ok {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+    .inv-qty-out {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    /* ---------- Pagination ---------- */
+    .page-link {
+        color: #450C98;
+        border-color: #e2e8f0;
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+    }
+    .page-link:hover {
+        color: #9550fc;
+        background: #faf5ff;
+        border-color: #e9d5ff;
+    }
+    .page-item.active .inv-page-active {
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        border-color: #450C98;
+        color: #fff;
+    }
+
+    /* ---------- Breadcrumb ---------- */
+    .breadcrumb-item a:hover {
+        color: #450C98 !important;
+        transition: color 0.2s ease;
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+        .inv-wrapper h2 { font-size: 1.4rem !important; }
+        .inv-table tbody td { padding: 10px 12px; }
+    }
+</style>
+{% endblock %}
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — no page-specific JS needed                   -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
+{# No page-specific scripts needed for this list page #}
 {% endblock %}

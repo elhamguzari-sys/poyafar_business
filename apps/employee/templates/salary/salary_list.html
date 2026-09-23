@@ -233,7 +233,7 @@
 
                                     <!-- PDF Download Button -->
                                     <div style="display: flex; justify-content: center; margin: 10px 0;">
-                                        <button onclick="downloadSalaryPDF('{{ salary.id }}')" style="
+                                        <button onclick="downloadSalaryPDF('{{ salary.id }}', this)" style="
                                             background: linear-gradient(135deg, #5a189a, #9d4edd);
                                             color: white;
                                             border: none;
@@ -258,12 +258,12 @@
                                     </div>
 
                                     <div class="modal-body" id="salary-invoice-{{ salary.id }}" style="padding: 8px;">
-                                        <!-- Header with Logo and Info -->
+                                        <!-- Header -->
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                             <div style="width: 40px; height: 40px; background: #f8fafd; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(90, 24, 154, 0.2);">
                                                 <i class="fas fa-money-bill-wave" style="color: #5a189a; font-size: 1.2rem;"></i>
                                             </div>
-                                            <h4>شرکت نرم افزاری پویافر</h4>
+                                            <h4> خدمات مرغداری ترکمن لقمان  </h4>
                                             <div style="text-align: right;">
                                                 <div style="background: linear-gradient(135deg, #5a189a, #9d4edd); padding: 2px 8px; border-radius: 15px; margin-bottom: 3px; display: inline-block;">
                                                     <span style="color: white; font-weight: 600; font-size: 0.65rem;">#{{ salary.id }}</span>
@@ -361,24 +361,6 @@
                                             </div>
                                         </div>
                                         <br>
-
-                                        <!-- Footer with Contact -->
-                                        <div style="background: #f8fafc; border-radius: 8px; padding: 5px; border: 1px solid #e2e8f0;">
-                                            <div style="display: flex; flex-direction: column; gap: 2px;">
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-envelope" style="color: #4361ee; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">poyafar@yahoo.com</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-phone" style="color: #10b981; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">+93794483138</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-map-marker-alt" style="color: #f97316; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">کابل، افغانستان</span>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div class="modal-footer" style="padding: 8px;">
@@ -486,9 +468,14 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!-- Scripts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — MUST be in extra_scripts block               -->
+<!-- This runs AFTER base.html's deferred scripts are loaded     -->
+<!-- So bootstrap, html2pdf, etc. are guaranteed available       -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
     let deleteSalaryId = null;
 
@@ -509,7 +496,7 @@
         new bootstrap.Modal(document.getElementById('invoiceModal' + salaryId)).show();
     }
 
-    function downloadSalaryPDF(salaryId) {
+    function downloadSalaryPDF(salaryId, btn) {
         console.log('Downloading salary PDF for ID:', salaryId);
 
         const element = document.getElementById('salary-invoice-' + salaryId);
@@ -520,7 +507,6 @@
             return;
         }
 
-        const btn = event?.target;
         let originalText = '';
         if (btn) {
             originalText = btn.innerHTML;
@@ -530,12 +516,31 @@
 
         const clone = element.cloneNode(true);
 
-        // تبدیل گرادیانت‌ها به رنگ ثابت
+        // Convert gradients to solid colors for PDF
         clone.querySelectorAll('*').forEach(el => {
             const bg = window.getComputedStyle(el).backgroundImage;
-            if (bg && bg.includes('gradient')) {
-                el.style.background = '#5a189a';
-                el.style.color = '#ffffff';
+            const bgStr = bg || '';
+            if (bgStr && bgStr.includes('gradient')) {
+                // Check for green gradients
+                if (bgStr.includes('25, 135, 84') || bgStr.includes('#11998e') || bgStr.includes('#38ef7d') || bgStr.includes('rgba(25, 135, 84')) {
+                    el.style.background = '#11998e';
+                    el.style.color = '#ffffff';
+                }
+                // Check for red/pink gradients
+                else if (bgStr.includes('220, 53, 69') || bgStr.includes('#f093fb') || bgStr.includes('#f5576c') || bgStr.includes('rgba(220, 53, 69')) {
+                    el.style.background = '#f5576c';
+                    el.style.color = '#ffffff';
+                }
+                // Check for blue gradients
+                else if (bgStr.includes('79, 172, 254') || bgStr.includes('#4facfe') || bgStr.includes('#00f2fe')) {
+                    el.style.background = '#4facfe';
+                    el.style.color = '#ffffff';
+                }
+                // Default purple gradient
+                else {
+                    el.style.background = '#5a189a';
+                    el.style.color = '#ffffff';
+                }
             }
         });
 
@@ -595,5 +600,4 @@
         });
     }
 </script>
-
 {% endblock %}

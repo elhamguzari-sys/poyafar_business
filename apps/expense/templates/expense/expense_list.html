@@ -223,9 +223,8 @@
                                         </h5>
                                     </div>
 
-                                    <!-- PDF Download Button -->
                                     <div style="display: flex; justify-content: center; margin: 10px 0;">
-                                        <button onclick="downloadExpensePDF('{{ expense.id }}')" style="
+                                        <button onclick="downloadExpensePDF('{{ expense.id }}', this)" style="
                                             background: linear-gradient(135deg, #5a189a, #9d4edd);
                                             color: white;
                                             border: none;
@@ -250,12 +249,11 @@
                                     </div>
 
                                     <div class="modal-body" id="expense-invoice-{{ expense.id }}" style="padding: 8px;">
-                                        <!-- Header with Logo and Info -->
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                             <div style="width: 40px; height: 40px; background: #f8fafd; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(90, 24, 154, 0.2);">
                                                 <i class="fas fa-money-bill-wave" style="color: #5a189a; font-size: 1.2rem;"></i>
                                             </div>
-                                            <h4>شرکت نرم افزاری پویافر</h4>
+                                            <h4>خدمات مرغداری ترکمن لقمان</h4>
                                             <div style="text-align: right;">
                                                 <div style="background: linear-gradient(135deg, #5a189a, #9d4edd); padding: 2px 8px; border-radius: 15px; margin-bottom: 3px; display: inline-block;">
                                                     <span style="color: white; font-weight: 600; font-size: 0.65rem;">#{{ expense.id }}</span>
@@ -266,7 +264,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Order Info -->
                                         <div style="background: #f8fafd; border-radius: 8px; padding: 6px; margin-bottom: 8px; border: 1px solid rgba(90, 24, 154, 0.1);">
                                             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;">
                                                 <div>
@@ -288,7 +285,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Items Cards Section -->
                                         <div style="margin-bottom: 8px;">
                                             <div style="background: #f8fafd; border-radius: 8px; padding: 6px; border: 1px solid rgba(90, 24, 154, 0.1);">
                                                 {% for item in expense.items %}
@@ -330,7 +326,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Totals -->
                                         <div style="background: #f8fafd; border-radius: 8px; padding: 8px; margin-bottom: 8px; border: 1px solid rgba(90, 24, 154, 0.1);">
                                             <div style="display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed #ddd;">
                                                 <span style="font-size: 0.7rem; color: #64748b;">مجموع مصرف</span>
@@ -348,7 +343,6 @@
                                         </div>
                                         {% endif %}
 
-                                        <!-- Image -->
                                         {% if expense.image %}
                                         <div style="text-align: center; margin-bottom: 8px;">
                                             <img src="{{ expense.image.url }}" alt="receipt"
@@ -358,7 +352,6 @@
 
                                         <br>
 
-                                        <!-- Signatures -->
                                         <div style="display: flex; justify-content: space-between; margin: 15px 0 8px 0; padding: 0 20px;">
                                             <div style="text-align: center;">
                                                 <div style="border-top: 1px solid #cbd5e1; width: 110px; margin-bottom: 3px;"></div>
@@ -370,24 +363,6 @@
                                             </div>
                                         </div>
                                         <br>
-
-                                        <!-- Footer with Contact -->
-                                        <div style="background: #f8fafc; border-radius: 8px; padding: 5px; border: 1px solid #e2e8f0;">
-                                            <div style="display: flex; flex-direction: column; gap: 2px;">
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-envelope" style="color: #4361ee; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">poyafar@yahoo.com</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-phone" style="color: #10b981; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">+93794483138</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-map-marker-alt" style="color: #f97316; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">کابل، افغانستان</span>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div class="modal-footer" style="padding: 8px;">
@@ -496,8 +471,12 @@
     </div>
 </div>
 
-<!-- Scripts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — runs AFTER base.html libraries load          -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
     let deleteExpenseId = null;
 
@@ -507,18 +486,11 @@
         new bootstrap.Modal(document.getElementById('deleteModal')).show();
     }
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
-        if (deleteExpenseId) {
-            const form = document.getElementById('deleteForm-' + deleteExpenseId);
-            if (form) form.submit();
-        }
-    });
-
     function showInvoiceModal(expenseId) {
         new bootstrap.Modal(document.getElementById('invoiceModal' + expenseId)).show();
     }
 
-    function downloadExpensePDF(expenseId) {
+    function downloadExpensePDF(expenseId, btn) {
         console.log('Downloading expense PDF for ID:', expenseId);
 
         const element = document.getElementById('expense-invoice-' + expenseId);
@@ -529,7 +501,6 @@
             return;
         }
 
-        const btn = event?.target;
         let originalText = '';
         if (btn) {
             originalText = btn.innerHTML;
@@ -537,10 +508,8 @@
             btn.disabled = true;
         }
 
-        // ✅ کپی از عنصر برای PDF
         const clone = element.cloneNode(true);
 
-        // ✅ تبدیل گرادیانت‌ها به رنگ ثابت
         clone.querySelectorAll('*').forEach(el => {
             const bg = window.getComputedStyle(el).backgroundImage;
             if (bg && bg.includes('gradient')) {
@@ -558,7 +527,6 @@
         clone.style.direction = 'rtl';
         clone.style.boxSizing = 'border-box';
 
-        // ✅ wrapper مخفی
         const wrapper = document.createElement('div');
         wrapper.style.position = 'fixed';
         wrapper.style.left = '-9999px';
@@ -605,6 +573,17 @@
             alert('خطا در ایجاد PDF. لطفاً دوباره تلاش کنید.');
         });
     }
-</script>
 
+    document.addEventListener('DOMContentLoaded', function () {
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function () {
+                if (deleteExpenseId) {
+                    const form = document.getElementById('deleteForm-' + deleteExpenseId);
+                    if (form) form.submit();
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

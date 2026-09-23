@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container-fluid">
-    
+
     <!-- Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
         <div>
@@ -36,83 +36,77 @@
     {% endif %}
 
     <!-- Stats Cards -->
-  <!-- Stats Cards -->
-<div class="row g-3 mb-4">
-    <div class="col-6 col-md-4">
-        <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <div class="card-body text-center py-4">
-                <i class="fas fa-folder-open fa-2x mb-2"></i>
-                <h3 class="fw-bold mb-0">{{ categories|length }}</h3>
-                <small>کل دسته‌بندی‌ها</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-4">
-        <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-            <div class="card-body text-center py-4">
-                <i class="fas fa-check-circle fa-2x mb-2"></i>
-                <h3 class="fw-bold mb-0">{{ active_categories_count }}</h3>
-                <small>فعال</small>
-            </div>
-        </div>
-    </div>
-   
-    <div class="col-12 col-md-4">
-        <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-            <div class="card-body text-center py-4">
-                <i class="fas fa-times-circle fa-2x mb-2"></i>
-                <h3 class="fw-bold mb-0">{{ inactive_categories_count }}</h3>
-                <small>غیرفعال</small>
-            </div>
-        </div>
-    </div>
-</div>
-
-    <!-- Search and Filters -->
-   <div class="card border-0 shadow-sm mb-4 rounded-3">
-    <div class="card-body">
-        <form method="GET" class="row g-3 align-items-center">
-    <!-- جستجو -->
-            <div class="col-12 col-md-5">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="fas fa-search" style="color: #450C98;"></i>
-                    </span>
-                    <input type="text" name="search" class="form-control border-start-0" 
-                        placeholder="جستجو در دسته‌بندی‌ها..." 
-                        value="{{ request.GET.search }}">
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-folder-open fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ categories|length }}</h3>
+                    <small>کل دسته‌بندی‌ها</small>
                 </div>
             </div>
-
-            <!-- وضعیت -->
-            <div class="col-12 col-md-3">
-                <select name="status" class="form-select">
-                    <option value="">همه وضعیت‌ها</option>
-                    <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>فعال</option>
-                    <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>غیرفعال</option>
-                </select>
-            </div>
-
-            <!-- دکمه اعمال -->
-            <div class="col-12 col-md-4">
-                <button type="submit" class="btn w-100 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
-                    <i class="fas fa-filter me-1"></i> جستجو
-                </button>
-            </div>
-        </form>
-
-        <!-- دکمه حذف جستجو - فقط وقتی فیلتری فعال است -->
-        {% if request.GET.search or request.GET.status %}
-        <div class="mt-2">
-            <a href="{{ request.path }}" 
-            class="btn btn-dark btn-sm" 
-            style="font-size: 0.85rem;">
-                <i class="fas fa-times-circle me-1"></i> حذف جستجو
-            </a>
         </div>
-        {% endif %}
+        <div class="col-6 col-md-4">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ active_categories_count }}</h3>
+                    <small>فعال</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-times-circle fa-2x mb-2"></i>
+                    <h3 class="fw-bold mb-0">{{ inactive_categories_count }}</h3>
+                    <small>غیرفعال</small>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+
+    <!-- Search and Filters -->
+    <div class="card border-0 shadow-sm mb-4 rounded-3">
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-center">
+                <div class="col-12 col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search" style="color: #450C98;"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control border-start-0" 
+                            placeholder="جستجو در دسته‌بندی‌ها..." 
+                            value="{{ request.GET.search }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">همه وضعیت‌ها</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>فعال</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>غیرفعال</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <button type="submit" class="btn w-100 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <i class="fas fa-filter me-1"></i> جستجو
+                    </button>
+                </div>
+            </form>
+
+            {% if request.GET.search or request.GET.status %}
+            <div class="mt-2">
+                <a href="{{ request.path }}" 
+                class="btn btn-dark btn-sm" 
+                style="font-size: 0.85rem;">
+                    <i class="fas fa-times-circle me-1"></i> حذف جستجو
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
     <!-- Table Card -->
     <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
@@ -146,22 +140,22 @@
                             <td class="d-none d-md-table-cell">
                                 <code class="text-muted">{{ category.code }}</code>
                             </td>
-                           
-                         <td>
-                            {% if category.description %}
-                                <button class="btn btn-outline-info btn-sm rounded-pill px-3" 
-                                        onclick="showDescriptionModal('{{ category.name }}', '{{ category.description|escapejs }}')"
-                                        title="مشاهده توضیحات">
-                                    <i class="fas fa-eye me-1"></i>
-                                </button>
-                            {% else %}
-                                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" 
-                                        onclick="showDescriptionModal('{{ category.name }}', '')"
-                                        title="مشاهده توضیحات">
-                                    <i class="fas fa-eye-slash me-1"></i>
-                                </button>
-                            {% endif %}
-                        </td>
+
+                            <td>
+                                {% if category.description %}
+                                    <button class="btn btn-outline-info btn-sm rounded-pill px-3" 
+                                            onclick="showDescriptionModal('{{ category.name }}', '{{ category.description|escapejs }}')"
+                                            title="مشاهده توضیحات">
+                                        <i class="fas fa-eye me-1"></i>
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" 
+                                            onclick="showDescriptionModal('{{ category.name }}', '')"
+                                            title="مشاهده توضیحات">
+                                        <i class="fas fa-eye-slash me-1"></i>
+                                    </button>
+                                {% endif %}
+                            </td>
                             <td class="text-center">
                                 {% if category.is_active %}
                                     <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
@@ -211,59 +205,56 @@
             </div>
         </div>
     </div>
-    {% if categories.has_other_pages %}
-<div class="d-flex justify-content-center mt-4">
-    <nav aria-label="Page navigation">
-        <ul class="pagination">
-            <!-- Previous button -->
-            {% if categories.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ categories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-            {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link" aria-hidden="true">&laquo;</span>
-                </li>
-            {% endif %}
 
-            <!-- Page numbers -->
-            {% for num in categories.paginator.page_range %}
-                {% if categories.number == num %}
-                    <li class="page-item active">
-                        <span class="page-link" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%); border-color: #014f86;">{{ num }}</span>
-                    </li>
-                {% elif num > categories.number|add:'-3' and num < categories.number|add:'3' %}
+    {% if categories.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if categories.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                        <a class="page-link" href="?page={{ categories.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&laquo;</span>
                     </li>
                 {% endif %}
-            {% endfor %}
 
-            <!-- Next button -->
-            {% if categories.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ categories.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-            {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link" aria-hidden="true">&raquo;</span>
-                </li>
-            {% endif %}
-        </ul>
-    </nav>
-</div>
+                {% for num in categories.paginator.page_range %}
+                    {% if categories.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%); border-color: #014f86;">{{ num }}</span>
+                        </li>
+                    {% elif num > categories.number|add:'-3' and num < categories.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
 
-<!-- Showing results info -->
-<div class="text-center mt-2">
-    <small class="text-muted">
-        نمایش {{ categories.start_index }} تا {{ categories.end_index }} از {{ paginator.count }} دسته‌بندی
-    </small>
-</div>
-{% endif %}
+                {% if categories.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ categories.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+    <div class="text-center mt-2">
+        <small class="text-muted">
+            نمایش {{ categories.start_index }} تا {{ categories.end_index }} از {{ paginator.count }} دسته‌بندی
+        </small>
+    </div>
+    {% endif %}
 
 </div>
 
@@ -296,6 +287,8 @@
         </div>
     </div>
 </div>
+
+<!-- Description Modal -->
 <div class="modal fade" id="descriptionModal" tabindex="-1" aria-labelledby="descriptionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -325,18 +318,23 @@
     </div>
 </div>
 
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
     let deleteCategoryId = null;
-    
+
     function showDeleteModal(categoryId, categoryName) {
         deleteCategoryId = categoryId;
         document.getElementById('deleteCategoryName').textContent = categoryName;
-        
-        // Show modal
+
         const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
         deleteModal.show();
     }
-    
+
     document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
         if (deleteCategoryId) {
             const form = document.getElementById('deleteForm-' + deleteCategoryId);
@@ -345,13 +343,13 @@
             }
         }
     });
+
     function showDescriptionModal(categoryName, description) {
         document.getElementById('descriptionCategoryName').textContent = categoryName;
         document.getElementById('descriptionText').textContent = description || 'توضیحاتی ثبت نشده است';
-        
+
         const descriptionModal = new bootstrap.Modal(document.getElementById('descriptionModal'));
         descriptionModal.show();
     }
 </script>
-
 {% endblock %}

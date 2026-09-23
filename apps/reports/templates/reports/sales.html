@@ -1,10 +1,869 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 {% load math_filters %}
+{% load static %}
 
 {% block title %}راپور فروش{% endblock %}
 
 {% block content %}
+<div class="container-fluid sl-wrapper py-4">
+
+    <!-- ============ HEADER ============ -->
+    <div class="sl-header">
+        <div class="content">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                    <h1>
+                        <i class="fas fa-shopping-bag me-2"></i>
+                        راپور فروش
+                    </h1>
+                    <div class="sub">
+                        <i class="fas fa-info-circle me-1"></i>
+                        تحلیل کامل فروش‌ها، مشتریان برتر و پرفروش‌ترین کالاها
+                    </div>
+                    <div class="meta-badges">
+                        <span class="meta-badge">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            {{ period.label }}
+                        </span>
+                        <span class="meta-badge">
+                            <i class="fas fa-calendar-day me-1"></i>
+                            {{ period.start|date:"Y/m/d" }} تا {{ period.end|date:"Y/m/d" }}
+                        </span>
+                        <span class="meta-badge">
+                            <i class="fas fa-clock me-1"></i>
+                            {% now "H:i" %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ PDF ACTION BAR ============ -->
+    <div class="pdf-action-bar">
+        <div class="pdf-action-text">
+            <h5>
+                <i class="fas fa-file-pdf" style="color: #dc2626;"></i>
+                دانلود PDF راپور فروش
+            </h5>
+            <p>
+                شامل KPI‌های فروش، مشتریان برتر، پرفروش‌ترین کالاها و لیست کامل فروش‌ها — A4
+            </p>
+        </div>
+        <button type="button" class="pdf-download-btn" id="pdfDownloadBtn" onclick="downloadSalesReport()">
+            <i class="fas fa-download"></i>
+            <span>دانلود PDF</span>
+        </button>
+    </div>
+
+    <!-- ============ NAV ============ -->
+    <div class="report-nav">
+        <span class="nav-label">
+            <i class="fas fa-compass"></i> پیمایش سریع:
+        </span>
+        <a href="{% url 'report_overview' %}" class="nav-pill">
+            <i class="fas fa-chart-pie"></i> جامع
+        </a>
+        <a href="{% url 'report_sales' %}" class="nav-pill active-sales">
+            <i class="fas fa-shopping-bag"></i> فروش
+        </a>
+        <a href="{% url 'report_purchases' %}" class="nav-pill">
+            <i class="fas fa-shopping-cart"></i> خرید
+        </a>
+        <a href="{% url 'report_expenses' %}" class="nav-pill">
+            <i class="fas fa-receipt"></i> مصارف
+        </a>
+        <a href="{% url 'report_salaries' %}" class="nav-pill">
+            <i class="fas fa-money-bill-wave"></i> معاشات
+        </a>
+        <a href="{% url 'report_stock' %}" class="nav-pill">
+            <i class="fas fa-warehouse"></i> انبار
+        </a>
+        <a href="{% url 'report_treasury' %}" class="nav-pill">
+            <i class="fas fa-vault"></i> خزانه
+        </a>
+        <a href="{% url 'report_returns' %}" class="nav-pill">
+            <i class="fas fa-undo-alt"></i> مرجوعی
+        </a>
+        <a href="{% url 'report_debts' %}" class="nav-pill">
+            <i class="fas fa-hand-holding-usd"></i> قروض
+        </a>
+        <a href="{% url 'report_employees' %}" class="nav-pill">
+            <i class="fas fa-users"></i> کارمندان
+        </a>
+    </div>
+
+    <!-- ============ PERIOD ============ -->
+    <div class="period-toolbar">
+        <span class="lbl"><i class="fas fa-filter me-1"></i> دوره:</span>
+        <a href="?period=today" class="period-btn {% if period.key == 'today' %}active{% endif %}">امروز</a>
+        <a href="?period=yesterday" class="period-btn {% if period.key == 'yesterday' %}active{% endif %}">دیروز</a>
+        <a href="?period=this_week" class="period-btn {% if period.key == 'this_week' %}active{% endif %}">هفته جاری</a>
+        <a href="?period=last_week" class="period-btn {% if period.key == 'last_week' %}active{% endif %}">هفته گذشته</a>
+        <a href="?period=this_month" class="period-btn {% if period.key == 'this_month' %}active{% endif %}">ماه جاری</a>
+        <a href="?period=last_month" class="period-btn {% if period.key == 'last_month' %}active{% endif %}">ماه گذشته</a>
+        <a href="?period=7" class="period-btn {% if period.key == '7' %}active{% endif %}">۷ روز</a>
+        <a href="?period=30" class="period-btn {% if period.key == '30' %}active{% endif %}">۳۰ روز</a>
+        <a href="?period=90" class="period-btn {% if period.key == '90' %}active{% endif %}">۹۰ روز</a>
+        <a href="?period=365" class="period-btn {% if period.key == '365' %}active{% endif %}">۱ سال</a>
+        <a href="?period=this_year" class="period-btn {% if period.key == 'this_year' %}active{% endif %}">سال جاری</a>
+        <a href="?period=last_year" class="period-btn {% if period.key == 'last_year' %}active{% endif %}">سال گذشته</a>
+    </div>
+
+    <!-- ============ KPI ============ -->
+    <div class="row g-3 mb-2">
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="kpi-card kpi-total">
+                <div class="kpi-icon"><i class="fas fa-money-bill-wave"></i></div>
+                <p class="kpi-value text-success">{{ stats.total|floatformat:0 }}</p>
+                <div class="kpi-label">مجموع فروش (افغانی)</div>
+                <div class="kpi-sub">
+                    <i class="fas fa-file-invoice me-1"></i>
+                    {{ stats.count }} سند
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="kpi-card kpi-received">
+                <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+                <p class="kpi-value" style="color: #059669;">{{ stats.received|floatformat:0 }}</p>
+                <div class="kpi-label">مجموع دریافتی (افغانی)</div>
+                <div class="kpi-sub">
+                    <i class="fas fa-percent me-1"></i>
+                    {% if stats.total > 0 %}
+                        {% widthratio stats.received stats.total 100 %}% وصولی
+                    {% else %}0%{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="kpi-card kpi-remaining">
+                <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+                <p class="kpi-value text-danger">{{ stats.remaining|floatformat:0 }}</p>
+                <div class="kpi-label">باقی‌مانده (افغانی)</div>
+                <div class="kpi-sub">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    قابل وصول
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="kpi-card kpi-profit">
+                <div class="kpi-icon"><i class="fas fa-chart-line"></i></div>
+                <p class="kpi-value {% if stats.profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {% if stats.profit >= 0 %}+{% endif %}{{ stats.profit|floatformat:0 }}
+                </p>
+                <div class="kpi-label">سود تخمینی دوره</div>
+                <div class="kpi-sub">
+                    <i class="fas fa-percent me-1"></i>
+                    {% if stats.total > 0 %}
+                        حاشیه: {% widthratio stats.profit stats.total 100 %}%
+                    {% else %}—{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="kpi-card kpi-count">
+                <div class="kpi-icon"><i class="fas fa-file-invoice"></i></div>
+                <p class="kpi-value text-info">{{ stats.count }}</p>
+                <div class="kpi-label">تعداد فروش‌ها</div>
+                <div class="kpi-sub">
+                    <i class="fas fa-calendar-day me-1"></i>
+                    در دوره {{ period.label }}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="kpi-card kpi-avg">
+                <div class="kpi-icon"><i class="fas fa-calculator"></i></div>
+                <p class="kpi-value" style="color: var(--primary);">{{ stats.avg|floatformat:0 }}</p>
+                <div class="kpi-label">میانگین هر فروش</div>
+                <div class="kpi-sub">
+                    <i class="fas fa-chart-simple me-1"></i>
+                    افغانی
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ CHART DAILY ============ -->
+    <div class="sec-title">
+        <span class="bar"></span>
+        <i class="fas fa-chart-column me-1"></i>
+        روند روزانه فروش و سود
+    </div>
+
+    <div class="row g-3 mb-2">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="chart-head">
+                    <div class="chart-title">
+                        <i class="fas fa-chart-bar"></i>
+                        نمودار فروش و سود روزانه
+                    </div>
+                    <span class="chart-tag">
+                        <i class="fas fa-calendar-day me-1"></i>
+                        {{ period.days }} روز
+                    </span>
+                </div>
+                <div class="chart-wrap">
+                    <canvas id="dailyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ TOP CUSTOMERS + TOP PRODUCTS ============ -->
+    <div class="sec-title">
+        <span class="bar"></span>
+        <i class="fas fa-list-alt me-1"></i>
+        تحلیل‌های تفصیلی
+    </div>
+
+    <div class="row g-3 mb-2">
+        <div class="col-12 col-lg-6">
+            <div class="table-card">
+                <div class="table-head">
+                    <h6 style="color: #9550fc;">
+                        <i class="fas fa-crown"></i>
+                        مشتریان برتر
+                    </h6>
+                    <span class="tag">Top 15</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">#</th>
+                                <th>مشتری</th>
+                                <th class="text-center">فاکتور</th>
+                                <th class="text-end">مجموع خرید</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in top_customers %}
+                            <tr>
+                                <td><span class="rank-badge rank-{{ forloop.counter }}">{{ forloop.counter }}</span></td>
+                                <td class="fw-bold small">{{ c.customer_name }}</td>
+                                <td class="text-center"><span class="badge bg-light text-dark">{{ c.total_count }}</span></td>
+                                <td class="text-end fw-bold" style="color: #9550fc;">{{ c.total_amount|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4"><div class="empty-state"><i class="fas fa-user-slash"></i>مشتری‌ای ثبت نشده</div></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="table-card">
+                <div class="table-head">
+                    <h6 style="color: #11998e;">
+                        <i class="fas fa-trophy"></i>
+                        پرفروش‌ترین کالاها
+                    </h6>
+                    <span class="tag">Top 15</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">#</th>
+                                <th>کالا</th>
+                                <th class="text-center">تعداد</th>
+                                <th class="text-end">مبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in top_products %}
+                            <tr>
+                                <td><span class="rank-badge rank-{{ forloop.counter }}">{{ forloop.counter }}</span></td>
+                                <td class="fw-bold small">{{ p.name }}</td>
+                                <td class="text-center"><span class="badge bg-light text-dark">{{ p.qty }}</span></td>
+                                <td class="text-end fw-bold text-success">{{ p.amount|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4"><div class="empty-state"><i class="fas fa-box-open"></i>داده‌ای موجود نیست</div></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ FULL SALES LIST ============ -->
+    <div class="sec-title">
+        <span class="bar"></span>
+        <i class="fas fa-receipt me-1"></i>
+        لیست کامل فروش‌ها
+    </div>
+
+    <div class="sales-list-card mb-3">
+        <div class="list-head">
+            <h6>
+                <i class="fas fa-list"></i>
+                همه فروش‌های دوره
+            </h6>
+            <span class="count-tag">
+                <i class="fas fa-file-invoice me-1"></i>
+                {{ sales|length }} فروش
+            </span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">#</th>
+                        <th>شماره فروش</th>
+                        <th>تاریخ</th>
+                        <th>مشتری</th>
+                        <th class="text-center">اقلام</th>
+                        <th class="text-end">مجموع</th>
+                        <th class="text-end">دریافتی</th>
+                        <th class="text-end">باقی‌مانده</th>
+                        <th class="text-center">وضعیت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td class="text-center">
+                            <span class="badge rounded-pill text-white"
+                                  style="background: linear-gradient(135deg, #11998e, #38ef7d);">
+                                {{ forloop.counter }}
+                            </span>
+                        </td>
+                        <td><code class="text-muted small">{{ sale.sale_number|default:'---' }}</code></td>
+                        <td class="text-muted small">{{ sale.sale_date|date:"Y/m/d" }}</td>
+                        <td>
+                            <span class="fw-bold small">{{ sale.customer_name }}</span>
+                            {% if sale.customer_number %}
+                                <br><small class="text-muted"><i class="fas fa-phone me-1"></i>{{ sale.customer_number }}</small>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark">{{ sale.items|length }}</span>
+                        </td>
+                        <td class="text-end fw-bold">{{ sale.total_amount|floatformat:0 }}</td>
+                        <td class="text-end text-success fw-bold">{{ sale.received_amount|floatformat:0 }}</td>
+                        <td class="text-end {% if sale.remaining_amount > 0 %}text-danger{% else %}text-muted{% endif %} fw-bold">
+                            {{ sale.remaining_amount|floatformat:0 }}
+                        </td>
+                        <td class="text-center">
+                            {% if sale.is_fully_paid %}
+                                <span class="status-badge status-paid">
+                                    <i class="fas fa-check-circle me-1"></i>پرداخت کامل
+                                </span>
+                            {% elif sale.is_partially_paid %}
+                                <span class="status-badge status-partial">
+                                    <i class="fas fa-clock me-1"></i>پرداخت جزئی
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-unpaid">
+                                    <i class="fas fa-times-circle me-1"></i>پرداخت نشده
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <i class="fas fa-shopping-bag"></i>
+                                فروشی در این دوره ثبت نشده
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============ FOOTER ============ -->
+    <div class="soft-divider"></div>
+    <div class="text-center text-muted small pb-3">
+        <i class="fas fa-shield-halved me-1" style="color: #11998e;"></i>
+        راپور فروش فقط برای <strong>مشاهده</strong> است
+        <br>
+        <span style="font-size: 0.75rem;">آخرین بروزرسانی: {% now "Y/m/d H:i" %}</span>
+    </div>
+</div>
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
+<script>
+    // ─── Offline fonts from static folder — no CDN ───
+    window.VAZIR_FONT_URL = '{% static "webfonts/Vazirmatn/static/Vazirmatn-Regular.ttf" %}';
+    window.VAZIR_FONT_BOLD_URL = '{% static "webfonts/Vazirmatn/static/Vazirmatn-Bold.ttf" %}';
+
+    /* ============================================================ */
+    /* DAILY CHART — deferred Chart.js is ready by DOMContentLoaded */
+    /* ============================================================ */
+    document.addEventListener('DOMContentLoaded', function () {
+        const dailyCanvas = document.getElementById('dailyChart');
+        if (!dailyCanvas || !window.Chart) return;
+
+        const ctx = dailyCanvas.getContext('2d');
+        const makeG = (c1, c2) => {
+            const g = ctx.createLinearGradient(0, 0, 0, 300);
+            g.addColorStop(0, c1); g.addColorStop(1, c2);
+            return g;
+        };
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ daily_labels|safe }},
+                datasets: [
+                    {
+                        label: 'فروش',
+                        data: {{ daily_sales|safe }},
+                        borderColor: '#11998e',
+                        backgroundColor: makeG('rgba(17,153,142,0.3)','rgba(17,153,142,0.02)'),
+                        borderWidth: 3, tension: 0.4, fill: true,
+                        pointRadius: 4, pointBackgroundColor: '#11998e',
+                        pointBorderColor: '#fff', pointBorderWidth: 2,
+                    },
+                    {
+                        label: 'سود',
+                        data: {{ daily_profits|safe }},
+                        borderColor: '#9550fc',
+                        backgroundColor: 'transparent',
+                        borderWidth: 3, borderDash: [6,4], tension: 0.4, fill: false,
+                        pointRadius: 4, pointBackgroundColor: '#9550fc',
+                        pointBorderColor: '#fff', pointBorderWidth: 2,
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top',
+                        labels: { font: { family: 'Vazirmatn, Tahoma', size: 12, weight: '600' },
+                                  color: '#11998e', usePointStyle: true, pointStyle: 'circle', padding: 14 } },
+                    tooltip: { rtl: true, backgroundColor: 'rgba(30,41,59,0.95)', padding: 12, cornerRadius: 10,
+                        callbacks: { label: c => ' ' + c.dataset.label + ': ' + Number(c.parsed.y).toLocaleString('fa-AF') + ' افغانی' } }
+                },
+                scales: {
+                    y: { beginAtZero: true,
+                        ticks: { color: '#64748b', callback: v => Number(v).toLocaleString('fa-AF') },
+                        grid: { color: 'rgba(148,163,184,0.12)', drawBorder: false } },
+                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
+                }
+            }
+        });
+    });
+
+    /* ============================================================ */
+    /* LOADING */
+    /* ============================================================ */
+    function showLoading(text, sub) {
+        let overlay = document.getElementById('pdfLoadingOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'pdfLoadingOverlay';
+            overlay.className = 'pdf-loading-overlay';
+            overlay.innerHTML =
+                '<div class="pdf-loading-spinner"></div>' +
+                '<div class="pdf-loading-text" id="pdfLoadingText">در حال آماده‌سازی...</div>' +
+                '<div class="pdf-loading-sub" id="pdfLoadingSub">لطفاً صبر کنید</div>';
+            document.body.appendChild(overlay);
+        }
+        document.getElementById('pdfLoadingText').textContent = text || 'در حال آماده‌سازی...';
+        document.getElementById('pdfLoadingSub').textContent = sub || 'لطفاً صبر کنید';
+        overlay.classList.add('active');
+    }
+
+    function hideLoading() {
+        const overlay = document.getElementById('pdfLoadingOverlay');
+        if (overlay) overlay.classList.remove('active');
+    }
+
+    /* ============================================================ */
+    /* FONT HELPERS */
+    /* ============================================================ */
+    async function fetchFont(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Font not found: ' + url);
+            const buffer = await response.arrayBuffer();
+            return arrayBufferToBase64(buffer);
+        } catch (err) {
+            console.warn('Font load failed:', err);
+            return null;
+        }
+    }
+
+    function arrayBufferToBase64(buffer) {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        const chunk = 0x8000;
+        for (let i = 0; i < len; i += chunk) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+        }
+        return btoa(binary);
+    }
+
+    /* ============================================================ */
+    /* DOWNLOAD SALES PDF */
+    /* ============================================================ */
+    async function downloadSalesReport() {
+        const btn = document.getElementById('pdfDownloadBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>در حال ساخت...</span>';
+        showLoading('در حال ساخت PDF...', 'کمی صبر کنید');
+
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4',
+                compress: true,
+            });
+
+            // ====== LOAD FONTS ======
+            const fontRegular = await fetchFont(window.VAZIR_FONT_URL);
+            const fontBold = await fetchFont(window.VAZIR_FONT_BOLD_URL);
+
+            if (!fontRegular) {
+                throw new Error('فونت فارسی لود نشد. مسیر static/webfonts/Vazirmatn/static/ را بررسی کنید.');
+            }
+
+            doc.addFileToVFS('Vazirmatn-Regular.ttf', fontRegular);
+            doc.addFont('Vazirmatn-Regular.ttf', 'Vazirmatn', 'normal');
+
+            if (fontBold) {
+                doc.addFileToVFS('Vazirmatn-Bold.ttf', fontBold);
+                doc.addFont('Vazirmatn-Bold.ttf', 'Vazirmatn', 'bold');
+            }
+
+            doc.setFont('Vazirmatn', 'normal');
+
+            // ====== DATA ======
+            const data = {
+                periodLabel: "{{ period.label|escapejs }}",
+                periodStart: "{{ period.start|date:'Y/m/d' }}",
+                periodEnd: "{{ period.end|date:'Y/m/d' }}",
+                today: new Date().toLocaleDateString('fa-AF'),
+                time: new Date().toLocaleTimeString('fa-AF', {hour: '2-digit', minute: '2-digit'}),
+
+                total: "{{ stats.total|floatformat:0 }}",
+                received: "{{ stats.received|floatformat:0 }}",
+                remaining: "{{ stats.remaining|floatformat:0 }}",
+                profit: "{{ stats.profit|floatformat:0 }}",
+                count: "{{ stats.count }}",
+                avg: "{{ stats.avg|floatformat:0 }}",
+            };
+
+            const topCustomers = [
+                {% for c in top_customers %}
+                { rank: {{ forloop.counter }}, name: "{{ c.customer_name|escapejs }}", count: "{{ c.total_count }}", amount: "{{ c.total_amount|floatformat:0 }}" },
+                {% endfor %}
+            ];
+
+            const topProducts = [
+                {% for p in top_products %}
+                { rank: {{ forloop.counter }}, name: "{{ p.name|escapejs }}", qty: "{{ p.qty }}", amount: "{{ p.amount|floatformat:0 }}" },
+                {% endfor %}
+            ];
+
+            const salesList = [
+                {% for sale in sales %}
+                {
+                    rank: {{ forloop.counter }},
+                    number: "{{ sale.sale_number|default:'---'|escapejs }}",
+                    date: "{{ sale.sale_date|date:'Y/m/d' }}",
+                    customer: "{{ sale.customer_name|escapejs }}",
+                    items: "{{ sale.items|length }}",
+                    total: "{{ sale.total_amount|floatformat:0 }}",
+                    received: "{{ sale.received_amount|floatformat:0 }}",
+                    remaining: "{{ sale.remaining_amount|floatformat:0 }}",
+                    status: "{% if sale.is_fully_paid %}پرداخت کامل{% elif sale.is_partially_paid %}پرداخت جزئی{% else %}پرداخت نشده{% endif %}"
+                },
+                {% endfor %}
+            ];
+
+            // ====== PAGE SETUP ======
+            const PAGE_W = 210;
+            const PAGE_H = 297;
+            const MARGIN = 12;
+            const CONTENT_W = PAGE_W - (MARGIN * 2);
+            let y = MARGIN;
+            let pageNum = 1;
+
+            // ====== HELPERS ======
+            const setFont = (size, weight = 'normal', color = [30, 41, 59]) => {
+                doc.setFont('Vazirmatn', weight);
+                doc.setFontSize(size);
+                doc.setTextColor(color[0], color[1], color[2]);
+            };
+
+            const drawPageFooter = () => {
+                const footerY = PAGE_H - 8;
+                doc.setDrawColor(220, 220, 220);
+                doc.setLineWidth(0.3);
+                doc.line(MARGIN, footerY - 3, PAGE_W - MARGIN, footerY - 3);
+
+                setFont(7, 'normal', [120, 120, 120]);
+                doc.text('صفحه ' + pageNum, MARGIN + 2, footerY, { align: 'left' });
+                doc.text(data.today + ' - ' + data.time, PAGE_W / 2, footerY, { align: 'center' });
+                doc.text('poyafar@yahoo.com', PAGE_W - MARGIN - 2, footerY, { align: 'right' });
+            };
+
+            const drawMiniHeader = () => {
+                doc.setFillColor(17, 153, 142);
+                doc.rect(0, 0, PAGE_W, 8, 'F');
+                setFont(8, 'normal', [255, 255, 255]);
+                doc.text('راپور فروش — شرکت نرم‌افزاری پویافر', PAGE_W - MARGIN, 5.5, { align: 'right' });
+                y = 14;
+            };
+
+            const checkPage = (needed = 20) => {
+                if (y + needed > PAGE_H - 15) {
+                    drawPageFooter();
+                    doc.addPage();
+                    pageNum++;
+                    drawMiniHeader();
+                }
+            };
+
+            const drawSectionTitle = (title) => {
+                checkPage(12);
+                setFont(11, 'bold', [17, 153, 142]);
+                doc.text(title, PAGE_W - MARGIN, y, { align: 'right' });
+                doc.setDrawColor(17, 153, 142);
+                doc.setLineWidth(0.6);
+                doc.line(PAGE_W - MARGIN - 50, y + 1.5, PAGE_W - MARGIN, y + 1.5);
+                y += 6;
+            };
+
+            const drawSimpleTable = (headers, rows, colWidths) => {
+                const headerH = 7.5;
+                const rowH = 6.5;
+                const tableW = colWidths.reduce((a, b) => a + b, 0);
+                const startX = PAGE_W - MARGIN - tableW;
+
+                checkPage(headerH + rowH * 2);
+                doc.setFillColor(17, 153, 142);
+                doc.rect(startX, y, tableW, headerH, 'F');
+                setFont(8, 'bold', [255, 255, 255]);
+
+                let xPos = PAGE_W - MARGIN;
+                headers.forEach((h, i) => {
+                    xPos -= colWidths[i];
+                    doc.text(h, xPos + colWidths[i] - 2, y + 5, { align: 'right' });
+                });
+                y += headerH;
+
+                rows.forEach((row, idx) => {
+                    checkPage(rowH);
+                    if (idx % 2 === 0) {
+                        doc.setFillColor(240, 253, 244);
+                        doc.rect(startX, y, tableW, rowH, 'F');
+                    }
+                    doc.setDrawColor(226, 232, 240);
+                    doc.setLineWidth(0.2);
+                    doc.rect(startX, y, tableW, rowH);
+
+                    setFont(8, 'normal', [30, 41, 59]);
+                    xPos = PAGE_W - MARGIN;
+                    row.forEach((cell, i) => {
+                        xPos -= colWidths[i];
+                        let x, align;
+                        if (i === 0) {
+                            align = 'center';
+                            x = xPos + colWidths[i] / 2;
+                        } else if (i === row.length - 1) {
+                            align = 'left';
+                            x = xPos + 3;
+                        } else {
+                            align = 'right';
+                            x = xPos + colWidths[i] - 2;
+                        }
+                        doc.text(String(cell), x, y + 4.5, { align: align });
+                    });
+                    y += rowH;
+                });
+
+                y += 4;
+            };
+
+            const drawKpiBox = (x, yPos, w, h, title, value, meta, color) => {
+                doc.setDrawColor(226, 232, 240);
+                doc.setFillColor(255, 255, 255);
+                doc.roundedRect(x, yPos, w, h, 1.5, 1.5, 'FD');
+
+                doc.setFillColor(color[0], color[1], color[2]);
+                doc.rect(x, yPos, w, 1.5, 'F');
+
+                setFont(7, 'normal', [100, 116, 139]);
+                doc.text(title, x + w - 3, yPos + 5, { align: 'right' });
+
+                setFont(12.5, 'bold', color);
+                doc.text(value, x + w - 3, yPos + 12, { align: 'right' });
+
+                setFont(6, 'normal', [148, 163, 184]);
+                if (meta) doc.text(meta, x + w - 3, yPos + 17.5, { align: 'right' });
+            };
+
+            // ====== 1) MAIN HEADER ======
+            doc.setFillColor(17, 153, 142);
+            doc.rect(0, 0, PAGE_W, 32, 'F');
+
+            doc.setFillColor(56, 239, 125);
+            doc.circle(PAGE_W - 15, 16, 22, 'F');
+
+            setFont(18, 'bold', [255, 255, 255]);
+            doc.text('راپور فروش', PAGE_W - MARGIN, 12, { align: 'right' });
+
+            setFont(9, 'normal', [255, 255, 255]);
+            doc.text('شرکت نرم‌افزاری پویافر — تحلیل کامل فروش', PAGE_W - MARGIN, 19, { align: 'right' });
+
+            setFont(8, 'normal', [255, 255, 255]);
+            doc.text('دوره: ' + data.periodLabel, PAGE_W - MARGIN, 27, { align: 'right' });
+            doc.text('از: ' + data.periodStart + '  تا: ' + data.periodEnd, MARGIN + 2, 27, { align: 'left' });
+
+            y = 40;
+
+            // ====== 2) KPI ======
+            drawSectionTitle('شاخص‌های کلیدی فروش');
+
+            const kpiW = (CONTENT_W - 4) / 3;
+            const kpiH = 20;
+            const kpiGap = 2;
+
+            const kpis = [
+                { title: 'مجموع فروش', value: data.total, meta: data.count + ' سند', color: [17, 153, 142] },
+                { title: 'مجموع دریافتی', value: data.received, meta: 'دریافتی از مشتریان', color: [5, 150, 105] },
+                { title: 'باقی‌مانده', value: data.remaining, meta: 'قابل وصول', color: [245, 87, 108] },
+                { title: 'سود تخمینی', value: data.profit, meta: 'بر اساس قیمت خرید', color: [217, 119, 6] },
+                { title: 'تعداد فروش', value: data.count, meta: 'در دوره انتخابی', color: [37, 99, 235] },
+                { title: 'میانگین هر فروش', value: data.avg, meta: 'افغانی', color: [124, 58, 237] },
+            ];
+
+            kpis.forEach((kpi, i) => {
+                const col = i % 3;
+                const row = Math.floor(i / 3);
+                const x = PAGE_W - MARGIN - (col + 1) * kpiW - col * kpiGap;
+                drawKpiBox(x, y + row * (kpiH + kpiGap), kpiW, kpiH, kpi.title, kpi.value, kpi.meta, kpi.color);
+            });
+
+            y += 2 * (kpiH + kpiGap) + 6;
+
+            // ====== 3) TOP CUSTOMERS ======
+            if (topCustomers.length > 0) {
+                drawSectionTitle('مشتریان برتر');
+                drawSimpleTable(
+                    ['#', 'نام مشتری', 'فاکتور', 'مجموع خرید (افغانی)'],
+                    topCustomers.map(c => [c.rank, c.name, c.count, c.amount]),
+                    [12, 90, 25, 47]
+                );
+            }
+
+            // ====== 4) TOP PRODUCTS ======
+            if (topProducts.length > 0) {
+                drawSectionTitle('پرفروش‌ترین کالاها');
+                drawSimpleTable(
+                    ['#', 'نام کالا', 'تعداد', 'مبلغ (افغانی)'],
+                    topProducts.map(p => [p.rank, p.name, p.qty, p.amount]),
+                    [12, 90, 25, 47]
+                );
+            }
+
+            // ====== 5) FULL SALES LIST ======
+            drawSectionTitle('لیست کامل فروش‌ها');
+
+            const salesRows = salesList.map(s => [
+                s.rank,
+                s.number,
+                s.date,
+                s.customer,
+                s.items,
+                s.total,
+                s.status,
+            ]);
+
+            drawSimpleTable(
+                ['#', 'شماره', 'تاریخ', 'مشتری', 'اقلام', 'مجموع', 'وضعیت'],
+                salesRows,
+                [10, 22, 20, 55, 14, 30, 31]
+            );
+
+            // ====== 6) SIGNATURES ======
+            checkPage(35);
+            y += 8;
+            const sigW = (CONTENT_W - 20) / 3;
+            const sigLabels = ['امضای تهیه‌کننده', 'امضای مدیر', 'مهر شرکت'];
+
+            sigLabels.forEach((label, i) => {
+                const x = PAGE_W - MARGIN - i * (sigW + 10) - sigW;
+                doc.setDrawColor(148, 163, 184);
+                doc.setLineWidth(0.3);
+                doc.line(x + 10, y + 12, x + sigW - 10, y + 12);
+
+                setFont(8, 'normal', [100, 116, 139]);
+                doc.text(label, x + sigW / 2, y + 17, { align: 'center' });
+            });
+
+            y += 24;
+
+            // ====== 7) FINAL FOOTER ======
+            checkPage(20);
+            doc.setFillColor(240, 253, 244);
+            doc.roundedRect(MARGIN, y, CONTENT_W, 15, 2, 2, 'F');
+
+            setFont(9, 'bold', [17, 153, 142]);
+            doc.text('شرکت نرم‌افزاری پویافر', PAGE_W / 2, y + 5.5, { align: 'center' });
+
+            setFont(7.5, 'normal', [100, 116, 139]);
+            doc.text('کابل، افغانستان | poyafar@yahoo.com | +93794483138', PAGE_W / 2, y + 11, { align: 'center' });
+
+            // ====== 8) FOOTERS ======
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                drawPageFooter();
+            }
+
+            // ====== 9) SAVE ======
+            const filename = 'Poyafar_Sales_Report_' + new Date().toISOString().slice(0, 10) + '.pdf';
+            doc.save(filename);
+
+            hideLoading();
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+
+        } catch (error) {
+            console.error('PDF Error:', error);
+            hideLoading();
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            alert('خطا در ساخت PDF: ' + error.message);
+        }
+    }
+</script>
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE STYLES — in extra_head block                           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_head %}
 <style>
     :root {
         --primary: #450C98;
@@ -382,866 +1241,4 @@
         .pdf-download-btn { justify-content: center; }
     }
 </style>
-
-<div class="container-fluid sl-wrapper py-4">
-
-    <!-- ============ HEADER ============ -->
-    <div class="sl-header">
-        <div class="content">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                <div>
-                    <h1>
-                        <i class="fas fa-shopping-bag me-2"></i>
-                        راپور فروش
-                    </h1>
-                    <div class="sub">
-                        <i class="fas fa-info-circle me-1"></i>
-                        تحلیل کامل فروش‌ها، مشتریان برتر و پرفروش‌ترین کالاها
-                    </div>
-                    <div class="meta-badges">
-                        <span class="meta-badge">
-                            <i class="fas fa-calendar-alt me-1"></i>
-                            {{ period.label }}
-                        </span>
-                        <span class="meta-badge">
-                            <i class="fas fa-calendar-day me-1"></i>
-                            {{ period.start|date:"Y/m/d" }} تا {{ period.end|date:"Y/m/d" }}
-                        </span>
-                        <span class="meta-badge">
-                            <i class="fas fa-clock me-1"></i>
-                            {% now "H:i" %}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============ PDF ACTION BAR ============ -->
-    <div class="pdf-action-bar">
-        <div class="pdf-action-text">
-            <h5>
-                <i class="fas fa-file-pdf" style="color: #dc2626;"></i>
-                دانلود PDF راپور فروش
-            </h5>
-            <p>
-                شامل KPI‌های فروش، مشتریان برتر، پرفروش‌ترین کالاها و لیست کامل فروش‌ها — A4
-            </p>
-        </div>
-        <button type="button" class="pdf-download-btn" id="pdfDownloadBtn" onclick="downloadSalesReport()">
-            <i class="fas fa-download"></i>
-            <span>دانلود PDF</span>
-        </button>
-    </div>
-
-    <!-- ============ NAV ============ -->
-    <div class="report-nav">
-        <span class="nav-label">
-            <i class="fas fa-compass"></i> پیمایش سریع:
-        </span>
-        <a href="{% url 'report_overview' %}" class="nav-pill">
-            <i class="fas fa-chart-pie"></i> جامع
-        </a>
-        <a href="{% url 'report_sales' %}" class="nav-pill active-sales">
-            <i class="fas fa-shopping-bag"></i> فروش
-        </a>
-        <a href="{% url 'report_purchases' %}" class="nav-pill">
-            <i class="fas fa-shopping-cart"></i> خرید
-        </a>
-        <a href="{% url 'report_expenses' %}" class="nav-pill">
-            <i class="fas fa-receipt"></i> مصارف
-        </a>
-        <a href="{% url 'report_salaries' %}" class="nav-pill">
-            <i class="fas fa-money-bill-wave"></i> معاشات
-        </a>
-        <a href="{% url 'report_stock' %}" class="nav-pill">
-            <i class="fas fa-warehouse"></i> انبار
-        </a>
-        <a href="{% url 'report_treasury' %}" class="nav-pill">
-            <i class="fas fa-vault"></i> خزانه
-        </a>
-        <a href="{% url 'report_returns' %}" class="nav-pill">
-            <i class="fas fa-undo-alt"></i> مرجوعی
-        </a>
-        <a href="{% url 'report_debts' %}" class="nav-pill">
-            <i class="fas fa-hand-holding-usd"></i> قروض
-        </a>
-        <a href="{% url 'report_employees' %}" class="nav-pill">
-            <i class="fas fa-users"></i> کارمندان
-        </a>
-    </div>
-
-    <!-- ============ PERIOD ============ -->
-    <div class="period-toolbar">
-        <span class="lbl"><i class="fas fa-filter me-1"></i> دوره:</span>
-        <a href="?period=today" class="period-btn {% if period.key == 'today' %}active{% endif %}">امروز</a>
-        <a href="?period=yesterday" class="period-btn {% if period.key == 'yesterday' %}active{% endif %}">دیروز</a>
-        <a href="?period=this_week" class="period-btn {% if period.key == 'this_week' %}active{% endif %}">هفته جاری</a>
-        <a href="?period=last_week" class="period-btn {% if period.key == 'last_week' %}active{% endif %}">هفته گذشته</a>
-        <a href="?period=this_month" class="period-btn {% if period.key == 'this_month' %}active{% endif %}">ماه جاری</a>
-        <a href="?period=last_month" class="period-btn {% if period.key == 'last_month' %}active{% endif %}">ماه گذشته</a>
-        <a href="?period=7" class="period-btn {% if period.key == '7' %}active{% endif %}">۷ روز</a>
-        <a href="?period=30" class="period-btn {% if period.key == '30' %}active{% endif %}">۳۰ روز</a>
-        <a href="?period=90" class="period-btn {% if period.key == '90' %}active{% endif %}">۹۰ روز</a>
-        <a href="?period=365" class="period-btn {% if period.key == '365' %}active{% endif %}">۱ سال</a>
-        <a href="?period=this_year" class="period-btn {% if period.key == 'this_year' %}active{% endif %}">سال جاری</a>
-        <a href="?period=last_year" class="period-btn {% if period.key == 'last_year' %}active{% endif %}">سال گذشته</a>
-    </div>
-
-    <!-- ============ KPI ============ -->
-    <div class="row g-3 mb-2">
-
-        <div class="col-6 col-md-4 col-lg-3">
-            <div class="kpi-card kpi-total">
-                <div class="kpi-icon"><i class="fas fa-money-bill-wave"></i></div>
-                <p class="kpi-value text-success">{{ stats.total|floatformat:0 }}</p>
-                <div class="kpi-label">مجموع فروش (افغانی)</div>
-                <div class="kpi-sub">
-                    <i class="fas fa-file-invoice me-1"></i>
-                    {{ stats.count }} سند
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-            <div class="kpi-card kpi-received">
-                <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
-                <p class="kpi-value" style="color: #059669;">{{ stats.received|floatformat:0 }}</p>
-                <div class="kpi-label">مجموع دریافتی (افغانی)</div>
-                <div class="kpi-sub">
-                    <i class="fas fa-percent me-1"></i>
-                    {% if stats.total > 0 %}
-                        {% widthratio stats.received stats.total 100 %}% وصولی
-                    {% else %}0%{% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-            <div class="kpi-card kpi-remaining">
-                <div class="kpi-icon"><i class="fas fa-clock"></i></div>
-                <p class="kpi-value text-danger">{{ stats.remaining|floatformat:0 }}</p>
-                <div class="kpi-label">باقی‌مانده (افغانی)</div>
-                <div class="kpi-sub">
-                    <i class="fas fa-exclamation-triangle me-1"></i>
-                    قابل وصول
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-            <div class="kpi-card kpi-profit">
-                <div class="kpi-icon"><i class="fas fa-chart-line"></i></div>
-                <p class="kpi-value {% if stats.profit >= 0 %}text-success{% else %}text-danger{% endif %}">
-                    {% if stats.profit >= 0 %}+{% endif %}{{ stats.profit|floatformat:0 }}
-                </p>
-                <div class="kpi-label">سود تخمینی دوره</div>
-                <div class="kpi-sub">
-                    <i class="fas fa-percent me-1"></i>
-                    {% if stats.total > 0 %}
-                        حاشیه: {% widthratio stats.profit stats.total 100 %}%
-                    {% else %}—{% endif %}
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-            <div class="kpi-card kpi-count">
-                <div class="kpi-icon"><i class="fas fa-file-invoice"></i></div>
-                <p class="kpi-value text-info">{{ stats.count }}</p>
-                <div class="kpi-label">تعداد فروش‌ها</div>
-                <div class="kpi-sub">
-                    <i class="fas fa-calendar-day me-1"></i>
-                    در دوره {{ period.label }}
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-md-4 col-lg-3">
-            <div class="kpi-card kpi-avg">
-                <div class="kpi-icon"><i class="fas fa-calculator"></i></div>
-                <p class="kpi-value" style="color: var(--primary);">{{ stats.avg|floatformat:0 }}</p>
-                <div class="kpi-label">میانگین هر فروش</div>
-                <div class="kpi-sub">
-                    <i class="fas fa-chart-simple me-1"></i>
-                    افغانی
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ============ CHART DAILY ============ -->
-    <div class="sec-title">
-        <span class="bar"></span>
-        <i class="fas fa-chart-column me-1"></i>
-        روند روزانه فروش و سود
-    </div>
-
-    <div class="row g-3 mb-2">
-        <div class="col-12">
-            <div class="chart-card">
-                <div class="chart-head">
-                    <div class="chart-title">
-                        <i class="fas fa-chart-bar"></i>
-                        نمودار فروش و سود روزانه
-                    </div>
-                    <span class="chart-tag">
-                        <i class="fas fa-calendar-day me-1"></i>
-                        {{ period.days }} روز
-                    </span>
-                </div>
-                <div class="chart-wrap">
-                    <canvas id="dailyChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============ TOP CUSTOMERS + TOP PRODUCTS ============ -->
-    <div class="sec-title">
-        <span class="bar"></span>
-        <i class="fas fa-list-alt me-1"></i>
-        تحلیل‌های تفصیلی
-    </div>
-
-    <div class="row g-3 mb-2">
-
-        <div class="col-12 col-lg-6">
-            <div class="table-card">
-                <div class="table-head">
-                    <h6 style="color: #9550fc;">
-                        <i class="fas fa-crown"></i>
-                        مشتریان برتر
-                    </h6>
-                    <span class="tag">Top 15</span>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th style="width:40px;">#</th>
-                                <th>مشتری</th>
-                                <th class="text-center">فاکتور</th>
-                                <th class="text-end">مجموع خرید</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for c in top_customers %}
-                            <tr>
-                                <td><span class="rank-badge rank-{{ forloop.counter }}">{{ forloop.counter }}</span></td>
-                                <td class="fw-bold small">{{ c.customer_name }}</td>
-                                <td class="text-center"><span class="badge bg-light text-dark">{{ c.total_count }}</span></td>
-                                <td class="text-end fw-bold" style="color: #9550fc;">{{ c.total_amount|floatformat:0 }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="4"><div class="empty-state"><i class="fas fa-user-slash"></i>مشتری‌ای ثبت نشده</div></td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-6">
-            <div class="table-card">
-                <div class="table-head">
-                    <h6 style="color: #11998e;">
-                        <i class="fas fa-trophy"></i>
-                        پرفروش‌ترین کالاها
-                    </h6>
-                    <span class="tag">Top 15</span>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th style="width:40px;">#</th>
-                                <th>کالا</th>
-                                <th class="text-center">تعداد</th>
-                                <th class="text-end">مبلغ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for p in top_products %}
-                            <tr>
-                                <td><span class="rank-badge rank-{{ forloop.counter }}">{{ forloop.counter }}</span></td>
-                                <td class="fw-bold small">{{ p.name }}</td>
-                                <td class="text-center"><span class="badge bg-light text-dark">{{ p.qty }}</span></td>
-                                <td class="text-end fw-bold text-success">{{ p.amount|floatformat:0 }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="4"><div class="empty-state"><i class="fas fa-box-open"></i>داده‌ای موجود نیست</div></td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- ============ FULL SALES LIST ============ -->
-    <div class="sec-title">
-        <span class="bar"></span>
-        <i class="fas fa-receipt me-1"></i>
-        لیست کامل فروش‌ها
-    </div>
-
-    <div class="sales-list-card mb-3">
-        <div class="list-head">
-            <h6>
-                <i class="fas fa-list"></i>
-                همه فروش‌های دوره
-            </h6>
-            <span class="count-tag">
-                <i class="fas fa-file-invoice me-1"></i>
-                {{ sales|length }} فروش
-            </span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th style="width:40px;">#</th>
-                        <th>شماره فروش</th>
-                        <th>تاریخ</th>
-                        <th>مشتری</th>
-                        <th class="text-center">اقلام</th>
-                        <th class="text-end">مجموع</th>
-                        <th class="text-end">دریافتی</th>
-                        <th class="text-end">باقی‌مانده</th>
-                        <th class="text-center">وضعیت</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for sale in sales %}
-                    <tr>
-                        <td class="text-center">
-                            <span class="badge rounded-pill text-white"
-                                  style="background: linear-gradient(135deg, #11998e, #38ef7d);">
-                                {{ forloop.counter }}
-                            </span>
-                        </td>
-                        <td><code class="text-muted small">{{ sale.sale_number|default:'---' }}</code></td>
-                        <td class="text-muted small">{{ sale.sale_date|date:"Y/m/d" }}</td>
-                        <td>
-                            <span class="fw-bold small">{{ sale.customer_name }}</span>
-                            {% if sale.customer_number %}
-                                <br><small class="text-muted"><i class="fas fa-phone me-1"></i>{{ sale.customer_number }}</small>
-                            {% endif %}
-                        </td>
-                        <td class="text-center">
-                            <span class="badge bg-light text-dark">{{ sale.items|length }}</span>
-                        </td>
-                        <td class="text-end fw-bold">{{ sale.total_amount|floatformat:0 }}</td>
-                        <td class="text-end text-success fw-bold">{{ sale.received_amount|floatformat:0 }}</td>
-                        <td class="text-end {% if sale.remaining_amount > 0 %}text-danger{% else %}text-muted{% endif %} fw-bold">
-                            {{ sale.remaining_amount|floatformat:0 }}
-                        </td>
-                        <td class="text-center">
-                            {% if sale.is_fully_paid %}
-                                <span class="status-badge status-paid">
-                                    <i class="fas fa-check-circle me-1"></i>پرداخت کامل
-                                </span>
-                            {% elif sale.is_partially_paid %}
-                                <span class="status-badge status-partial">
-                                    <i class="fas fa-clock me-1"></i>پرداخت جزئی
-                                </span>
-                            {% else %}
-                                <span class="status-badge status-unpaid">
-                                    <i class="fas fa-times-circle me-1"></i>پرداخت نشده
-                                </span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="9">
-                            <div class="empty-state">
-                                <i class="fas fa-shopping-bag"></i>
-                                فروشی در این دوره ثبت نشده
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ============ FOOTER ============ -->
-    <div class="soft-divider"></div>
-    <div class="text-center text-muted small pb-3">
-        <i class="fas fa-shield-halved me-1" style="color: #11998e;"></i>
-        راپور فروش فقط برای <strong>مشاهده</strong> است
-        <br>
-        <span style="font-size: 0.75rem;">آخرین بروزرسانی: {% now "Y/m/d H:i" %}</span>
-    </div>
-
-</div>
-
-<!-- ============================================================ -->
-<!-- Libraries -->
-<!-- ============================================================ -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<script>
-    /* ============================================================ */
-    /* FONT URLS */
-    /* ============================================================ */
-    window.VAZIR_FONT_URL = 'https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/ttf/Vazirmatn-Regular.ttf';
-    window.VAZIR_FONT_BOLD_URL = 'https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/ttf/Vazirmatn-Bold.ttf';
-
-    /* ============================================================ */
-    /* DAILY CHART */
-    /* ============================================================ */
-    document.addEventListener('DOMContentLoaded', function () {
-        const dailyCanvas = document.getElementById('dailyChart');
-        if (dailyCanvas) {
-            const ctx = dailyCanvas.getContext('2d');
-            const makeG = (c1, c2) => {
-                const g = ctx.createLinearGradient(0, 0, 0, 300);
-                g.addColorStop(0, c1); g.addColorStop(1, c2);
-                return g;
-            };
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: {{ daily_labels|safe }},
-                    datasets: [
-                        {
-                            label: 'فروش',
-                            data: {{ daily_sales|safe }},
-                            borderColor: '#11998e',
-                            backgroundColor: makeG('rgba(17,153,142,0.3)','rgba(17,153,142,0.02)'),
-                            borderWidth: 3, tension: 0.4, fill: true,
-                            pointRadius: 4, pointBackgroundColor: '#11998e',
-                            pointBorderColor: '#fff', pointBorderWidth: 2,
-                        },
-                        {
-                            label: 'سود',
-                            data: {{ daily_profits|safe }},
-                            borderColor: '#9550fc',
-                            backgroundColor: 'transparent',
-                            borderWidth: 3, borderDash: [6,4], tension: 0.4, fill: false,
-                            pointRadius: 4, pointBackgroundColor: '#9550fc',
-                            pointBorderColor: '#fff', pointBorderWidth: 2,
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: {
-                        legend: { position: 'top',
-                            labels: { font: { family: 'Vazirmatn, Tahoma', size: 12, weight: '600' },
-                                      color: '#11998e', usePointStyle: true, pointStyle: 'circle', padding: 14 } },
-                        tooltip: { rtl: true, backgroundColor: 'rgba(30,41,59,0.95)', padding: 12, cornerRadius: 10,
-                            callbacks: { label: c => ' ' + c.dataset.label + ': ' + Number(c.parsed.y).toLocaleString('fa-AF') + ' افغانی' } }
-                    },
-                    scales: {
-                        y: { beginAtZero: true,
-                            ticks: { color: '#64748b', callback: v => Number(v).toLocaleString('fa-AF') },
-                            grid: { color: 'rgba(148,163,184,0.12)', drawBorder: false } },
-                        x: { ticks: { color: '#64748b' }, grid: { display: false } }
-                    }
-                }
-            });
-        }
-    });
-
-    /* ============================================================ */
-    /* LOADING */
-    /* ============================================================ */
-    function showLoading(text, sub) {
-        let overlay = document.getElementById('pdfLoadingOverlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'pdfLoadingOverlay';
-            overlay.className = 'pdf-loading-overlay';
-            overlay.innerHTML =
-                '<div class="pdf-loading-spinner"></div>' +
-                '<div class="pdf-loading-text" id="pdfLoadingText">در حال آماده‌سازی...</div>' +
-                '<div class="pdf-loading-sub" id="pdfLoadingSub">لطفاً صبر کنید</div>';
-            document.body.appendChild(overlay);
-        }
-        document.getElementById('pdfLoadingText').textContent = text || 'در حال آماده‌سازی...';
-        document.getElementById('pdfLoadingSub').textContent = sub || 'لطفاً صبر کنید';
-        overlay.classList.add('active');
-    }
-
-    function hideLoading() {
-        const overlay = document.getElementById('pdfLoadingOverlay');
-        if (overlay) overlay.classList.remove('active');
-    }
-
-    /* ============================================================ */
-    /* FONT HELPERS */
-    /* ============================================================ */
-    async function fetchFont(url) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Font not found: ' + url);
-            const buffer = await response.arrayBuffer();
-            return arrayBufferToBase64(buffer);
-        } catch (err) {
-            console.warn('Font load failed:', err);
-            return null;
-        }
-    }
-
-    function arrayBufferToBase64(buffer) {
-        let binary = '';
-        const bytes = new Uint8Array(buffer);
-        const len = bytes.byteLength;
-        const chunk = 0x8000;
-        for (let i = 0; i < len; i += chunk) {
-            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
-        }
-        return btoa(binary);
-    }
-
-    /* ============================================================ */
-    /* DOWNLOAD SALES PDF */
-    /* ============================================================ */
-    async function downloadSalesReport() {
-        const btn = document.getElementById('pdfDownloadBtn');
-        const originalHtml = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>در حال ساخت...</span>';
-        showLoading('در حال ساخت PDF...', 'کمی صبر کنید');
-
-        try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4',
-                compress: true,
-            });
-
-            // ====== LOAD FONTS ======
-            const fontRegular = await fetchFont(window.VAZIR_FONT_URL);
-            const fontBold = await fetchFont(window.VAZIR_FONT_BOLD_URL);
-
-            if (!fontRegular) {
-                throw new Error('فونت فارسی لود نشد. اتصال اینترنت را بررسی کنید.');
-            }
-
-            doc.addFileToVFS('Vazirmatn-Regular.ttf', fontRegular);
-            doc.addFont('Vazirmatn-Regular.ttf', 'Vazirmatn', 'normal');
-
-            if (fontBold) {
-                doc.addFileToVFS('Vazirmatn-Bold.ttf', fontBold);
-                doc.addFont('Vazirmatn-Bold.ttf', 'Vazirmatn', 'bold');
-            }
-
-            doc.setFont('Vazirmatn', 'normal');
-
-            // ====== DATA ======
-            const data = {
-                periodLabel: "{{ period.label|escapejs }}",
-                periodStart: "{{ period.start|date:'Y/m/d' }}",
-                periodEnd: "{{ period.end|date:'Y/m/d' }}",
-                today: new Date().toLocaleDateString('fa-AF'),
-                time: new Date().toLocaleTimeString('fa-AF', {hour: '2-digit', minute: '2-digit'}),
-
-                total: "{{ stats.total|floatformat:0 }}",
-                received: "{{ stats.received|floatformat:0 }}",
-                remaining: "{{ stats.remaining|floatformat:0 }}",
-                profit: "{{ stats.profit|floatformat:0 }}",
-                count: "{{ stats.count }}",
-                avg: "{{ stats.avg|floatformat:0 }}",
-            };
-
-            const topCustomers = [
-                {% for c in top_customers %}
-                { rank: {{ forloop.counter }}, name: "{{ c.customer_name|escapejs }}", count: "{{ c.total_count }}", amount: "{{ c.total_amount|floatformat:0 }}" },
-                {% endfor %}
-            ];
-
-            const topProducts = [
-                {% for p in top_products %}
-                { rank: {{ forloop.counter }}, name: "{{ p.name|escapejs }}", qty: "{{ p.qty }}", amount: "{{ p.amount|floatformat:0 }}" },
-                {% endfor %}
-            ];
-
-            const salesList = [
-                {% for sale in sales %}
-                {
-                    rank: {{ forloop.counter }},
-                    number: "{{ sale.sale_number|default:'---'|escapejs }}",
-                    date: "{{ sale.sale_date|date:'Y/m/d' }}",
-                    customer: "{{ sale.customer_name|escapejs }}",
-                    items: "{{ sale.items|length }}",
-                    total: "{{ sale.total_amount|floatformat:0 }}",
-                    received: "{{ sale.received_amount|floatformat:0 }}",
-                    remaining: "{{ sale.remaining_amount|floatformat:0 }}",
-                    status: "{% if sale.is_fully_paid %}پرداخت کامل{% elif sale.is_partially_paid %}پرداخت جزئی{% else %}پرداخت نشده{% endif %}"
-                },
-                {% endfor %}
-            ];
-
-            // ====== PAGE SETUP ======
-            const PAGE_W = 210;
-            const PAGE_H = 297;
-            const MARGIN = 12;
-            const CONTENT_W = PAGE_W - (MARGIN * 2);
-            let y = MARGIN;
-            let pageNum = 1;
-
-            // ====== HELPERS ======
-            const setFont = (size, weight = 'normal', color = [30, 41, 59]) => {
-                doc.setFont('Vazirmatn', weight);
-                doc.setFontSize(size);
-                doc.setTextColor(color[0], color[1], color[2]);
-            };
-
-            const drawPageFooter = () => {
-                const footerY = PAGE_H - 8;
-                doc.setDrawColor(220, 220, 220);
-                doc.setLineWidth(0.3);
-                doc.line(MARGIN, footerY - 3, PAGE_W - MARGIN, footerY - 3);
-
-                setFont(7, 'normal', [120, 120, 120]);
-                doc.text('صفحه ' + pageNum, MARGIN + 2, footerY, { align: 'left' });
-                doc.text(data.today + ' - ' + data.time, PAGE_W / 2, footerY, { align: 'center' });
-                doc.text('poyafar@yahoo.com', PAGE_W - MARGIN - 2, footerY, { align: 'right' });
-            };
-
-            const drawMiniHeader = () => {
-                doc.setFillColor(17, 153, 142);
-                doc.rect(0, 0, PAGE_W, 8, 'F');
-                setFont(8, 'normal', [255, 255, 255]);
-                doc.text('راپور فروش — شرکت نرم‌افزاری پویافر', PAGE_W - MARGIN, 5.5, { align: 'right' });
-                y = 14;
-            };
-
-            const checkPage = (needed = 20) => {
-                if (y + needed > PAGE_H - 15) {
-                    drawPageFooter();
-                    doc.addPage();
-                    pageNum++;
-                    drawMiniHeader();
-                }
-            };
-
-            const drawSectionTitle = (title) => {
-                checkPage(12);
-                setFont(11, 'bold', [17, 153, 142]);
-                doc.text(title, PAGE_W - MARGIN, y, { align: 'right' });
-                doc.setDrawColor(17, 153, 142);
-                doc.setLineWidth(0.6);
-                doc.line(PAGE_W - MARGIN - 50, y + 1.5, PAGE_W - MARGIN, y + 1.5);
-                y += 6;
-            };
-
-            const drawSimpleTable = (headers, rows, colWidths) => {
-                const headerH = 7.5;
-                const rowH = 6.5;
-                const tableW = colWidths.reduce((a, b) => a + b, 0);
-                const startX = PAGE_W - MARGIN - tableW;
-
-                checkPage(headerH + rowH * 2);
-                doc.setFillColor(17, 153, 142);
-                doc.rect(startX, y, tableW, headerH, 'F');
-                setFont(8, 'bold', [255, 255, 255]);
-
-                let xPos = PAGE_W - MARGIN;
-                headers.forEach((h, i) => {
-                    xPos -= colWidths[i];
-                    doc.text(h, xPos + colWidths[i] - 2, y + 5, { align: 'right' });
-                });
-                y += headerH;
-
-                rows.forEach((row, idx) => {
-                    checkPage(rowH);
-                    if (idx % 2 === 0) {
-                        doc.setFillColor(240, 253, 244);
-                        doc.rect(startX, y, tableW, rowH, 'F');
-                    }
-                    doc.setDrawColor(226, 232, 240);
-                    doc.setLineWidth(0.2);
-                    doc.rect(startX, y, tableW, rowH);
-
-                    setFont(8, 'normal', [30, 41, 59]);
-                    xPos = PAGE_W - MARGIN;
-                    row.forEach((cell, i) => {
-                        xPos -= colWidths[i];
-                        let x, align;
-                        if (i === 0) {
-                            align = 'center';
-                            x = xPos + colWidths[i] / 2;
-                        } else if (i === row.length - 1) {
-                            align = 'left';
-                            x = xPos + 3;
-                        } else {
-                            align = 'right';
-                            x = xPos + colWidths[i] - 2;
-                        }
-                        doc.text(String(cell), x, y + 4.5, { align: align });
-                    });
-                    y += rowH;
-                });
-
-                y += 4;
-            };
-
-            const drawKpiBox = (x, yPos, w, h, title, value, meta, color) => {
-                doc.setDrawColor(226, 232, 240);
-                doc.setFillColor(255, 255, 255);
-                doc.roundedRect(x, yPos, w, h, 1.5, 1.5, 'FD');
-
-                doc.setFillColor(color[0], color[1], color[2]);
-                doc.rect(x, yPos, w, 1.5, 'F');
-
-                setFont(7, 'normal', [100, 116, 139]);
-                doc.text(title, x + w - 3, yPos + 5, { align: 'right' });
-
-                setFont(12.5, 'bold', color);
-                doc.text(value, x + w - 3, yPos + 12, { align: 'right' });
-
-                setFont(6, 'normal', [148, 163, 184]);
-                if (meta) doc.text(meta, x + w - 3, yPos + 17.5, { align: 'right' });
-            };
-
-            // ====== 1) MAIN HEADER ======
-            doc.setFillColor(17, 153, 142);
-            doc.rect(0, 0, PAGE_W, 32, 'F');
-
-            doc.setFillColor(56, 239, 125);
-            doc.circle(PAGE_W - 15, 16, 22, 'F');
-
-            setFont(18, 'bold', [255, 255, 255]);
-            doc.text('راپور فروش', PAGE_W - MARGIN, 12, { align: 'right' });
-
-            setFont(9, 'normal', [255, 255, 255]);
-            doc.text('شرکت نرم‌افزاری پویافر — تحلیل کامل فروش', PAGE_W - MARGIN, 19, { align: 'right' });
-
-            setFont(8, 'normal', [255, 255, 255]);
-            doc.text('دوره: ' + data.periodLabel, PAGE_W - MARGIN, 27, { align: 'right' });
-            doc.text('از: ' + data.periodStart + '  تا: ' + data.periodEnd, MARGIN + 2, 27, { align: 'left' });
-
-            y = 40;
-
-            // ====== 2) KPI ======
-            drawSectionTitle('شاخص‌های کلیدی فروش');
-
-            const kpiW = (CONTENT_W - 4) / 3;
-            const kpiH = 20;
-            const kpiGap = 2;
-
-            const kpis = [
-                { title: 'مجموع فروش', value: data.total, meta: data.count + ' سند', color: [17, 153, 142] },
-                { title: 'مجموع دریافتی', value: data.received, meta: 'دریافتی از مشتریان', color: [5, 150, 105] },
-                { title: 'باقی‌مانده', value: data.remaining, meta: 'قابل وصول', color: [245, 87, 108] },
-                { title: 'سود تخمینی', value: data.profit, meta: 'بر اساس قیمت خرید', color: [217, 119, 6] },
-                { title: 'تعداد فروش', value: data.count, meta: 'در دوره انتخابی', color: [37, 99, 235] },
-                { title: 'میانگین هر فروش', value: data.avg, meta: 'افغانی', color: [124, 58, 237] },
-            ];
-
-            kpis.forEach((kpi, i) => {
-                const col = i % 3;
-                const row = Math.floor(i / 3);
-                const x = PAGE_W - MARGIN - (col + 1) * kpiW - col * kpiGap;
-                drawKpiBox(x, y + row * (kpiH + kpiGap), kpiW, kpiH, kpi.title, kpi.value, kpi.meta, kpi.color);
-            });
-
-            y += 2 * (kpiH + kpiGap) + 6;
-
-            // ====== 3) TOP CUSTOMERS ======
-            if (topCustomers.length > 0) {
-                drawSectionTitle('مشتریان برتر');
-                drawSimpleTable(
-                    ['#', 'نام مشتری', 'فاکتور', 'مجموع خرید (افغانی)'],
-                    topCustomers.map(c => [c.rank, c.name, c.count, c.amount]),
-                    [12, 90, 25, 47]
-                );
-            }
-
-            // ====== 4) TOP PRODUCTS ======
-            if (topProducts.length > 0) {
-                drawSectionTitle('پرفروش‌ترین کالاها');
-                drawSimpleTable(
-                    ['#', 'نام کالا', 'تعداد', 'مبلغ (افغانی)'],
-                    topProducts.map(p => [p.rank, p.name, p.qty, p.amount]),
-                    [12, 90, 25, 47]
-                );
-            }
-
-            // ====== 5) FULL SALES LIST ======
-            drawSectionTitle('لیست کامل فروش‌ها');
-
-            const salesRows = salesList.map(s => [
-                s.rank,
-                s.number,
-                s.date,
-                s.customer,
-                s.items,
-                s.total,
-                s.status,
-            ]);
-
-            drawSimpleTable(
-                ['#', 'شماره', 'تاریخ', 'مشتری', 'اقلام', 'مجموع', 'وضعیت'],
-                salesRows,
-                [10, 22, 20, 55, 14, 30, 31]
-            );
-
-            // ====== 6) SIGNATURES ======
-            checkPage(35);
-            y += 8;
-            const sigW = (CONTENT_W - 20) / 3;
-            const sigLabels = ['امضای تهیه‌کننده', 'امضای مدیر', 'مهر شرکت'];
-
-            sigLabels.forEach((label, i) => {
-                const x = PAGE_W - MARGIN - i * (sigW + 10) - sigW;
-                doc.setDrawColor(148, 163, 184);
-                doc.setLineWidth(0.3);
-                doc.line(x + 10, y + 12, x + sigW - 10, y + 12);
-
-                setFont(8, 'normal', [100, 116, 139]);
-                doc.text(label, x + sigW / 2, y + 17, { align: 'center' });
-            });
-
-            y += 24;
-
-            // ====== 7) FINAL FOOTER ======
-            checkPage(20);
-            doc.setFillColor(240, 253, 244);
-            doc.roundedRect(MARGIN, y, CONTENT_W, 15, 2, 2, 'F');
-
-            setFont(9, 'bold', [17, 153, 142]);
-            doc.text('شرکت نرم‌افزاری پویافر', PAGE_W / 2, y + 5.5, { align: 'center' });
-
-            setFont(7.5, 'normal', [100, 116, 139]);
-            doc.text('کابل، افغانستان | poyafar@yahoo.com | +93794483138', PAGE_W / 2, y + 11, { align: 'center' });
-
-            // ====== 8) FOOTERS ======
-            const totalPages = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= totalPages; i++) {
-                doc.setPage(i);
-                drawPageFooter();
-            }
-
-            // ====== 9) SAVE ======
-            const filename = 'Poyafar_Sales_Report_' + new Date().toISOString().slice(0, 10) + '.pdf';
-            doc.save(filename);
-
-            hideLoading();
-            btn.disabled = false;
-            btn.innerHTML = originalHtml;
-
-        } catch (error) {
-            console.error('PDF Error:', error);
-            hideLoading();
-            btn.disabled = false;
-            btn.innerHTML = originalHtml;
-            alert('خطا در ساخت PDF: ' + error.message);
-        }
-    }
-</script>
-
 {% endblock %}

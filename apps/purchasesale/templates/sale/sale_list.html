@@ -2,7 +2,6 @@
 {% load custom_filters %}
 {% load math_filters %}
 
-
 {% block title %}لیست فروش‌ها{% endblock %}
 
 {% block content %}
@@ -201,17 +200,12 @@
                                     {{ sale.items|length }} قلم
                                 </span>
                             </td>
-
-                            <!-- ✅ ستون مجموع -->
                             <td>
-                               
-
                                 <div style="border-top: 1px dashed #ccc; padding-top: 3px; font-size: 0.75rem; color: #450C98;">
                                     <i class="fas fa-calculator me-1"></i>
                                     <strong> {{ sale.total_amount|floatformat:0 }} اف</strong>
                                 </div>
                             </td>
-
                             <td class="text-center">
                                 <span class="badge rounded-pill px-3 py-2"
                                       style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1.05rem; font-weight: 600;">
@@ -267,7 +261,6 @@
                             </td>
                         </tr>
 
-                        <!-- Hidden Delete Form -->
                         <form id="deleteForm-{{ sale.id }}"
                               method="POST"
                               action="{% url 'delete_sale' sale.id %}"
@@ -287,7 +280,7 @@
                                     </div>
 
                                     <div style="display: flex; justify-content: center; margin: 10px 0;">
-                                        <button onclick="downloadSalePDF('{{ sale.id }}')" style="
+                                        <button onclick="downloadSalePDF('{{ sale.id }}', this)" style="
                                             background: linear-gradient(135deg, #5a189a, #9d4edd);
                                             color: white;
                                             border: none;
@@ -316,7 +309,7 @@
                                             <div style="width: 40px; height: 40px; background: #f8fafd; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(90, 24, 154, 0.2);">
                                                 <i class="fas fa-shopping-bag" style="color: #5a189a; font-size: 1.2rem;"></i>
                                             </div>
-                                            <h4>شرکت نرم افزاری پویافر</h4>
+                                            <h4>خدمات مرغداری ترکمن لقمان </h4>
                                             <div style="text-align: right;">
                                                 <div style="background: linear-gradient(135deg, #5a189a, #9d4edd); padding: 2px 8px; border-radius: 15px; margin-bottom: 3px; display: inline-block;">
                                                     <span style="color: white; font-weight: 600; font-size: 0.65rem;">#{{ sale.id }}</span>
@@ -419,7 +412,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Totals -->
                                         <div style="background: #f8fafd; border-radius: 8px; padding: 8px; margin-bottom: 8px; border: 1px solid rgba(90, 24, 154, 0.1);">
                                             {% if sale.total_dollar_amount > 0 %}
                                             <div style="background: #fff8e1; border-right: 3px solid #f59e0b; padding: 6px 8px; border-radius: 5px; margin-bottom: 5px;">
@@ -481,23 +473,6 @@
                                             </div>
                                         </div>
                                         <br>
-
-                                        <div style="background: #f8fafc; border-radius: 8px; padding: 5px; border: 1px solid #e2e8f0;">
-                                            <div style="display: flex; flex-direction: column; gap: 2px;">
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-envelope" style="color: #4361ee; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">poyafar@yahoo.com</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-phone" style="color: #10b981; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">+93794483138</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-map-marker-alt" style="color: #f97316; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">کابل، افغانستان</span>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div class="modal-footer" style="padding: 8px;">
@@ -606,7 +581,12 @@
     </div>
 </div>
 
-<!-- Scripts -->
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
     let deleteSaleId = null;
 
@@ -616,18 +596,11 @@
         new bootstrap.Modal(document.getElementById('deleteModal')).show();
     }
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
-        if (deleteSaleId) {
-            const form = document.getElementById('deleteForm-' + deleteSaleId);
-            if (form) form.submit();
-        }
-    });
-
     function showInvoiceModal(saleId) {
         new bootstrap.Modal(document.getElementById('invoiceModal' + saleId)).show();
     }
 
-    function downloadSalePDF(saleId) {
+    function downloadSalePDF(saleId, btn) {
         const element = document.getElementById('sale-invoice-' + saleId);
 
         if (!element) {
@@ -635,7 +608,6 @@
             return;
         }
 
-        const btn = event?.target;
         let originalText = '';
         if (btn) {
             originalText = btn.innerHTML;
@@ -708,6 +680,17 @@
             alert('خطا در ایجاد PDF. لطفاً دوباره تلاش کنید.');
         });
     }
-</script>
 
+    document.addEventListener('DOMContentLoaded', function () {
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function () {
+                if (deleteSaleId) {
+                    const form = document.getElementById('deleteForm-' + deleteSaleId);
+                    if (form) form.submit();
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

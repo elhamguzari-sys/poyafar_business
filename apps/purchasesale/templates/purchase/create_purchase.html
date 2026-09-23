@@ -244,10 +244,12 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
 const stockData = {{ stock_data|safe }};
 
@@ -261,12 +263,10 @@ function getDollarRate() {
     return parseFloat($('#id_dollar_rate').val()) || 0;
 }
 
-// ==================== چک موجودی (فقط نمایشی برای خرید) ====================
 function checkStockAvailability(row) {
     const productId = row.find('.product-select').val();
     const locationId = row.find('.location-select').val();
 
-    // حذف هشدار قبلی
     row.find('.stock-warning').remove();
 
     if (!productId || !locationId) {
@@ -276,7 +276,6 @@ function checkStockAvailability(row) {
     const key = productId + '_' + locationId;
     const available = stockData[key] || 0;
 
-    // برای خرید، موجودی فعلی رو نشون بده (فقط اطلاعاتی)
     row.find('.location-select').closest('td').append(`
         <div class="stock-warning" style="color: #0ea5e9; font-size: 0.7rem; margin-top: 3px;">
             <i class="fas fa-info-circle me-1"></i>
@@ -611,7 +610,12 @@ $(document).ready(function() {
     });
 });
 </script>
+{% endblock %}
 
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE STYLES — in extra_head block                           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_head %}
 <style>
 .form-control:focus,
 .form-select:focus {
@@ -625,5 +629,4 @@ $(document).ready(function() {
 #id_purchase_number { background-color: #f8f9fa !important; cursor: not-allowed !important; }
 #id_dollar_rate { background-color: #fff8e1 !important; font-weight: 700; font-size: 1.1rem; color: #450C98; }
 </style>
-
 {% endblock %}

@@ -119,7 +119,7 @@ def backup_restore(request, backup_id):
         return redirect('backup_list')
 
     if success:
-        messages.success(request, msg + ' — لطفاً سرور را ری‌استارت کنید.')
+        messages.success(request, msg + ' — لطفاً نرم‌افزار را ری‌استارت کنید.')
     else:
         messages.error(request, msg)
 

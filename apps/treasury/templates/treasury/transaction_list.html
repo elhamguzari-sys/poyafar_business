@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
+{% load static %}
 
 {% block title %}لیست تراکنش‌ها{% endblock %}
 
@@ -220,7 +221,7 @@
                             {% csrf_token %}
                         </form>
 
-                        <!-- ==================== INVOICE MODAL (mirrors sale) ==================== -->
+                        <!-- ==================== INVOICE MODAL ==================== -->
                         <div class="modal fade" id="invoiceModal{{ transaction.id }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-lg modal-dialog-centered">
                                 <div class="modal-content">
@@ -232,7 +233,7 @@
                                     </div>
 
                                     <div style="display: flex; justify-content: center; margin: 10px 0;">
-                                        <button onclick="downloadTransactionPDF('{{ transaction.id }}')" style="
+                                        <button onclick="downloadTransactionPDF('{{ transaction.id }}', this)" style="
                                             background: linear-gradient(135deg, #5a189a, #9d4edd);
                                             color: white;
                                             border: none;
@@ -262,7 +263,7 @@
                                             <div style="width: 40px; height: 40px; background: #f8fafd; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(90, 24, 154, 0.2);">
                                                 <i class="fas fa-exchange-alt" style="color: #5a189a; font-size: 1.2rem;"></i>
                                             </div>
-                                            <h4>شرکت نرم افزاری پویافر</h4>
+                                            <h4>خدمات مرغداری ترکمن لقمان</h4>
                                             <div style="text-align: right;">
                                                 <div style="background: linear-gradient(135deg, #5a189a, #9d4edd); padding: 2px 8px; border-radius: 15px; margin-bottom: 3px; display: inline-block;">
                                                     <span style="color: white; font-weight: 600; font-size: 0.65rem;">#{{ transaction.id }}</span>
@@ -308,7 +309,7 @@
                                             <div style="font-size: 0.75rem; opacity: 0.9; margin-top: 3px;">افغانی</div>
                                         </div>
 
-                                        <!-- Details list (compact like sale) -->
+                                        <!-- Details list -->
                                         <div style="background: #f8fafd; border-radius: 8px; padding: 8px; margin-bottom: 8px; border: 1px solid rgba(90, 24, 154, 0.1);">
                                             <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #ddd;">
                                                 <span style="font-size: 0.72rem; color: #64748b;">شماره تراکنش</span>
@@ -370,24 +371,6 @@
                                             </div>
                                         </div>
                                         <br>
-
-                                        <!-- Footer -->
-                                        <div style="background: #f8fafc; border-radius: 8px; padding: 5px; border: 1px solid #e2e8f0;">
-                                            <div style="display: flex; flex-direction: column; gap: 2px;">
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-envelope" style="color: #4361ee; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">poyafar@yahoo.com</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-phone" style="color: #10b981; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">+93794483138</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-map-marker-alt" style="color: #f97316; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">کابل، افغانستان</span>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div class="modal-footer" style="padding: 8px;">
@@ -499,8 +482,12 @@
     </div>
 </div>
 
-<!-- Scripts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
     let deleteTransactionId = null;
 
@@ -523,7 +510,7 @@
         new bootstrap.Modal(document.getElementById('invoiceModal' + transactionId)).show();
     }
 
-    function downloadTransactionPDF(transactionId) {
+    function downloadTransactionPDF(transactionId, btn) {
         const element = document.getElementById('transaction-invoice-' + transactionId);
 
         if (!element) {
@@ -531,7 +518,6 @@
             return;
         }
 
-        const btn = event?.target;
         let originalText = '';
         if (btn) {
             originalText = btn.innerHTML;
@@ -541,7 +527,6 @@
 
         const clone = element.cloneNode(true);
 
-        // Convert gradients to solid colors
         clone.querySelectorAll('*').forEach(el => {
             const bg = window.getComputedStyle(el).backgroundImage;
             const bgStr = bg || '';
@@ -618,5 +603,4 @@
         });
     }
 </script>
-
 {% endblock %}

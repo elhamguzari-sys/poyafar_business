@@ -192,7 +192,6 @@
                             </td>
                         </tr>
 
-                        <!-- Hidden Delete Form -->
                         <form id="deleteForm-{{ w.id }}"
                               method="POST"
                               action="{% url 'delete_waste' w.id %}"
@@ -213,7 +212,6 @@
                                     </div>
                                     <div class="modal-body p-4">
 
-                                        <!-- اطلاعات ضایعات -->
                                         <div class="row mb-4">
                                             <div class="col-12">
                                                 <h3 class="fw-bold mb-3">{{ w.reason }}</h3>
@@ -240,7 +238,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- اقلام به شکل کارت -->
                                         <div class="card border-0 shadow-sm">
                                             <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
                                                 <h6 class="mb-0 fw-bold">
@@ -400,6 +397,12 @@
     </div>
 </div>
 
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
     let deleteWasteId = null;
 
@@ -420,5 +423,4 @@
         new bootstrap.Modal(document.getElementById('detailModal' + wasteId)).show();
     }
 </script>
-
 {% endblock %}

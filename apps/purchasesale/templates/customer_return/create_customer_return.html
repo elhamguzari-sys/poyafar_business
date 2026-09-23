@@ -95,7 +95,7 @@
                     </div>
                 </div>
 
-                <!-- ✅ انتخاب فروش اصلی -->
+                <!-- انتخاب فروش اصلی -->
                 <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #f4efff 0%, #faf5ff 100%);">
                     <div class="card-body p-4">
                         <label for="{{ form.original_sale.id_for_label }}" class="form-label fw-bold fs-4" style="color: #450C98;">
@@ -115,10 +115,9 @@
                     </div>
                 </div>
 
-                <!-- ✅ اطلاعات کامل فروش انتخاب‌شده -->
+                <!-- اطلاعات کامل فروش انتخاب‌شده -->
                 <div id="saleInfoBox" style="display: none;">
 
-                    <!-- ردیف ۱: اطلاعات اصلی فروش -->
                     <div class="card mb-3 border-0 shadow-sm" style="background: linear-gradient(135deg, #e7f9ee 0%, #f0fff5 100%);">
                         <div class="card-body p-3">
                             <div class="d-flex align-items-center mb-3">
@@ -153,7 +152,6 @@
                         </div>
                     </div>
 
-                    <!-- ردیف ۲: مبالغ فروش -->
                     <div class="row g-2 mb-3">
                         <div class="col-6 col-md-3">
                             <div class="p-3 rounded-3" style="background: #eff6ff; border: 1px solid #bfdbfe;">
@@ -197,7 +195,6 @@
                         </div>
                     </div>
 
-                    <!-- ردیف ۳: اطلاعات دالری -->
                     <div id="dollarInfoBox" class="card mb-3 border-0 shadow-sm" style="display: none; background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);">
                         <div class="card-body p-3">
                             <div class="row g-3">
@@ -217,14 +214,13 @@
                         </div>
                     </div>
 
-                    <!-- ردیف ۴: یادداشت فروش -->
                     <div id="saleNoteBox" class="alert alert-secondary rounded-3" style="display: none;">
                         <small class="text-muted d-block mb-1"><i class="fas fa-sticky-note me-1"></i> یادداشت فروش</small>
                         <span id="saleNote">-</span>
                     </div>
                 </div>
 
-                <!-- ✅ نام مشتری + مبلغ بازپرداخت -->
+                <!-- نام مشتری + مبلغ بازپرداخت -->
                 <div class="row">
                     <div class="col-12 col-md-6 mb-4">
                         <label class="form-label fw-bold fs-5">
@@ -257,7 +253,7 @@
                     </div>
                 </div>
 
-                <!-- ✅ اقلام قابل برگشت -->
+                <!-- اقلام قابل برگشت -->
                 <div class="card mb-4 border-0 shadow-sm">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3" style="border-bottom: 2px solid #9550fc;">
                         <h5 class="mb-0 fw-bold fs-4" style="color: #450C98;">
@@ -348,10 +344,12 @@
     </div>
 
 </div>
+{% endblock %}
 
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
 // ═══════════════════════════════════════════════════════════════════
 // داده‌های فروش‌ها از Django
@@ -432,20 +430,17 @@ function handleSaleSelected(saleId) {
     currentSale = SALES_DATA.find(s => s.id === parseInt(saleId));
     if (!currentSale) return;
 
-    // ═══ اطلاعات اصلی فروش ═══
     $('#saleNumber').text(currentSale.number || '-');
     $('#saleCustomer').text(currentSale.customer || '-');
     $('#saleCustomerNumber').text(currentSale.customer_number || '-');
     $('#saleDate').text(currentSale.date || '-');
     $('#saleItemsCount').text((currentSale.items || []).length + ' قلم');
 
-    // ═══ مبالغ ═══
     $('#saleTotal').text(fmtMoney(currentSale.total_amount));
     $('#saleReceived').text(fmtMoney(currentSale.received_amount));
     $('#saleRemaining').text(fmtMoney(currentSale.remaining_amount));
     $('#saleReturned').text(fmtMoney(currentSale.total_returned_amount));
 
-    // ═══ اطلاعات دالری (اگر دارد) ═══
     if (currentSale.total_dollar_amount > 0) {
         $('#saleDollarTotal').text('$ ' + fmtMoney(currentSale.total_dollar_amount));
         $('#saleDollarRate').text(fmtMoney(currentSale.dollar_rate) + ' افغانی');
@@ -456,7 +451,6 @@ function handleSaleSelected(saleId) {
         $('#dollarInfoBox').hide();
     }
 
-    // ═══ یادداشت فروش ═══
     if (currentSale.note && currentSale.note.trim() !== '') {
         $('#saleNote').text(currentSale.note);
         $('#saleNoteBox').show();
@@ -464,14 +458,11 @@ function handleSaleSelected(saleId) {
         $('#saleNoteBox').hide();
     }
 
-    // ═══ نمایش Info Box ═══
     $('#saleInfoBox').show();
 
-    // ═══ نام مشتری در فیلد ═══
     $('#customerNameDisplay').text(currentSale.customer || '---');
     $('#id_customer_name').val(currentSale.customer || '');
 
-    // ═══ رندر اقلام ═══
     renderSaleItems(currentSale);
 }
 
@@ -588,7 +579,6 @@ $(document).ready(function() {
 // ═══════════════════════════════════════════════════════════════════
 $(document).ready(function() {
 
-    // تغییر فروش
     $('#id_original_sale').on('change', function() {
         handleSaleSelected($(this).val());
     });
@@ -600,7 +590,6 @@ $(document).ready(function() {
     }
     {% endif %}
 
-    // تغییر تعداد
     $(document).on('input', '.return-quantity', function() {
         const max = parseInt($(this).data('max')) || 0;
         const val = parseInt($(this).val()) || 0;
@@ -623,7 +612,6 @@ $(document).ready(function() {
         updateItemsJson();
     });
 
-    // چک‌باکس
     $(document).on('change', '.row-selector', function() {
         const row = $(this).closest('tr');
         const input = row.find('.return-quantity');
@@ -639,7 +627,6 @@ $(document).ready(function() {
         updateItemsJson();
     });
 
-    // Submit
     $('#customerReturnForm').submit(function(e) {
         e.preventDefault();
         updateItemsJson();
@@ -660,7 +647,12 @@ $(document).ready(function() {
     });
 });
 </script>
+{% endblock %}
 
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE STYLES — in extra_head block                           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_head %}
 <style>
 .form-control:focus,
 .form-select:focus {
@@ -691,5 +683,4 @@ $(document).ready(function() {
     display: inline-block;
 }
 </style>
-
 {% endblock %}

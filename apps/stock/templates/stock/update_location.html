@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}ثبت موقعیت جدید{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    
-    <!-- Header -->
+
+    <!-- ============ HEADER ============ -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
         <div>
             <h2 class="fw-bold mb-1" style="color: #9550fc; font-size: 2rem;">
@@ -14,19 +15,25 @@
             </h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 fs-6">
-                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'location_list' %}" class="text-decoration-none text-muted">موقعیت‌ها</a></li>
+                    <li class="breadcrumb-item">
+                        <a href="/" class="text-decoration-none text-muted">داشبورد</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'location_list' %}" class="text-decoration-none text-muted">موقعیت‌ها</a>
+                    </li>
                     <li class="breadcrumb-item active" style="color: #450C98;">ثبت موقعیت</li>
                 </ol>
             </nav>
         </div>
-        <a href="{% url 'location_list' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
+        <a href="{% url 'location_list' %}"
+           class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6"
+           style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
             <i class="fas fa-arrow-right me-2"></i>
             بازگشت به لیست
         </a>
     </div>
 
-    <!-- Messages -->
+    <!-- ============ MESSAGES ============ -->
     {% if messages %}
         {% for message in messages %}
         <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
@@ -36,20 +43,22 @@
         {% endfor %}
     {% endif %}
 
-    <!-- Form Card -->
+    <!-- ============ FORM CARD ============ -->
     <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+        <div class="card-header text-white py-3"
+             style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
             <h5 class="mb-0 fw-bold fs-4">
                 <i class="fas fa-map-marker-alt me-2"></i>
                 فرم ثبت موقعیت
             </h5>
         </div>
+
         <div class="card-body p-4 p-md-5">
-            
+
             <form method="POST" novalidate>
                 {% csrf_token %}
 
-                <!-- Display non-field errors -->
+                <!-- Non-field errors -->
                 {% if form.non_field_errors %}
                 <div class="alert alert-danger shadow-sm rounded-3 fs-6">
                     <i class="fas fa-exclamation-triangle me-2"></i>
@@ -114,22 +123,26 @@
                     </div>
 
                     <!-- Is Active Field -->
-                    <div class="col-12 col-md-6 mb-4 d-flex align-items-center">
-                        <div class="form-check mt-md-4 pt-md-3">
+                    <div class="col-12 col-md-6 mb-4">
+                        <label class="form-label fw-bold fs-5 d-block">
+                            <i class="fas fa-check-circle me-1" style="color: #450C98;"></i>
+                            وضعیت
+                        </label>
+                        <div class="form-check form-switch mt-2">
                             {{ form.is_active }}
-                            <label class="form-check-label fw-bold fs-5 ms-2" for="{{ form.is_active.id_for_label }}">
-                                <i class="fas fa-check-circle me-1" style="color: #450C98;"></i>
+                            <label class="form-check-label fw-bold fs-6 ms-2"
+                                   for="{{ form.is_active.id_for_label }}">
                                 فعال
                             </label>
-                            <small class="text-muted d-block mt-2 fs-6">
-                                <i class="far fa-lightbulb me-1"></i>اگر غیرفعال باشد، در فرم‌ها نمایش داده نمی‌شود
-                            </small>
                         </div>
                         {% if form.is_active.errors %}
                         <div class="text-danger mt-2 fs-6">
                             {% for error in form.is_active.errors %}{{ error }}{% endfor %}
                         </div>
                         {% endif %}
+                        <small class="text-muted d-block mt-2 fs-6">
+                            <i class="far fa-lightbulb me-1"></i>اگر غیرفعال باشد، در فرم‌ها نمایش داده نمی‌شود
+                        </small>
                     </div>
                 </div>
 
@@ -152,24 +165,24 @@
 
                 <!-- Form Actions -->
                 <div class="row g-2 mt-5 pt-4 border-top">
-
                     <div class="col-lg-4 col-md-6">
-                        <button type="submit" class="btn btn-sm rounded-pill text-white px-4 fs-6 fw-bold w-100" 
+                        <button type="submit"
+                                class="btn btn-sm rounded-pill text-white px-4 fs-6 fw-bold w-100"
                                 style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
                             <i class="fas fa-save"></i> ذخیره اطلاعات
                         </button>
                     </div>
-                    
-                    <!-- دکمه پاک کردن -->
+
                     <div class="col-lg-4 col-md-6">
-                        <button type="reset" class="btn btn-sm btn-outline-secondary rounded-pill px-4 fs-6 w-100">
+                        <button type="reset"
+                                class="btn btn-sm btn-outline-secondary rounded-pill px-4 fs-6 w-100">
                             <i class="fas fa-undo"></i> پاک کردن فرم
                         </button>
                     </div>
-                    
-                    <!-- دکمه انصراف -->
+
                     <div class="col-lg-4 col-md-12">
-                        <a href="{% url 'location_list' %}" class="btn btn-sm btn-outline-danger rounded-pill px-4 fs-6 w-100">
+                        <a href="{% url 'location_list' %}"
+                           class="btn btn-sm btn-outline-danger rounded-pill px-4 fs-6 w-100">
                             <i class="fas fa-times"></i> انصراف
                         </a>
                     </div>
@@ -179,11 +192,100 @@
         </div>
     </div>
 
-    <!-- Subtle footer note -->
+    <!-- Footer note -->
     <div class="text-center mt-4 text-muted fs-6">
-        <i class="fas fa-info-circle me-1"></i> فیلدهای ستاره‌دار اجباری هستند | کد موقعیت باید یکتا باشد
+        <i class="fas fa-info-circle me-1"></i>
+        فیلدهای ستاره‌دار اجباری هستند | کد موقعیت باید یکتا باشد
     </div>
 
 </div>
+{% endblock %}
 
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE STYLES — follows your base.html pattern                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_head %}
+<style>
+    /* Force Vazirmatn on all form controls (in case Bootstrap reset wins) */
+    .form-control,
+    .form-select,
+    .form-check-input,
+    .btn,
+    textarea,
+    input {
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+    }
+
+    /* Purple focus ring for inputs and selects */
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #9550fc;
+        box-shadow: 0 0 0 0.2rem rgba(149, 80, 252, 0.15);
+    }
+
+    /* Textarea: comfortable height, vertical resize only */
+    textarea.form-control {
+        resize: vertical;
+        min-height: 90px;
+    }
+
+    /* Breadcrumb link hover in theme color */
+    .breadcrumb-item a:hover {
+        color: #450C98 !important;
+        transition: color 0.2s ease;
+    }
+
+    /* Smooth card shadow transition */
+    .card {
+        transition: box-shadow 0.25s ease;
+    }
+
+    /* RTL-friendly switch alignment + purple checked state */
+    .form-switch {
+        padding-right: 0;
+        padding-left: 2.5em;
+    }
+    .form-switch .form-check-input {
+        cursor: pointer;
+        margin-left: -2.5em;
+        margin-right: 0;
+    }
+    .form-switch .form-check-input:checked {
+        background-color: #9550fc;
+        border-color: #9550fc;
+    }
+    .form-switch .form-check-input:focus {
+        border-color: #9550fc;
+        box-shadow: 0 0 0 0.2rem rgba(149, 80, 252, 0.15);
+    }
+
+    /* Slight purple tint on the reset & cancel buttons */
+    .btn-outline-secondary:hover {
+        background-color: #f8fafc;
+        color: #450C98;
+        border-color: #9550fc;
+    }
+    .btn-outline-danger:hover {
+        background-color: #fee2e2;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 1.25rem !important;
+        }
+        h2 {
+            font-size: 1.4rem !important;
+        }
+    }
+</style>
+{% endblock %}
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — no page-specific JS needed                   -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
+{# No page-specific scripts needed for this form #}
 {% endblock %}

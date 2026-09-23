@@ -211,13 +211,13 @@
     </div>
 
 </div>
+{% endblock %}
 
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
-// ✅ stock_data از ویو می‌آید: { "product_id_location_id": quantity }
-// در حالت ویرایش، موجودی + مقدار قدیمی این سند است.
 const stockData = {{ stock_data|safe }};
 
 function updateItemNumbers() {
@@ -226,12 +226,10 @@ function updateItemNumbers() {
     });
 }
 
-// ✅ چک موجودی و نمایش در ستون «موجودی»
 function updateStockDisplay(row) {
     const productId = row.find('.product-select').val();
     const locationId = row.find('.location-select').val();
 
-    // ریست
     row.find('.stock-cell').html('<span class="text-muted small">-</span>');
     row.removeClass('table-danger table-success');
 
@@ -353,7 +351,6 @@ function addItem(itemData = null) {
     updateItemsJson();
 }
 
-// ✅ اعتبارسنجی قبل از submit با چک موجودی و چک تکراری
 function validateForm() {
     const reason = $('#{{ form.reason.id_for_label }}').val().trim();
     if (!reason) {
@@ -386,7 +383,6 @@ function validateForm() {
             return false;
         }
 
-        // ✅ چک تکراری بر اساس جفت (product_id, location_id)
         const key = item.product_id + '_' + item.location_id;
         if (seenKeys.has(key)) {
             alert('قلم ' + (i + 1) + ': این محصول با این موقعیت قبلاً اضافه شده است!');
@@ -394,7 +390,6 @@ function validateForm() {
         }
         seenKeys.add(key);
 
-        // ✅ چک موجودی قبل از submit
         const available = stockData[key] || 0;
         if (item.quantity > available) {
             alert(
@@ -475,7 +470,12 @@ $(document).ready(function() {
     });
 });
 </script>
+{% endblock %}
 
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE STYLES — in extra_head block                           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_head %}
 <style>
 .form-control:focus,
 .form-select:focus {
@@ -506,5 +506,4 @@ $(document).ready(function() {
     background-color: #d1e7dd !important;
 }
 </style>
-
 {% endblock %}

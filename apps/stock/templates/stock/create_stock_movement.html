@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}ثبت حرکت کالا{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    
-    <!-- Header -->
+
+    <!-- ============ HEADER ============ -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
         <div>
             <h2 class="fw-bold mb-1" style="color: #9550fc; font-size: 2rem;">
@@ -14,19 +15,25 @@
             </h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 fs-6">
-                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'stock_movement_list' %}" class="text-decoration-none text-muted">حرکات کالا</a></li>
+                    <li class="breadcrumb-item">
+                        <a href="/" class="text-decoration-none text-muted">داشبورد</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'stock_movement_list' %}" class="text-decoration-none text-muted">حرکات کالا</a>
+                    </li>
                     <li class="breadcrumb-item active" style="color: #450C98;">ثبت حرکت</li>
                 </ol>
             </nav>
         </div>
-        <a href="{% url 'stock_movement_list' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
+        <a href="{% url 'stock_movement_list' %}"
+           class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6"
+           style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
             <i class="fas fa-arrow-right me-2"></i>
             بازگشت به لیست
         </a>
     </div>
 
-    <!-- Messages -->
+    <!-- ============ MESSAGES ============ -->
     {% if messages %}
         {% for message in messages %}
         <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
@@ -36,20 +43,22 @@
         {% endfor %}
     {% endif %}
 
-    <!-- Form Card -->
+    <!-- ============ FORM CARD ============ -->
     <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+        <div class="card-header text-white py-3"
+             style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
             <h5 class="mb-0 fw-bold fs-4">
                 <i class="fas fa-exchange-alt me-2"></i>
                 فرم ثبت حرکت کالا
             </h5>
         </div>
+
         <div class="card-body p-4 p-md-5">
-            
-            <form method="POST" novalidate>
+
+            <form method="POST" novalidate id="movementForm">
                 {% csrf_token %}
 
-                <!-- Display non-field errors -->
+                <!-- Non-field errors -->
                 {% if form.non_field_errors %}
                 <div class="alert alert-danger shadow-sm rounded-3 fs-6">
                     <i class="fas fa-exclamation-triangle me-2"></i>
@@ -92,6 +101,13 @@
                             <i class="fas fa-store me-1"></i>موقعیت را انتخاب کنید (دوکان یا گدام)
                         </small>
                     </div>
+                </div>
+
+                <!-- Live stock preview (populated by JS) -->
+                <div id="stockPreview" class="alert alert-light border rounded-3 fs-6 d-none">
+                    <i class="fas fa-info-circle me-2" style="color: #9550fc;"></i>
+                    موجودی فعلی این کالا در موقعیت انتخابی:
+                    <strong id="currentStock" class="ms-2" style="color: #450C98;">—</strong>
                 </div>
 
                 <div class="row">
@@ -168,25 +184,25 @@
 
                 <!-- Form Actions -->
                 <div class="row g-2 mt-5 pt-4 border-top">
+                    <div class="col-lg-4 col-md-6">
+                        <button type="submit"
+                                class="btn btn-sm rounded-pill text-white px-4 fs-6 fw-bold w-100"
+                                style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                            <i class="fas fa-save"></i> ذخیره اطلاعات
+                        </button>
+                    </div>
 
                     <div class="col-lg-4 col-md-6">
-                        <button type="submit" class="btn btn-sm rounded-pill text-white px-4 fs-6 fw-bold w-100" 
-                                style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
-                            <i class="fas fa-save "></i> ذخیره اطلاعات
+                        <button type="reset"
+                                class="btn btn-sm btn-outline-secondary rounded-pill px-4 fs-6 w-100">
+                            <i class="fas fa-undo"></i> پاک کردن فرم
                         </button>
                     </div>
-                    
-                    <!-- دکمه پاک کردن -->
-                    <div class="col-lg-4 col-md-6">
-                        <button type="reset" class="btn btn-sm btn-outline-secondary rounded-pill px-4 fs-6 w-100">
-                            <i class="fas fa-undo "></i> پاک کردن فرم
-                        </button>
-                    </div>
-                    
-                    <!-- دکمه انصراف -->
+
                     <div class="col-lg-4 col-md-12">
-                        <a href="{% url 'stock_movement_list' %}" class="btn btn-sm btn-outline-danger rounded-pill px-4 fs-6 w-100">
-                            <i class="fas fa-times "></i> انصراف
+                        <a href="{% url 'stock_movement_list' %}"
+                           class="btn btn-sm btn-outline-danger rounded-pill px-4 fs-6 w-100">
+                            <i class="fas fa-times"></i> انصراف
                         </a>
                     </div>
                 </div>
@@ -195,11 +211,146 @@
         </div>
     </div>
 
-    <!-- Subtle footer note -->
+    <!-- Footer note -->
     <div class="text-center mt-4 text-muted fs-6">
-        <i class="fas fa-info-circle me-1"></i> فیلدهای ستاره‌دار اجباری هستند | شماره مرجع به صورت خودکار تولید می‌شود
+        <i class="fas fa-info-circle me-1"></i>
+        فیلدهای ستاره‌دار اجباری هستند | شماره مرجع به صورت خودکار تولید می‌شود
     </div>
 
 </div>
+{% endblock %}
 
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE STYLES — follows your base.html pattern                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_head %}
+<style>
+    /* Force Vazirmatn on all form controls */
+    .form-control,
+    .form-select,
+    .form-check-input,
+    .btn,
+    textarea,
+    input {
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+    }
+
+    /* Purple focus ring */
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #9550fc;
+        box-shadow: 0 0 0 0.2rem rgba(149, 80, 252, 0.15);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 90px;
+    }
+
+    /* Breadcrumb hover */
+    .breadcrumb-item a:hover {
+        color: #450C98 !important;
+        transition: color 0.2s ease;
+    }
+
+    .card { transition: box-shadow 0.25s ease; }
+
+    /* Movement type select: highlight positive/negative choice */
+    #id_movement_type {
+        font-weight: 700;
+    }
+
+    /* Live stock preview pulse */
+    #stockPreview {
+        background: #faf5ff;
+        border-color: #e9d5ff !important;
+        color: #450C98;
+    }
+    #stockPreview.preview-warning {
+        background: #fffbeb;
+        border-color: #fde68a !important;
+        color: #d97706;
+    }
+    #stockPreview.preview-danger {
+        background: #fef2f2;
+        border-color: #fecaca !important;
+        color: #dc2626;
+    }
+
+    /* Buttons */
+    .btn-outline-secondary:hover {
+        background-color: #f8fafc;
+        color: #450C98;
+        border-color: #9550fc;
+    }
+    .btn-outline-danger:hover {
+        background-color: #fee2e2;
+    }
+
+    @media (max-width: 768px) {
+        .card-body { padding: 1.25rem !important; }
+        h2 { font-size: 1.4rem !important; }
+    }
+</style>
+{% endblock %}
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — live stock preview                           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
+<script>
+    /*
+     * Live stock preview — optional, but very useful on a movement form.
+     * Requires a small endpoint: /api/stock/?product=<id>&location=<id>
+     * returning JSON: { "stock": 42 }
+     *
+     * If you don't have that endpoint yet, this block is safe to leave
+     * as-is (it just silently does nothing when the fetch fails).
+     */
+    document.addEventListener('DOMContentLoaded', function () {
+        const productSelect  = document.getElementById('{{ form.product.id_for_label }}');
+        const locationSelect = document.getElementById('{{ form.location.id_for_label }}');
+        const preview        = document.getElementById('stockPreview');
+        const stockEl        = document.getElementById('currentStock');
+
+        if (!productSelect || !locationSelect || !preview || !stockEl) return;
+
+        async function refreshPreview() {
+            const productId  = productSelect.value;
+            const locationId = locationSelect.value;
+            if (!productId || !locationId) {
+                preview.classList.add('d-none');
+                return;
+            }
+            try {
+                const res = await fetch(
+                    `/api/stock/?product=${encodeURIComponent(productId)}&location=${encodeURIComponent(locationId)}`
+                );
+                if (!res.ok) throw new Error('no endpoint');
+                const data = await res.json();
+
+                const current = Number(data.stock ?? 0);
+                stockEl.textContent = current.toLocaleString('fa-AF');
+
+                preview.classList.remove('d-none', 'preview-warning', 'preview-danger');
+                if (current === 0) {
+                    preview.classList.add('preview-danger');
+                } else if (current < 10) {
+                    preview.classList.add('preview-warning');
+                }
+            } catch (e) {
+                // Endpoint not available — silently hide
+                preview.classList.add('d-none');
+            }
+        }
+
+        productSelect.addEventListener('change', refreshPreview);
+        locationSelect.addEventListener('change', refreshPreview);
+
+        // Initial run if edit mode / pre-selected values
+        refreshPreview();
+    });
+</script>
 {% endblock %}

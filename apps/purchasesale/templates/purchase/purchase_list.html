@@ -200,16 +200,12 @@
                                     {{ purchase.items|length }} قلم
                                 </span>
                             </td>
-
-                            <!-- ✅ ستون مجموع -->
                             <td>
-                                
                                 <div style="border-top: 1px dashed #ccc; padding-top: 3px; font-size: 0.75rem; color: #450C98;">
                                     <i class="fas fa-calculator me-1"></i>
                                     <strong>{{ purchase.total_amount|floatformat:0 }} اف</strong>
                                 </div>
                             </td>
-
                             <td class="text-center">
                                 <span class="badge rounded-pill px-3 py-2"
                                       style="background: rgba(25, 135, 84, 0.1); color: #198754; font-size: 1.05rem; font-weight: 600;">
@@ -285,7 +281,7 @@
                                     </div>
 
                                     <div style="display: flex; justify-content: center; margin: 10px 0;">
-                                        <button onclick="downloadPurchasePDF('{{ purchase.id }}')" style="
+                                        <button onclick="downloadPurchasePDF('{{ purchase.id }}', this)" style="
                                             background: linear-gradient(135deg, #5a189a, #9d4edd);
                                             color: white;
                                             border: none;
@@ -310,12 +306,11 @@
                                     </div>
 
                                     <div class="modal-body" id="purchase-invoice-{{ purchase.id }}" style="padding: 8px;">
-                                        <!-- Header -->
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                             <div style="width: 40px; height: 40px; background: #f8fafd; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(90, 24, 154, 0.2);">
                                                 <i class="fas fa-shopping-cart" style="color: #5a189a; font-size: 1.2rem;"></i>
                                             </div>
-                                            <h4>شرکت نرم افزاری پویافر</h4>
+                                            <h4>خدمات مرغداری ترکمن لقمان</h4>
                                             <div style="text-align: right;">
                                                 <div style="background: linear-gradient(135deg, #5a189a, #9d4edd); padding: 2px 8px; border-radius: 15px; margin-bottom: 3px; display: inline-block;">
                                                     <span style="color: white; font-weight: 600; font-size: 0.65rem;">#{{ purchase.id }}</span>
@@ -326,7 +321,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Order Info -->
                                         <div style="background: #f8fafd; border-radius: 8px; padding: 6px; margin-bottom: 8px; border: 1px solid rgba(90, 24, 154, 0.1);">
                                             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;">
                                                 <div>
@@ -354,7 +348,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- Items Cards -->
                                         <div style="margin-bottom: 8px;">
                                             <div style="background: #f8fafd; border-radius: 8px; padding: 6px; border: 1px solid rgba(90, 24, 154, 0.1);">
                                                 {% for item in purchase.items %}
@@ -418,7 +411,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- ==================== Totals ==================== -->
                                         <div style="background: #f8fafd; border-radius: 8px; padding: 8px; margin-bottom: 8px; border: 1px solid rgba(90, 24, 154, 0.1);">
 
                                             {% if purchase.total_dollar_amount > 0 %}
@@ -470,7 +462,6 @@
                                         {% endif %}
                                         <br>
 
-                                        <!-- Signatures -->
                                         <div style="display: flex; justify-content: space-between; margin: 15px 0 8px 0; padding: 0 20px;">
                                             <div style="text-align: center;">
                                                 <div style="border-top: 1px solid #cbd5e1; width: 110px; margin-bottom: 3px;"></div>
@@ -482,24 +473,6 @@
                                             </div>
                                         </div>
                                         <br>
-
-                                        <!-- Footer -->
-                                        <div style="background: #f8fafc; border-radius: 8px; padding: 5px; border: 1px solid #e2e8f0;">
-                                            <div style="display: flex; flex-direction: column; gap: 2px;">
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-envelope" style="color: #4361ee; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">poyafar@yahoo.com</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-phone" style="color: #10b981; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">+93794483138</span>
-                                                </div>
-                                                <div style="display: flex; align-items: center; gap: 5px;">
-                                                    <i class="fas fa-map-marker-alt" style="color: #f97316; font-size: 0.5rem;"></i>
-                                                    <span style="font-size: 0.5rem;">کابل، افغانستان</span>
-                                                </div>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div class="modal-footer" style="padding: 8px;">
@@ -560,7 +533,7 @@
 
                 {% if purchases.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ purchases.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if supplier_filter %}&supplier={{ supplier_filter }}{% endif %}{% if supplier_number_filter %}&supplier_number={{ supplier_number_filter }}{% endif %}{% if payment_status %}&payment_status={{ payment_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if min_amount %}&min_amount={{ min_amount }}{% endif %}{% if max_amount %}&max_amount={{ max_amount }}{% endif %}" aria-label="Next">
+                        <a class="page-link" href="?page={{ purchases.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if supplier_filter %}&supplier={{ supplier_filter }}{% endif %}{% if supplier_number_filter %}&supplier_number={{ supplier_number_filter }}{% endif %}{% if payment_method %}&payment_status={{ payment_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}{% if min_amount %}&min_amount={{ min_amount }}{% endif %}{% if max_amount %}&max_amount={{ max_amount }}{% endif %}" aria-label="Next">
                             <span aria-hidden="true">&raquo;</span>
                         </a>
                     </li>
@@ -608,8 +581,12 @@
     </div>
 </div>
 
-<!-- Scripts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
     let deletePurchaseId = null;
 
@@ -619,18 +596,11 @@
         new bootstrap.Modal(document.getElementById('deleteModal')).show();
     }
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
-        if (deletePurchaseId) {
-            const form = document.getElementById('deleteForm-' + deletePurchaseId);
-            if (form) form.submit();
-        }
-    });
-
     function showInvoiceModal(purchaseId) {
         new bootstrap.Modal(document.getElementById('invoiceModal' + purchaseId)).show();
     }
 
-    function downloadPurchasePDF(purchaseId) {
+    function downloadPurchasePDF(purchaseId, btn) {
         const element = document.getElementById('purchase-invoice-' + purchaseId);
 
         if (!element) {
@@ -638,7 +608,6 @@
             return;
         }
 
-        const btn = event?.target;
         let originalText = '';
         if (btn) {
             originalText = btn.innerHTML;
@@ -711,6 +680,17 @@
             alert('خطا در ایجاد PDF. لطفاً دوباره تلاش کنید.');
         });
     }
-</script>
 
+    document.addEventListener('DOMContentLoaded', function () {
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function () {
+                if (deletePurchaseId) {
+                    const form = document.getElementById('deleteForm-' + deletePurchaseId);
+                    if (form) form.submit();
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

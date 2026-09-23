@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}لیست مرجوعی‌های به تأمین‌کنندگان{% endblock %}
+{% block title %}لیست مرجوعی‌های تأمین‌کنندگان{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -10,12 +10,12 @@
         <div>
             <h2 class="fw-bold mb-1" style="color: #9550fc;">
                 <i class="fas fa-truck-arrow-right me-2"></i>
-                لیست مرجوعی‌های به تأمین‌کنندگان
+                لیست مرجوعی‌های تأمین‌کنندگان
             </h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
-                    <li class="breadcrumb-item active" style="color: #450C98">مرجوعی به تأمین‌کننده</li>
+                    <li class="breadcrumb-item active" style="color: #450C98">مرجوعی به تأمین‌کنندگان</li>
                 </ol>
             </nav>
         </div>
@@ -192,7 +192,6 @@
                             </td>
                         </tr>
 
-                        <!-- Hidden Delete Form -->
                         <form id="deleteForm-{{ ret.id }}"
                               method="POST"
                               action="{% url 'delete_supplier_return' ret.id %}"
@@ -213,7 +212,6 @@
                                     </div>
                                     <div class="modal-body p-4">
 
-                                        <!-- اطلاعات مرجوعی -->
                                         <div class="row mb-4">
                                             <div class="col-12">
                                                 <h3 class="fw-bold mb-3">{{ ret.supplier_name }}</h3>
@@ -240,7 +238,6 @@
                                             </div>
                                         </div>
 
-                                        <!-- اقلام به شکل کارت -->
                                         <div class="card border-0 shadow-sm">
                                             <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
                                                 <h6 class="mb-0 fw-bold">
@@ -400,6 +397,12 @@
     </div>
 </div>
 
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
     let deleteReturnId = null;
 
@@ -420,5 +423,4 @@
         new bootstrap.Modal(document.getElementById('detailModal' + returnId)).show();
     }
 </script>
-
 {% endblock %}

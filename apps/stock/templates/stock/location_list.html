@@ -1,44 +1,50 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}لیست موقعیت‌ها{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    
-    <!-- Header -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+<div class="container-fluid loc-wrapper py-4">
+
+    <!-- ============ HEADER ============ -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+            <h2 class="fw-bold mb-1" style="color: #9550fc; font-size: 2rem;">
                 <i class="fas fa-map-marker-alt me-2"></i>
                 لیست موقعیت‌ها
             </h2>
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
-                    <li class="breadcrumb-item active" style="color: #450C98">موقعیت‌ها</li>
+                <ol class="breadcrumb mb-0 fs-6">
+                    <li class="breadcrumb-item">
+                        <a href="/" class="text-decoration-none text-muted">داشبورد</a>
+                    </li>
+                    <li class="breadcrumb-item active" style="color: #450C98;">موقعیت‌ها</li>
                 </ol>
             </nav>
         </div>
-        <a href="{% url 'create_location' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+        <a href="{% url 'create_location' %}"
+           class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6"
+           style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
             <i class="fas fa-plus-circle me-2"></i>
             موقعیت جدید
         </a>
     </div>
 
-    <!-- Messages -->
+    <!-- ============ MESSAGES ============ -->
     {% if messages %}
         {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
             <i class="fas fa-info-circle me-2"></i>{{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         {% endfor %}
     {% endif %}
 
-    <!-- Stats Cards -->
+    <!-- ============ STATS CARDS ============ -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 loc-stat-card"
+                 style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ total_locations_count }}</h3>
@@ -47,7 +53,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 loc-stat-card"
+                 style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-store fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ shop_count }}</h3>
@@ -56,7 +63,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 loc-stat-card"
+                 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-warehouse fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ warehouse_count }}</h3>
@@ -65,7 +73,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 loc-stat-card"
+                 style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-check-circle fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ active_locations_count }}</h3>
@@ -75,7 +84,7 @@
         </div>
     </div>
 
-    <!-- Search and Filters -->
+    <!-- ============ FILTER TOOLBAR ============ -->
     <div class="card border-0 shadow-sm mb-4 rounded-3">
         <div class="card-body">
             <form method="GET" class="row g-3">
@@ -84,11 +93,12 @@
                         <span class="input-group-text bg-white border-end-0">
                             <i class="fas fa-search" style="color: #450C98;"></i>
                         </span>
-                        <input type="text" name="search" class="form-control border-start-0" 
-                               placeholder="جستجو در موقعیت‌ها..." 
-                               value="{{ request.GET.search }}">
+                        <input type="text" name="search" class="form-control border-start-0"
+                               placeholder="جستجو در موقعیت‌ها..."
+                               value="{{ request.GET.search|default:'' }}">
                     </div>
                 </div>
+
                 <div class="col-12 col-md-2">
                     <select name="type" class="form-select">
                         <option value="">همه انواع</option>
@@ -96,6 +106,7 @@
                         <option value="warehouse" {% if request.GET.type == 'warehouse' %}selected{% endif %}>گدام</option>
                     </select>
                 </div>
+
                 <div class="col-12 col-md-2">
                     <select name="status" class="form-select">
                         <option value="">همه وضعیت‌ها</option>
@@ -103,16 +114,19 @@
                         <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>غیرفعال</option>
                     </select>
                 </div>
+
                 <div class="col-12 col-md-3">
-                    <button type="submit" class="btn w-100 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
-                        <i class="fas fa-filter me-1"></i>
+                    <button type="submit"
+                            class="btn w-100 text-white"
+                            style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <i class="fas fa-filter me-1"></i> اعمال فیلتر
                     </button>
                 </div>
             </form>
 
             {% if request.GET.search or request.GET.type or request.GET.status %}
-            <div class="mt-2">
-                <a href="{{ request.path }}" class="btn btn-dark btn-sm" style="font-size: 0.85rem;">
+            <div class="mt-3">
+                <a href="{{ request.path }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
                     <i class="fas fa-times-circle me-1"></i> حذف جستجو
                 </a>
             </div>
@@ -120,116 +134,128 @@
         </div>
     </div>
 
-    <!-- Table Card -->
+    <!-- ============ TABLE CARD ============ -->
     <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
-                        <tr class="text-white">
-                            <th class="text-center" style="width: 50px;">#</th>
-                            <th>کد</th>
-                            <th>نام</th>
-                            <th class="d-none d-md-table-cell">نوع</th>
-                            <th class="text-center d-none d-md-table-cell">تعداد کالاها</th>
-                            <th class="text-center d-none d-lg-table-cell">جمع موجودی</th>
-                            <th class="text-center">وضعیت</th>
-                            <th class="text-center" style="width: 100px;">عملیات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for location in locations %}
-                        <tr class="border-bottom" id="location-row-{{ location.id }}">
-                            <td class="text-center">
-                                <span class="badge rounded-pill text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">{{ forloop.counter }}</span>
-                            </td>
-                            <td>
-                                <code class="text-muted">{{ location.code }}</code>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="p-2 rounded me-2" style="background: rgba(149, 80, 252, 0.1);">
-                                        <i class="fas fa-map-marker-alt" style="color: #9550fc;"></i>
-                                    </div>
-                                    <span class="fw-bold">{{ location.name }}</span>
-                                </div>
-                            </td>
-                            <td class="d-none d-md-table-cell">
-                                {% if location.type == 'shop' %}
-                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
-                                        <i class="fas fa-store me-1"></i>دوکان
-                                    </span>
-                                {% else %}
-                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(79, 172, 254, 0.1); color: #4facfe;">
-                                        <i class="fas fa-warehouse me-1"></i>گدام
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="text-center d-none d-md-table-cell">
-                                <span class="badge bg-light text-dark rounded-pill px-3 py-2">{{ location.product_count }}</span>
-                            </td>
-                            <td class="text-center d-none d-lg-table-cell">
-                                <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 1.1rem; font-weight: 600;">
-                                    {{ location.total_quantity }}
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                {% if location.is_active %}
-                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
-                                        <i class="fas fa-check me-1"></i>فعال
-                                    </span>
-                                {% else %}
-                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">
-                                        <i class="fas fa-times me-1"></i>غیرفعال
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'update_location' location.id %}" 
-                                       class="btn btn-outline-warning border-0" title="ویرایش">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button class="btn btn-outline-danger border-0" title="حذف"
-                                       onclick="event.preventDefault(); showDeleteModal('{{ location.id }}','{{ location.name }}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 loc-table">
+                <thead>
+                    <tr>
+                        <th class="text-center" style="width: 60px;">#</th>
+                        <th>کد</th>
+                        <th>نام</th>
+                        <th class="d-none d-md-table-cell">نوع</th>
+                        <th class="text-center d-none d-md-table-cell">تعداد کالاها</th>
+                        <th class="text-center d-none d-lg-table-cell">جمع موجودی</th>
+                        <th class="text-center">وضعیت</th>
+                        <th class="text-center" style="width: 110px;">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for location in locations %}
+                    <tr id="location-row-{{ location.id }}">
+                        <td class="text-center">
+                            <span class="loc-rank">{{ forloop.counter }}</span>
+                        </td>
 
-                        <form id="deleteForm-{{ location.id }}"
-                              method="POST"
-                              action="{% url 'delete_location' location.id %}"
-                              style="display:none;">
-                            {% csrf_token %}
-                        </form>
-                        {% empty %}
-                        <tr>
-                            <td colspan="8" class="text-center py-5">
-                                <i class="fas fa-map-marker-alt fa-3x mb-3" style="color: #9550fc;"></i>
-                                <h5 class="text-muted">هیچ موقعیتی ثبت نشده است</h5>
-                                <p class="text-muted">اولین موقعیت را ثبت کنید</p>
-                                <a href="{% url 'create_location' %}" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
-                                    <i class="fas fa-plus me-1"></i> ثبت موقعیت
+                        <td>
+                            <code class="text-muted">{{ location.code }}</code>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="loc-row-icon me-2">
+                                    <i class="fas fa-map-marker-alt" style="color: #9550fc;"></i>
+                                </div>
+                                <span class="fw-bold">{{ location.name }}</span>
+                            </div>
+                        </td>
+
+                        <td class="d-none d-md-table-cell">
+                            {% if location.type == 'shop' %}
+                                <span class="loc-badge loc-badge-shop">
+                                    <i class="fas fa-store me-1"></i>دوکان
+                                </span>
+                            {% else %}
+                                <span class="loc-badge loc-badge-warehouse">
+                                    <i class="fas fa-warehouse me-1"></i>گدام
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center d-none d-md-table-cell">
+                            <span class="loc-count-badge">{{ location.product_count }}</span>
+                        </td>
+
+                        <td class="text-center d-none d-lg-table-cell">
+                            <span class="loc-count-badge loc-count-lg">{{ location.total_quantity }}</span>
+                        </td>
+
+                        <td class="text-center">
+                            {% if location.is_active %}
+                                <span class="loc-badge loc-badge-active">
+                                    <i class="fas fa-check me-1"></i>فعال
+                                </span>
+                            {% else %}
+                                <span class="loc-badge loc-badge-inactive">
+                                    <i class="fas fa-times me-1"></i>غیرفعال
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'update_location' location.id %}"
+                                   class="btn btn-outline-warning border-0"
+                                   title="ویرایش">
+                                    <i class="fas fa-edit"></i>
                                 </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                <button type="button"
+                                        class="btn btn-outline-danger border-0"
+                                        title="حذف"
+                                        onclick="showDeleteModal('{{ location.id }}','{{ location.name|escapejs }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+
+                            {# ✅ FIX: delete form moved INSIDE the row (was between <tr> before — invalid HTML) #}
+                            <form id="deleteForm-{{ location.id }}"
+                                  method="POST"
+                                  action="{% url 'delete_location' location.id %}"
+                                  style="display:none;">
+                                {% csrf_token %}
+                            </form>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <i class="fas fa-map-marker-alt fa-3x mb-3" style="color: #9550fc;"></i>
+                            <h5 class="text-muted">هیچ موقعیتی ثبت نشده است</h5>
+                            <p class="text-muted mb-3">اولین موقعیت را ثبت کنید</p>
+                            <a href="{% url 'create_location' %}"
+                               class="btn rounded-pill px-4 text-white"
+                               style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                <i class="fas fa-plus me-1"></i> ثبت موقعیت
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Pagination -->
+    <!-- ============ PAGINATION ============ -->
     {% if locations.has_other_pages %}
     <div class="d-flex justify-content-center mt-4">
         <nav aria-label="Page navigation">
             <ul class="pagination">
                 {% if locations.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ locations.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Previous">
+                        <a class="page-link"
+                           href="?page={{ locations.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                           aria-label="Previous">
                             <span aria-hidden="true">&laquo;</span>
                         </a>
                     </li>
@@ -242,18 +268,23 @@
                 {% for num in locations.paginator.page_range %}
                     {% if locations.number == num %}
                         <li class="page-item active">
-                            <span class="page-link" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); border-color: #450C98;">{{ num }}</span>
+                            <span class="page-link loc-page-active">{{ num }}</span>
                         </li>
                     {% elif num > locations.number|add:'-3' and num < locations.number|add:'3' %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                            <a class="page-link"
+                               href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                {{ num }}
+                            </a>
                         </li>
                     {% endif %}
                 {% endfor %}
 
                 {% if locations.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ locations.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Next">
+                        <a class="page-link"
+                           href="?page={{ locations.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}"
+                           aria-label="Next">
                             <span aria-hidden="true">&raquo;</span>
                         </a>
                     </li>
@@ -275,7 +306,7 @@
 
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- ============ DELETE MODAL ============ -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -290,8 +321,10 @@
                     <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
                 </div>
                 <h5 class="mb-3">آیا مطمئن هستید؟</h5>
-                <p class="text-muted mb-2">موقعیت "<strong id="deleteLocationName"></strong>" حذف خواهد شد.</p>
-                <p class="text-danger small">همه موجودی‌های مرتبط با این موقعیت نیز حذف می‌شوند!</p>
+                <p class="text-muted mb-2">
+                    موقعیت "<strong id="deleteLocationName"></strong>" حذف خواهد شد.
+                </p>
+                <p class="text-danger small mb-0">همه موجودی‌های مرتبط با این موقعیت نیز حذف می‌شوند!</p>
             </div>
             <div class="modal-footer justify-content-center">
                 <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
@@ -304,26 +337,179 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<script>
-    let deleteLocationId = null;
-    
-    function showDeleteModal(locationId, locationName) {
-        deleteLocationId = locationId;
-        document.getElementById('deleteLocationName').textContent = locationName;
-        
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        deleteModal.show();
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE STYLES — follows your base.html pattern                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_head %}
+<style>
+    .loc-wrapper {
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+        color: #1e293b;
     }
-    
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-        if (deleteLocationId) {
-            const form = document.getElementById('deleteForm-' + deleteLocationId);
-            if (form) {
-                form.submit();
-            }
-        }
-    });
-</script>
 
+    /* ---------- Stat cards ---------- */
+    .loc-stat-card {
+        border-radius: 16px;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .loc-stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    /* ---------- Filter controls ---------- */
+    .loc-wrapper .form-control,
+    .loc-wrapper .form-select,
+    .loc-wrapper .input-group-text,
+    .loc-wrapper .btn {
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+    }
+    .loc-wrapper .form-control:focus,
+    .loc-wrapper .form-select:focus {
+        border-color: #9550fc;
+        box-shadow: 0 0 0 0.2rem rgba(149, 80, 252, 0.15);
+    }
+    .loc-wrapper .input-group-text {
+        background: #fff;
+        border-color: #e2e8f0;
+    }
+
+    /* ---------- Table ---------- */
+    .loc-table {
+        font-size: 0.9rem;
+    }
+    .loc-table thead th {
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border: none;
+        padding: 14px 16px;
+        white-space: nowrap;
+    }
+    .loc-table tbody td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f5f7fa;
+        vertical-align: middle;
+    }
+    .loc-table tbody tr:last-child td { border-bottom: none; }
+    .loc-table tbody tr:hover { background: #faf5ff; }
+
+    /* Row number badge */
+    .loc-rank {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        color: #fff;
+    }
+
+    /* Row icon */
+    .loc-row-icon {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(149, 80, 252, 0.1);
+        border-radius: 8px;
+    }
+
+    /* Badges */
+    .loc-badge {
+        display: inline-block;
+        padding: 5px 14px;
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .loc-badge-shop       { background: rgba(25, 135, 84, 0.1);   color: #198754; }
+    .loc-badge-warehouse  { background: rgba(79, 172, 254, 0.1);  color: #4facfe; }
+    .loc-badge-active     { background: rgba(25, 135, 84, 0.1);   color: #198754; }
+    .loc-badge-inactive   { background: rgba(220, 53, 69, 0.1);   color: #dc3545; }
+
+    .loc-count-badge {
+        display: inline-block;
+        padding: 4px 14px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+    .loc-count-lg { font-size: 1rem; padding: 5px 16px; }
+
+    /* ---------- Pagination ---------- */
+    .page-link {
+        color: #450C98;
+        border-color: #e2e8f0;
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+    }
+    .page-link:hover {
+        color: #9550fc;
+        background: #faf5ff;
+        border-color: #e9d5ff;
+    }
+    .page-item.active .loc-page-active {
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        border-color: #450C98;
+        color: #fff;
+    }
+
+    /* ---------- Breadcrumb ---------- */
+    .breadcrumb-item a:hover {
+        color: #450C98 !important;
+        transition: color 0.2s ease;
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+        .loc-wrapper h2 { font-size: 1.4rem !important; }
+        .loc-table tbody td { padding: 10px 12px; }
+    }
+</style>
+{% endblock %}
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
+<script>
+    // ─── Delete confirmation modal ───
+    (function () {
+        let deleteLocationId = null;
+
+        window.showDeleteModal = function (locationId, locationName) {
+            deleteLocationId = locationId;
+            document.getElementById('deleteLocationName').textContent = locationName;
+
+            const modalEl = document.getElementById('deleteModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            if (!confirmBtn) return;
+
+            confirmBtn.addEventListener('click', function () {
+                if (!deleteLocationId) return;
+                const form = document.getElementById('deleteForm-' + deleteLocationId);
+                if (form) form.submit();
+            });
+        });
+    })();
+</script>
 {% endblock %}

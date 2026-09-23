@@ -1,6 +1,6 @@
 import os
-import zipfile
 import sqlite3
+import zipfile
 import shutil
 from datetime import datetime, timedelta
 from django.conf import settings
@@ -12,24 +12,28 @@ from django.utils import timezone
 # ═══════════════════════════════════════════════════════════
 
 def get_backup_dir():
-    """پوشه ذخیره بکاپ‌ها"""
-    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+    """پوشه ذخیره بکاپ‌ها — در AppData (قابل نوشتن)"""
+    # Store backups in AppData, NOT in the bundled app folder
+    user_data = os.path.join(
+        os.environ.get('APPDATA', os.path.expanduser('~')),
+        'PoyafarApp'
+    )
+    backup_dir = os.path.join(user_data, 'backups')
     os.makedirs(backup_dir, exist_ok=True)
     return backup_dir
 
 
 def get_media_dir():
-    """پوشه مدیا"""
+    """پوشه مدیا — از settings می‌خوانیم (AppData)"""
     media_root = getattr(settings, 'MEDIA_ROOT', None)
     if media_root and os.path.isdir(media_root):
         return media_root
-    fallback = os.path.join(settings.BASE_DIR, 'media')
-    return fallback if os.path.isdir(fallback) else None
+    return None
 
 
 def get_db_path():
-    """مسیر دیتابیس"""
-    return settings.DATABASES['default']['NAME']
+    """مسیر دیتابیس SQLite"""
+    return str(settings.DATABASES['default']['NAME'])
 
 
 def format_size(bytes_val):
@@ -44,13 +48,19 @@ def format_size(bytes_val):
 
 
 def safe_sqlite_backup(src_path, dest_path):
-    """کپی امن دیتابیس SQLite (بدون قفل شدن)"""
+    """
+    کپی امن دیتابیس SQLite.
+    از API رسمی sqlite3 استفاده می‌کند تا اگر دیتابیس در حال استفاده بود،
+    بدون قفل شدن و بدون خرابی، یک کپی سالم بگیرد.
+    """
     src = sqlite3.connect(src_path)
     dst = sqlite3.connect(dest_path)
-    with dst:
-        src.backup(dst)
-    dst.close()
-    src.close()
+    try:
+        with dst:
+            src.backup(dst)
+    finally:
+        dst.close()
+        src.close()
 
 
 # ═══════════════════════════════════════════════════════════
@@ -59,7 +69,7 @@ def safe_sqlite_backup(src_path, dest_path):
 
 def create_full_backup(prefix='poyafar', note='', include_media=True,
                         include_settings=False, trigger='manual'):
-    """ساخت بکاپ کامل در یک فایل ZIP"""
+    """ساخت بکاپ کامل در یک فایل ZIP (SQLite)"""
     from .models import Backup
 
     backup_dir = get_backup_dir()
@@ -165,7 +175,7 @@ def create_full_backup(prefix='poyafar', note='', include_media=True,
 # ═══════════════════════════════════════════════════════════
 
 def create_db_backup(prefix='poyafar', note='', trigger='manual'):
-    """بکاپ فقط دیتابیس"""
+    """بکاپ فقط دیتابیس SQLite"""
     from .models import Backup
 
     backup_dir = get_backup_dir()
@@ -193,6 +203,11 @@ def create_db_backup(prefix='poyafar', note='', trigger='manual'):
         return True, f'بکاپ دیتابیس: {filename} ({format_size(size)})', backup
 
     except Exception as e:
+        if os.path.isfile(dest):
+            try:
+                os.remove(dest)
+            except Exception:
+                pass
         return False, f'خطا: {str(e)}', None
 
 
@@ -201,7 +216,7 @@ def create_db_backup(prefix='poyafar', note='', trigger='manual'):
 # ═══════════════════════════════════════════════════════════
 
 def restore_from_zip(backup_obj, restore_media=False):
-    """بازیابی از فایل ZIP"""
+    """بازیابی از فایل ZIP (SQLite)"""
     if not os.path.isfile(backup_obj.file_path):
         return False, 'فایل بکاپ پیدا نشد.'
 
@@ -209,12 +224,15 @@ def restore_from_zip(backup_obj, restore_media=False):
     db_path = get_db_path()
 
     try:
-        # ۱. بکاپ ایمنی
+        # ۱. بکاپ ایمنی قبل از بازیابی
         ts = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         safety_name = f'safety_before_restore_{ts}.sqlite3'
         safety_path = os.path.join(backup_dir, safety_name)
         if os.path.isfile(db_path):
-            shutil.copy2(db_path, safety_path)
+            try:
+                shutil.copy2(db_path, safety_path)
+            except Exception:
+                pass
 
         # ۲. استخراج
         extract_dir = os.path.join(backup_dir, f'_restore_{ts}')
@@ -257,7 +275,7 @@ def restore_from_zip(backup_obj, restore_media=False):
 
 
 def restore_from_sqlite(backup_obj):
-    """بازیابی از فایل sqlite3"""
+    """بازیابی از فایل .sqlite3 (فقط دیتابیس)"""
     if not os.path.isfile(backup_obj.file_path):
         return False, 'فایل بکاپ پیدا نشد.'
 
@@ -268,9 +286,11 @@ def restore_from_sqlite(backup_obj):
         safety_name = f'safety_before_restore_{ts}.sqlite3'
         safety_path = os.path.join(backup_dir, safety_name)
 
+        # بکاپ ایمنی
         if os.path.isfile(db_path):
             shutil.copy2(db_path, safety_path)
 
+        # بازیابی
         shutil.copy2(backup_obj.file_path, db_path)
         return True, f'بازیابی موفق. بکاپ ایمنی: {safety_name}'
 
@@ -287,7 +307,6 @@ def cleanup_old_backups(keep_days=30, keep_count=20):
     from .models import Backup
 
     cutoff = timezone.now() - timedelta(days=keep_days)
-
     old = Backup.objects.filter(created_at__lt=cutoff).order_by('-created_at')[keep_count:]
 
     deleted = 0
@@ -298,7 +317,7 @@ def cleanup_old_backups(keep_days=30, keep_count=20):
 
 
 # ═══════════════════════════════════════════════════════════
-# بکاپ خودکار — چک و اجرا
+# بکاپ خودکار
 # ═══════════════════════════════════════════════════════════
 
 def auto_backup_if_needed():
@@ -311,7 +330,6 @@ def auto_backup_if_needed():
 
     today = timezone.now().date()
 
-    # چک امروز
     already_done = Backup.objects.filter(
         created_at__date=today,
         trigger='auto'
@@ -320,7 +338,6 @@ def auto_backup_if_needed():
     if already_done:
         return False, 'امروز قبلاً بکاپ گرفته شده'
 
-    # بکاپ جدید
     success, msg, _ = create_full_backup(
         prefix='poyafar_auto',
         note='بکاپ خودکار روزانه',
@@ -329,11 +346,9 @@ def auto_backup_if_needed():
     )
 
     if success:
-        # آپدیت last_run
         settings_obj.last_run = timezone.now()
         settings_obj.save(update_fields=['last_run'])
 
-        # پاکسازی خودکار
         cleanup_old_backups(
             keep_days=settings_obj.keep_days,
             keep_count=settings_obj.keep_count,
@@ -366,10 +381,9 @@ def _build_readme(media_count, media_size, include_media, trigger='manual'):
     └── db.sqlite3          ← دیتابیس کامل
 
   media/                    ← عکس‌ها و فایل‌ها
-    ├── products/
     ├── employees/
-    ├── expenses/
-    └── transaction_image/
+    ├── tazkera/
+    └── ...
 
   config/                   ← (اگر باشد)
     └── settings.py
@@ -385,14 +399,10 @@ def _build_readme(media_count, media_size, include_media, trigger='manual'):
 
   روش ۲ — دستی:
     ۱. فایل ZIP را استخراج کنید
-    ۲. db.sqlite3 را به ریشه پروژه کپی کنید
-    ۳. پوشه media را به ریشه پروژه کپی کنید
-    ۴. سرور را ری‌استارت کنید
+    ۲. db.sqlite3 را به مسیر زیر کپی کنید:
+         %APPDATA%\\PoyafarApp\\db.sqlite3
+    ۳. پوشه media را به مسیر زیر کپی کنید:
+         %APPDATA%\\PoyafarApp\\media\\
+    ۴. نرم‌افزار را ری‌استارت کنید
 
-
-────────────────────────────────────────────────────────────
-🏢 شرکت نرم‌افزاری پویافر
-📧 poyafar@yahoo.com | 📞 +93794483138
-📍 کابل، افغانستان
-────────────────────────────────────────────────────────────
 """

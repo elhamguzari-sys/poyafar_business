@@ -102,10 +102,9 @@
 
     <div class="tab-content" id="debtTabsContent">
 
-        <!-- ==================== TAB 1: ACTIVE DEBTS ==================== -->
+        <!-- TAB 1: ACTIVE DEBTS -->
         <div class="tab-pane fade show active" id="active-debts" role="tabpanel">
 
-            <!-- Search and Filters -->
             <div class="card border-0 shadow-sm mb-4 rounded-3">
                 <div class="card-body">
                     <form method="GET" class="row g-3">
@@ -156,7 +155,6 @@
                 </div>
             </div>
 
-            <!-- Table Card -->
             <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -296,7 +294,7 @@
 
         </div>
 
-        <!-- ==================== TAB 2: SETTLED DEBTS ==================== -->
+        <!-- TAB 2: SETTLED DEBTS -->
         <div class="tab-pane fade" id="settled-debts" role="tabpanel">
 
             <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
@@ -409,6 +407,12 @@
     </div>
 </div>
 
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
     function showPaymentModal(saleId, customerName, remainingAmount) {
         document.getElementById('modalCustomerName').textContent = customerName;
@@ -419,5 +423,4 @@
         modal.show();
     }
 </script>
-
 {% endblock %}

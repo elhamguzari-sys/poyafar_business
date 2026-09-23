@@ -1,44 +1,50 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}لیست حرکات کالا{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    
-    <!-- Header -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 mt-4">
+<div class="container-fluid mov-wrapper py-4">
+
+    <!-- ============ HEADER ============ -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-1" style="color: #9550fc;">
+            <h2 class="fw-bold mb-1" style="color: #9550fc; font-size: 2rem;">
                 <i class="fas fa-exchange-alt me-2"></i>
                 لیست حرکات کالا
             </h2>
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
-                    <li class="breadcrumb-item active" style="color: #450C98">حرکات کالا</li>
+                <ol class="breadcrumb mb-0 fs-6">
+                    <li class="breadcrumb-item">
+                        <a href="/" class="text-decoration-none text-muted">داشبورد</a>
+                    </li>
+                    <li class="breadcrumb-item active" style="color: #450C98;">حرکات کالا</li>
                 </ol>
             </nav>
         </div>
-        <a href="{% url 'create_stock_movement' %}" class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+        <a href="{% url 'create_stock_movement' %}"
+           class="btn btn-lg rounded-pill shadow mt-3 mt-md-0 text-white fs-6"
+           style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
             <i class="fas fa-plus-circle me-2"></i>
             حرکت جدید
         </a>
     </div>
 
-    <!-- Messages -->
+    <!-- ============ MESSAGES ============ -->
     {% if messages %}
         {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert">
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3 fs-6" role="alert">
             <i class="fas fa-info-circle me-2"></i>{{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         {% endfor %}
     {% endif %}
 
-    <!-- Stats Cards -->
+    <!-- ============ STATS CARDS ============ -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 mov-stat-card"
+                 style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-exchange-alt fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ total_movements_count }}</h3>
@@ -47,7 +53,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 mov-stat-card"
+                 style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-arrow-down fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ stock_in_count }}</h3>
@@ -56,7 +63,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 mov-stat-card"
+                 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-arrow-up fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ stock_out_count }}</h3>
@@ -65,7 +73,8 @@
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm text-white h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <div class="card border-0 shadow-sm text-white h-100 mov-stat-card"
+                 style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                 <div class="card-body text-center py-4">
                     <i class="fas fa-store fa-2x mb-2"></i>
                     <h3 class="fw-bold mb-0">{{ shop_movements_count }}</h3>
@@ -75,7 +84,7 @@
         </div>
     </div>
 
-    <!-- Search and Filters -->
+    <!-- ============ FILTER TOOLBAR ============ -->
     <div class="card border-0 shadow-sm mb-4 rounded-3">
         <div class="card-body">
             <form method="GET" class="row g-3">
@@ -84,51 +93,56 @@
                         <span class="input-group-text bg-white border-end-0">
                             <i class="fas fa-search" style="color: #450C98;"></i>
                         </span>
-                        <input type="text" name="search" class="form-control border-start-0" 
-                               placeholder="جستجو در حرکات..." 
-                               value="{{ request.GET.search }}">
+                        <input type="text" name="search" class="form-control border-start-0"
+                               placeholder="جستجو در حرکات..."
+                               value="{{ request.GET.search|default:'' }}">
                     </div>
                 </div>
+
                 <div class="col-12 col-md-2">
                     <select name="product" class="form-select">
                         <option value="">همه کالاها</option>
                         {% for product in products %}
-                            <option value="{{ product.id }}" {% if request.GET.product == product.id|stringformat:"s" %}selected{% endif %}>
+                            <option value="{{ product.id }}"
+                                {% if request.GET.product == product.id|stringformat:"s" %}selected{% endif %}>
                                 {{ product.name }}
                             </option>
                         {% endfor %}
                     </select>
                 </div>
+
                 <div class="col-12 col-md-2">
                     <select name="type" class="form-select">
                         <option value="">همه انواع</option>
-                        <option value="IN" {% if request.GET.type == 'IN' %}selected{% endif %}>ورود</option>
+                        <option value="IN"  {% if request.GET.type == 'IN'  %}selected{% endif %}>ورود</option>
                         <option value="OUT" {% if request.GET.type == 'OUT' %}selected{% endif %}>خروج</option>
                     </select>
                 </div>
+
                 <div class="col-12 col-md-2">
                     <select name="location" class="form-select">
                         <option value="">همه موقعیت‌ها</option>
                         {% for loc in locations %}
-                            <option value="{{ loc.id }}" {% if request.GET.location == loc.id|stringformat:"s" %}selected{% endif %}>
+                            <option value="{{ loc.id }}"
+                                {% if request.GET.location == loc.id|stringformat:"s" %}selected{% endif %}>
                                 {{ loc.name }}
                             </option>
                         {% endfor %}
                     </select>
                 </div>
+
                 <div class="col-12 col-md-3">
-                    <button type="submit" class="btn w-100 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
-                        <i class="fas fa-filter me-1"></i>  
+                    <button type="submit"
+                            class="btn w-100 text-white"
+                            style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                        <i class="fas fa-filter me-1"></i> اعمال فیلتر
                     </button>
                 </div>
             </form>
 
-            <!-- Clear Search Button -->
             {% if request.GET.search or request.GET.product or request.GET.type or request.GET.location %}
-            <div class="mt-2">
-                <a href="{{ request.path }}" 
-                   class="btn btn-dark btn-sm" 
-                   style="font-size: 0.85rem;">
+            <div class="mt-3">
+                <a href="{{ request.path }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
                     <i class="fas fa-times-circle me-1"></i> حذف جستجو
                 </a>
             </div>
@@ -136,132 +150,143 @@
         </div>
     </div>
 
-    <!-- Table Card -->
+    <!-- ============ TABLE CARD ============ -->
     <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
-                        <tr class="text-white">
-                            <th class="text-center" style="width: 50px;">#</th>
-                            <th>شماره مرجع</th>
-                            <th>کالا</th>
-                            <th class="d-none d-md-table-cell">موقعیت</th>
-                            <th class="d-none d-md-table-cell">نوع حرکت</th>
-                            <th class="text-center">تعداد</th>
-                            <th class="d-none d-lg-table-cell text-center">موجودی بعد</th>
-                            <th class="d-none d-md-table-cell">تاریخ</th>
-                            <th class="text-center" style="width: 100px;">عملیات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for movement in movements %}
-                        <tr class="border-bottom" id="movement-row-{{ movement.id }}">
-                            <td class="text-center">
-                                <span class="badge rounded-pill text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">{{ forloop.counter }}</span>
-                            </td>
-                            <td>
-                                <code class="text-muted">{{ movement.reference_number }}</code>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    {% if movement.product.image %}
-                                        <img src="{{ movement.product.image.url }}" alt="{{ movement.product.name }}" 
-                                             class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
-                                    {% else %}
-                                        <div class="p-2 rounded me-2" style="background: rgba(149, 80, 252, 0.1);">
-                                            <i class="fas fa-box" style="color: #9550fc;"></i>
-                                        </div>
-                                    {% endif %}
-                                    <span class="fw-bold">{{ movement.product.name }}</span>
-                                </div>
-                            </td>
-                            <td class="d-none d-md-table-cell">
-                                {% if movement.location.type == 'shop' %}
-                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
-                                        <i class="fas fa-store me-1"></i>{{ movement.location.name }}
-                                    </span>
-                                {% else %}
-                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(79, 172, 254, 0.1); color: #4facfe;">
-                                        <i class="fas fa-warehouse me-1"></i>{{ movement.location.name }}
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="d-none d-md-table-cell">
-                                {% if movement.movement_type == 'IN' %}
-                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(25, 135, 84, 0.1); color: #198754;">
-                                        <i class="fas fa-arrow-down me-1"></i>ورود
-                                    </span>
-                                {% else %}
-                                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(220, 53, 69, 0.1); color: #dc3545;">
-                                        <i class="fas fa-arrow-up me-1"></i>خروج
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td class="text-center">
-                                {% if movement.quantity > 0 %}
-                                    <span class="fw-bold text-success" style="font-size: 1.1rem;">+{{ movement.quantity }}</span>
-                                {% else %}
-                                    <span class="fw-bold text-danger" style="font-size: 1.1rem;">{{ movement.quantity }}</span>
-                                {% endif %}
-                            </td>
-                            <td class="d-none d-lg-table-cell text-center">
-                                <span class="badge bg-light text-dark rounded-pill px-3 py-2" style="font-size: 1.1rem; font-weight: 600;">
-                                    {{ movement.stock_after_movement }}
-                                </span>
-                            </td>
-                            <td class="d-none d-md-table-cell">
-                                <span class="text-muted" style="font-size: 1rem; font-weight: 500;">
-                                    {{ movement.created_at|date:"Y/m/d H:i" }}
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{% url 'update_stock_movement' movement.id %}" 
-                                       class="btn btn-outline-warning border-0" title="ویرایش">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button class="btn btn-outline-danger border-0" title="حذف"
-                                       onclick="event.preventDefault(); showDeleteModal('{{ movement.id }}','{{ movement.reference_number }}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 mov-table">
+                <thead>
+                    <tr>
+                        <th class="text-center" style="width: 60px;">#</th>
+                        <th>شماره مرجع</th>
+                        <th>کالا</th>
+                        <th class="d-none d-md-table-cell">موقعیت</th>
+                        <th class="d-none d-md-table-cell">نوع حرکت</th>
+                        <th class="text-center">تعداد</th>
+                        <th class="d-none d-lg-table-cell text-center">موجودی بعد</th>
+                        <th class="d-none d-md-table-cell">تاریخ</th>
+                        <th class="text-center" style="width: 110px;">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movement in movements %}
+                    <tr id="movement-row-{{ movement.id }}">
+                        <td class="text-center">
+                            <span class="mov-rank">{{ forloop.counter }}</span>
+                        </td>
 
-                        <!-- Hidden Delete Form -->
-                        <form id="deleteForm-{{ movement.id }}"
-                              method="POST"
-                              action="{% url 'delete_stock_movement' movement.id %}"
-                              style="display:none;">
-                            {% csrf_token %}
-                        </form>
-                        {% empty %}
-                        <tr>
-                            <td colspan="9" class="text-center py-5">
-                                <i class="fas fa-exchange-alt fa-3x mb-3" style="color: #9550fc;"></i>
-                                <h5 class="text-muted">هیچ حرکتی ثبت نشده است</h5>
-                                <p class="text-muted">اولین حرکت کالا را ثبت کنید</p>
-                                <a href="{% url 'create_stock_movement' %}" class="btn rounded-pill px-4 text-white" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
-                                    <i class="fas fa-plus me-1"></i> ثبت حرکت
+                        <td>
+                            <code class="text-muted">{{ movement.reference_number }}</code>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if movement.product.image %}
+                                    <img src="{{ movement.product.image.url }}"
+                                         alt="{{ movement.product.name }}"
+                                         class="rounded me-2 mov-row-thumb">
+                                {% else %}
+                                    <div class="mov-row-thumb mov-row-thumb-placeholder me-2">
+                                        <i class="fas fa-box" style="color: #9550fc;"></i>
+                                    </div>
+                                {% endif %}
+                                <span class="fw-bold">{{ movement.product.name }}</span>
+                            </div>
+                        </td>
+
+                        <td class="d-none d-md-table-cell">
+                            {% if movement.location.type == 'shop' %}
+                                <span class="mov-badge mov-badge-shop">
+                                    <i class="fas fa-store me-1"></i>{{ movement.location.name }}
+                                </span>
+                            {% else %}
+                                <span class="mov-badge mov-badge-warehouse">
+                                    <i class="fas fa-warehouse me-1"></i>{{ movement.location.name }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="d-none d-md-table-cell">
+                            {% if movement.movement_type == 'IN' %}
+                                <span class="mov-badge mov-badge-in">
+                                    <i class="fas fa-arrow-down me-1"></i>ورود
+                                </span>
+                            {% else %}
+                                <span class="mov-badge mov-badge-out">
+                                    <i class="fas fa-arrow-up me-1"></i>خروج
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            {% if movement.quantity > 0 %}
+                                <span class="mov-qty mov-qty-in">+{{ movement.quantity }}</span>
+                            {% else %}
+                                <span class="mov-qty mov-qty-out">{{ movement.quantity }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="d-none d-lg-table-cell text-center">
+                            <span class="mov-after-badge">{{ movement.stock_after_movement }}</span>
+                        </td>
+
+                        <td class="d-none d-md-table-cell">
+                            <span class="text-muted small">{{ movement.created_at|date:"Y/m/d H:i" }}</span>
+                        </td>
+
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'update_stock_movement' movement.id %}"
+                                   class="btn btn-outline-warning border-0"
+                                   title="ویرایش">
+                                    <i class="fas fa-edit"></i>
                                 </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                <button type="button"
+                                        class="btn btn-outline-danger border-0"
+                                        title="حذف"
+                                        onclick="showDeleteMovementModal('{{ movement.id }}','{{ movement.reference_number|default:''|escapejs }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+
+                            {# ✅ FIX: delete form moved INSIDE the row (was between <tr> before — invalid HTML) #}
+                            <form id="deleteForm-{{ movement.id }}"
+                                  method="POST"
+                                  action="{% url 'delete_stock_movement' movement.id %}"
+                                  style="display:none;">
+                                {% csrf_token %}
+                            </form>
+                        </td>
+                    </tr>
+
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <i class="fas fa-exchange-alt fa-3x mb-3" style="color: #9550fc;"></i>
+                            <h5 class="text-muted">هیچ حرکتی ثبت نشده است</h5>
+                            <p class="text-muted mb-3">اولین حرکت کالا را ثبت کنید</p>
+                            <a href="{% url 'create_stock_movement' %}"
+                               class="btn rounded-pill px-4 text-white"
+                               style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);">
+                                <i class="fas fa-plus me-1"></i> ثبت حرکت
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Pagination -->
+    <!-- ============ PAGINATION ============ -->
     {% if movements.has_other_pages %}
     <div class="d-flex justify-content-center mt-4">
         <nav aria-label="Page navigation">
             <ul class="pagination">
                 {% if movements.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ movements.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}" aria-label="Previous">
+                        <a class="page-link"
+                           href="?page={{ movements.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}"
+                           aria-label="Previous">
                             <span aria-hidden="true">&laquo;</span>
                         </a>
                     </li>
@@ -274,18 +299,23 @@
                 {% for num in movements.paginator.page_range %}
                     {% if movements.number == num %}
                         <li class="page-item active">
-                            <span class="page-link" style="background: linear-gradient(135deg, #450C98 0%, #9550fc 100%); border-color: #450C98;">{{ num }}</span>
+                            <span class="page-link mov-page-active">{{ num }}</span>
                         </li>
                     {% elif num > movements.number|add:'-3' and num < movements.number|add:'3' %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}">{{ num }}</a>
+                            <a class="page-link"
+                               href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}">
+                                {{ num }}
+                            </a>
                         </li>
                     {% endif %}
                 {% endfor %}
 
                 {% if movements.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ movements.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}" aria-label="Next">
+                        <a class="page-link"
+                           href="?page={{ movements.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}"
+                           aria-label="Next">
                             <span aria-hidden="true">&raquo;</span>
                         </a>
                     </li>
@@ -307,7 +337,7 @@
 
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- ============ DELETE MODAL ============ -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -322,8 +352,10 @@
                     <i class="fas fa-exclamation-triangle fa-4x text-warning"></i>
                 </div>
                 <h5 class="mb-3">آیا مطمئن هستید؟</h5>
-                <p class="text-muted mb-2">حرکت با شماره "<strong id="deleteMovementName"></strong>" حذف خواهد شد.</p>
-                <p class="text-danger small">موجودی کالا به حالت قبل برمی‌گردد!</p>
+                <p class="text-muted mb-2">
+                    حرکت با شماره "<strong id="deleteMovementName"></strong>" حذف خواهد شد.
+                </p>
+                <p class="text-danger small mb-0">موجودی کالا به حالت قبل برمی‌گردد!</p>
             </div>
             <div class="modal-footer justify-content-center">
                 <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
@@ -336,26 +368,192 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<script>
-    let deleteMovementId = null;
-    
-    function showDeleteModal(movementId, referenceNumber) {
-        deleteMovementId = movementId;
-        document.getElementById('deleteMovementName').textContent = referenceNumber;
-        
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        deleteModal.show();
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE STYLES — follows your base.html pattern                -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_head %}
+<style>
+    .mov-wrapper {
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+        color: #1e293b;
     }
-    
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-        if (deleteMovementId) {
-            const form = document.getElementById('deleteForm-' + deleteMovementId);
-            if (form) {
-                form.submit();
-            }
-        }
-    });
-</script>
 
+    /* ---------- Stat cards ---------- */
+    .mov-stat-card {
+        border-radius: 16px;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .mov-stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    /* ---------- Filter controls ---------- */
+    .mov-wrapper .form-control,
+    .mov-wrapper .form-select,
+    .mov-wrapper .input-group-text,
+    .mov-wrapper .btn {
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+    }
+    .mov-wrapper .form-control:focus,
+    .mov-wrapper .form-select:focus {
+        border-color: #9550fc;
+        box-shadow: 0 0 0 0.2rem rgba(149, 80, 252, 0.15);
+    }
+    .mov-wrapper .input-group-text {
+        background: #fff;
+        border-color: #e2e8f0;
+    }
+
+    /* ---------- Table ---------- */
+    .mov-table {
+        font-size: 0.9rem;
+    }
+    .mov-table thead th {
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border: none;
+        padding: 14px 16px;
+        white-space: nowrap;
+    }
+    .mov-table tbody td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #f5f7fa;
+        vertical-align: middle;
+    }
+    .mov-table tbody tr:last-child td { border-bottom: none; }
+    .mov-table tbody tr:hover { background: #faf5ff; }
+
+    /* Row number badge */
+    .mov-rank {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        color: #fff;
+    }
+
+    /* Row thumbnail */
+    .mov-row-thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+    }
+    .mov-row-thumb-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(149, 80, 252, 0.1);
+        border-radius: 8px;
+    }
+
+    /* Badges */
+    .mov-badge {
+        display: inline-block;
+        padding: 5px 14px;
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .mov-badge-shop      { background: rgba(25, 135, 84, 0.1);  color: #198754; }
+    .mov-badge-warehouse { background: rgba(79, 172, 254, 0.1); color: #4facfe; }
+    .mov-badge-in        { background: rgba(25, 135, 84, 0.1);  color: #198754; }
+    .mov-badge-out       { background: rgba(220, 53, 69, 0.1);  color: #dc3545; }
+
+    /* Quantity */
+    .mov-qty {
+        font-weight: 800;
+        font-size: 1.1rem;
+        direction: ltr;
+        display: inline-block;
+    }
+    .mov-qty-in  { color: #16a34a; }
+    .mov-qty-out { color: #dc2626; }
+
+    /* Stock after badge */
+    .mov-after-badge {
+        display: inline-block;
+        padding: 5px 16px;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 700;
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+
+    /* ---------- Pagination ---------- */
+    .page-link {
+        color: #450C98;
+        border-color: #e2e8f0;
+        font-family: 'Vazirmatn', Tahoma, sans-serif;
+    }
+    .page-link:hover {
+        color: #9550fc;
+        background: #faf5ff;
+        border-color: #e9d5ff;
+    }
+    .page-item.active .mov-page-active {
+        background: linear-gradient(135deg, #450C98 0%, #9550fc 100%);
+        border-color: #450C98;
+        color: #fff;
+    }
+
+    /* ---------- Breadcrumb ---------- */
+    .breadcrumb-item a:hover {
+        color: #450C98 !important;
+        transition: color 0.2s ease;
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+        .mov-wrapper h2 { font-size: 1.4rem !important; }
+        .mov-table tbody td { padding: 10px 12px; }
+    }
+</style>
+{% endblock %}
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
+<script>
+    // ─── Delete confirmation modal ───
+    (function () {
+        let deleteMovementId = null;
+
+        window.showDeleteMovementModal = function (movementId, referenceNumber) {
+            deleteMovementId = movementId;
+            document.getElementById('deleteMovementName').textContent = referenceNumber || '—';
+
+            const modalEl = document.getElementById('deleteModal');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            if (!confirmBtn) return;
+
+            confirmBtn.addEventListener('click', function () {
+                if (!deleteMovementId) return;
+                const form = document.getElementById('deleteForm-' + deleteMovementId);
+                if (form) form.submit();
+            });
+        });
+    })();
+</script>
 {% endblock %}

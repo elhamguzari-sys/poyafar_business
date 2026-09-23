@@ -1,88 +1,11 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 {% load math_filters %}
+{% load static %}
 
 {% block title %}راپور مرجوعی و ضایعات{% endblock %}
 
 {% block content %}
-<style>
-    :root { --primary: #450C98; --dark: #1e293b; --muted: #64748b; --bg-soft: #f8fafc; }
-    .rt-wrapper { font-family: 'Vazirmatn', Tahoma, sans-serif; color: var(--dark); }
-    .rt-header {
-        background: linear-gradient(135deg, #f59e0b 0%, #f6a821 55%, #fbbf24 100%);
-        border-radius: 24px; padding: 32px 36px; color: #fff;
-        box-shadow: 0 15px 45px rgba(245, 158, 11, 0.3);
-        position: relative; overflow: hidden; margin-bottom: 22px;
-    }
-    .rt-header::before { content: ''; position: absolute; top: -80px; left: -80px; width: 260px; height: 260px; background: rgba(255,255,255,0.08); border-radius: 50%; }
-    .rt-header::after { content: ''; position: absolute; bottom: -100px; right: -60px; width: 300px; height: 300px; background: rgba(255,255,255,0.06); border-radius: 50%; }
-    .rt-header .content { position: relative; z-index: 2; }
-    .rt-header h1 { font-weight: 800; font-size: 1.8rem; margin: 0; }
-    .rt-header .sub { opacity: 0.92; font-size: 0.95rem; margin-top: 6px; }
-    .rt-header .meta-badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-    .rt-header .meta-badge { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28); padding: 6px 16px; border-radius: 50px; font-size: 0.82rem; font-weight: 600; backdrop-filter: blur(8px); }
-    .pdf-action-bar { background: linear-gradient(135deg, #fff 0%, #fffbeb 100%); border-radius: 18px; padding: 18px 24px; box-shadow: 0 6px 22px rgba(245, 158, 11, 0.08); border: 1px solid #eef2f7; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
-    .pdf-action-text h5 { margin: 0; font-weight: 800; color: #d97706; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
-    .pdf-action-text p { margin: 4px 0 0; font-size: 0.82rem; color: var(--muted); }
-    .pdf-download-btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; border-radius: 50px; border: none; background: linear-gradient(135deg, #f59e0b, #f6a821); color: #fff; font-size: 0.92rem; font-weight: 800; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35); font-family: 'Vazirmatn', Tahoma, sans-serif; white-space: nowrap; }
-    .pdf-download-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(245, 158, 11, 0.45); }
-    .pdf-download-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-    .pdf-loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(30, 41, 59, 0.88); backdrop-filter: blur(8px); z-index: 99999; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 22px; }
-    .pdf-loading-overlay.active { display: flex; }
-    .pdf-loading-spinner { width: 70px; height: 70px; border: 5px solid rgba(255,255,255,0.15); border-top-color: #f6a821; border-radius: 50%; animation: pdfSpin 0.9s linear infinite; }
-    @keyframes pdfSpin { to { transform: rotate(360deg); } }
-    .pdf-loading-text { color: #fff; font-weight: 800; font-size: 1.05rem; font-family: 'Vazirmatn', Tahoma, sans-serif; }
-    .pdf-loading-sub { color: rgba(255,255,255,0.7); font-size: 0.85rem; font-family: 'Vazirmatn', Tahoma, sans-serif; }
-    .report-nav { background: #fff; border-radius: 18px; padding: 14px 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.06); border: 1px solid #eef2f7; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-    .report-nav .nav-label { font-weight: 800; font-size: 0.85rem; color: var(--primary); margin-left: 8px; display: flex; align-items: center; gap: 6px; }
-    .nav-pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 50px; background: #f8fafc; color: #475569; font-size: 0.82rem; font-weight: 700; text-decoration: none; border: 1px solid #eef2f7; transition: all 0.25s ease; white-space: nowrap; }
-    .nav-pill:hover { background: #fff; color: var(--primary); border-color: #e9d5ff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(69, 12, 152, 0.15); }
-    .nav-pill.active-returns { background: linear-gradient(135deg, #f59e0b, #f6a821); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); }
-    .sec-title { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.05rem; color: #d97706; margin: 28px 0 16px; }
-    .sec-title .bar { width: 5px; height: 22px; background: linear-gradient(180deg, #f59e0b, #f6a821); border-radius: 50px; }
-    .kpi-card { background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 6px 22px rgba(0,0,0,0.07); border: 1px solid #eef2f7; height: 100%; transition: all 0.35s ease; position: relative; overflow: hidden; }
-    .kpi-card::before { content: ''; position: absolute; top: 0; right: 0; width: 5px; height: 100%; }
-    .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.12); }
-    .kpi-card .kpi-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; margin-bottom: 14px; }
-    .kpi-card .kpi-value { font-size: 1.45rem; font-weight: 800; line-height: 1.2; margin: 0; }
-    .kpi-card .kpi-label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
-    .kpi-card .kpi-sub { font-size: 0.75rem; color: #94a3b8; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
-    .kpi-cr .kpi-icon { background: #dbeafe; color: #2563eb; }
-    .kpi-cr::before { background: linear-gradient(180deg, #4facfe, #00f2fe); }
-    .kpi-sr .kpi-icon { background: #e0e7ff; color: #4f46e5; }
-    .kpi-sr::before { background: linear-gradient(180deg, #4f46e5, #818cf8); }
-    .kpi-cr-amt .kpi-icon { background: #fee2e2; color: #dc2626; }
-    .kpi-cr-amt::before { background: linear-gradient(180deg, #f093fb, #f5576c); }
-    .kpi-sr-amt .kpi-icon { background: #dcfce7; color: #16a34a; }
-    .kpi-sr-amt::before { background: linear-gradient(180deg, #11998e, #38ef7d); }
-    .kpi-waste .kpi-icon { background: #fef3c7; color: #d97706; }
-    .kpi-waste::before { background: linear-gradient(180deg, #f59e0b, #fbbf24); }
-    .kpi-items .kpi-icon { background: #f3e8ff; color: #7c3aed; }
-    .kpi-items::before { background: linear-gradient(180deg, #450C98, #9550fc); }
-    .table-card { background: #fff; border-radius: 20px; box-shadow: 0 6px 24px rgba(0,0,0,0.07); border: 1px solid #eef2f7; overflow: hidden; height: 100%; }
-    .table-card .table-head { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eef2f7; }
-    .table-card .table-head h6 { margin: 0; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
-    .table-card .table-head .tag { font-size: 0.72rem; color: var(--muted); background: var(--bg-soft); padding: 3px 10px; border-radius: 50px; font-weight: 700; }
-    .table-card table { margin: 0; font-size: 0.85rem; }
-    .table-card table thead th { background: #fffbeb; color: #d97706; font-weight: 700; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #fde68a; padding: 12px 14px; white-space: nowrap; }
-    .table-card table tbody td { padding: 11px 14px; border-bottom: 1px solid #f5f7fa; vertical-align: middle; }
-    .table-card table tbody tr:last-child td { border-bottom: none; }
-    .table-card table tbody tr:hover { background: #fffbeb; }
-    .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; background: #f1f5f9; color: #64748b; }
-    .empty-state { text-align: center; padding: 30px 12px; color: #94a3b8; font-size: 0.85rem; }
-    .empty-state i { font-size: 1.8rem; margin-bottom: 8px; display: block; opacity: 0.5; }
-    .soft-divider { height: 1px; background: linear-gradient(90deg, transparent, #e2e8f0, transparent); margin: 30px 0; }
-    @media (max-width: 768px) {
-        .rt-header { padding: 22px; }
-        .rt-header h1 { font-size: 1.4rem; }
-        .kpi-card .kpi-value { font-size: 1.2rem; }
-        .report-nav { padding: 12px; }
-        .nav-pill { font-size: 0.75rem; padding: 6px 12px; }
-        .pdf-action-bar { flex-direction: column; align-items: stretch; }
-        .pdf-download-btn { justify-content: center; }
-    }
-</style>
-
 <div class="container-fluid rt-wrapper py-4">
     <div class="rt-header">
         <div class="content">
@@ -265,21 +188,54 @@
         <span style="font-size: 0.75rem;">آخرین بروزرسانی: {% now "Y/m/d H:i" %}</span>
     </div>
 </div>
+{% endblock %}
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
-    window.VAZIR_FONT_URL = 'https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/ttf/Vazirmatn-Regular.ttf';
-    window.VAZIR_FONT_BOLD_URL = 'https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/ttf/Vazirmatn-Bold.ttf';
-    function showLoading(t, s) { let o = document.getElementById('pdfLoadingOverlay');
-        if (!o) { o = document.createElement('div'); o.id = 'pdfLoadingOverlay'; o.className = 'pdf-loading-overlay';
+    // ─── Offline fonts from static folder — no CDN ───
+    window.VAZIR_FONT_URL = '{% static "webfonts/Vazirmatn/static/Vazirmatn-Regular.ttf" %}';
+    window.VAZIR_FONT_BOLD_URL = '{% static "webfonts/Vazirmatn/static/Vazirmatn-Bold.ttf" %}';
+
+    function showLoading(t, s) {
+        let o = document.getElementById('pdfLoadingOverlay');
+        if (!o) {
+            o = document.createElement('div');
+            o.id = 'pdfLoadingOverlay';
+            o.className = 'pdf-loading-overlay';
             o.innerHTML = '<div class="pdf-loading-spinner"></div><div class="pdf-loading-text" id="pdfLoadingText"></div><div class="pdf-loading-sub" id="pdfLoadingSub"></div>';
-            document.body.appendChild(o); }
+            document.body.appendChild(o);
+        }
         document.getElementById('pdfLoadingText').textContent = t || 'در حال ساخت...';
-        document.getElementById('pdfLoadingSub').textContent = s || ''; o.classList.add('active'); }
-    function hideLoading() { const o = document.getElementById('pdfLoadingOverlay'); if (o) o.classList.remove('active'); }
-    async function fetchFont(u) { try { const r = await fetch(u); if (!r.ok) throw 0; return ab2b64(await r.arrayBuffer()); } catch (e) { return null; } }
-    function ab2b64(b) { let s = ''; const y = new Uint8Array(b); const L = y.byteLength; const c = 0x8000;
-        for (let i = 0; i < L; i += c) s += String.fromCharCode.apply(null, y.subarray(i, i + c)); return btoa(s); }
+        document.getElementById('pdfLoadingSub').textContent = s || '';
+        o.classList.add('active');
+    }
+
+    function hideLoading() {
+        const o = document.getElementById('pdfLoadingOverlay');
+        if (o) o.classList.remove('active');
+    }
+
+    async function fetchFont(u) {
+        try {
+            const r = await fetch(u);
+            if (!r.ok) throw 0;
+            return ab2b64(await r.arrayBuffer());
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function ab2b64(b) {
+        let s = '';
+        const y = new Uint8Array(b);
+        const L = y.byteLength;
+        const c = 0x8000;
+        for (let i = 0; i < L; i += c) s += String.fromCharCode.apply(null, y.subarray(i, i + c));
+        return btoa(s);
+    }
 
     async function downloadReturnsReport() {
         const btn = document.getElementById('pdfDownloadBtn');
@@ -292,10 +248,13 @@
             const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
             const fR = await fetchFont(window.VAZIR_FONT_URL);
             const fB = await fetchFont(window.VAZIR_FONT_BOLD_URL);
-            if (!fR) throw new Error('فونت لود نشد');
+            if (!fR) throw new Error('فونت لود نشد. مسیر static/webfonts/Vazirmatn/static/ را بررسی کنید.');
             doc.addFileToVFS('Vazirmatn-Regular.ttf', fR);
             doc.addFont('Vazirmatn-Regular.ttf', 'Vazirmatn', 'normal');
-            if (fB) { doc.addFileToVFS('Vazirmatn-Bold.ttf', fB); doc.addFont('Vazirmatn-Bold.ttf', 'Vazirmatn', 'bold'); }
+            if (fB) {
+                doc.addFileToVFS('Vazirmatn-Bold.ttf', fB);
+                doc.addFont('Vazirmatn-Bold.ttf', 'Vazirmatn', 'bold');
+            }
             doc.setFont('Vazirmatn', 'normal');
 
             const data = {
@@ -329,45 +288,103 @@
 
             const PW = 210, PH = 297, M = 12, CW = PW - 24;
             let y = M, pn = 1;
-            const setFont = (sz, w = 'normal', c = [30, 41, 59]) => { doc.setFont('Vazirmatn', w); doc.setFontSize(sz); doc.setTextColor(c[0], c[1], c[2]); };
-            const drawFooter = () => { const fy = PH - 8; doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.3);
+            const setFont = (sz, w = 'normal', c = [30, 41, 59]) => {
+                doc.setFont('Vazirmatn', w);
+                doc.setFontSize(sz);
+                doc.setTextColor(c[0], c[1], c[2]);
+            };
+            const drawFooter = () => {
+                const fy = PH - 8;
+                doc.setDrawColor(220, 220, 220);
+                doc.setLineWidth(0.3);
                 doc.line(M, fy - 3, PW - M, fy - 3);
                 setFont(7, 'normal', [120, 120, 120]);
                 doc.text('صفحه ' + pn, M + 2, fy, { align: 'left' });
                 doc.text(data.today + ' - ' + data.time, PW / 2, fy, { align: 'center' });
-                doc.text('poyafar@yahoo.com', PW - M - 2, fy, { align: 'right' }); };
-            const drawMiniHeader = () => { doc.setFillColor(245, 158, 11); doc.rect(0, 0, PW, 8, 'F');
+                doc.text('poyafar@yahoo.com', PW - M - 2, fy, { align: 'right' });
+            };
+            const drawMiniHeader = () => {
+                doc.setFillColor(245, 158, 11);
+                doc.rect(0, 0, PW, 8, 'F');
                 setFont(8, 'normal', [255, 255, 255]);
-                doc.text('راپور مرجوعی و ضایعات — شرکت نرم‌افزاری پویافر', PW - M, 5.5, { align: 'right' }); y = 14; };
-            const checkPage = (n = 20) => { if (y + n > PH - 15) { drawFooter(); doc.addPage(); pn++; drawMiniHeader(); } };
-            const drawSection = (t) => { checkPage(12); setFont(11, 'bold', [217, 119, 6]); doc.text(t, PW - M, y, { align: 'right' });
-                doc.setDrawColor(245, 158, 11); doc.setLineWidth(0.6); doc.line(PW - M - 50, y + 1.5, PW - M, y + 1.5); y += 6; };
-            const drawTable = (heads, rows, ws) => { const hH = 7.5, rH = 6.5, tW = ws.reduce((a, b) => a + b, 0);
-                const sx = PW - M - tW; checkPage(hH + rH * 2);
-                doc.setFillColor(245, 158, 11); doc.rect(sx, y, tW, hH, 'F');
+                doc.text('راپور مرجوعی و ضایعات — شرکت نرم‌افزاری پویافر', PW - M, 5.5, { align: 'right' });
+                y = 14;
+            };
+            const checkPage = (n = 20) => {
+                if (y + n > PH - 15) {
+                    drawFooter();
+                    doc.addPage();
+                    pn++;
+                    drawMiniHeader();
+                }
+            };
+            const drawSection = (t) => {
+                checkPage(12);
+                setFont(11, 'bold', [217, 119, 6]);
+                doc.text(t, PW - M, y, { align: 'right' });
+                doc.setDrawColor(245, 158, 11);
+                doc.setLineWidth(0.6);
+                doc.line(PW - M - 50, y + 1.5, PW - M, y + 1.5);
+                y += 6;
+            };
+            const drawTable = (heads, rows, ws) => {
+                const hH = 7.5, rH = 6.5, tW = ws.reduce((a, b) => a + b, 0);
+                const sx = PW - M - tW;
+                checkPage(hH + rH * 2);
+                doc.setFillColor(245, 158, 11);
+                doc.rect(sx, y, tW, hH, 'F');
                 setFont(8, 'bold', [255, 255, 255]);
                 let xp = PW - M;
-                heads.forEach((h, i) => { xp -= ws[i]; doc.text(h, xp + ws[i] - 2, y + 5, { align: 'right' }); }); y += hH;
-                rows.forEach((r, idx) => { checkPage(rH);
-                    if (idx % 2 === 0) { doc.setFillColor(255, 251, 235); doc.rect(sx, y, tW, rH, 'F'); }
-                    doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.2); doc.rect(sx, y, tW, rH);
-                    setFont(8, 'normal', [30, 41, 59]); xp = PW - M;
-                    r.forEach((c, i) => { xp -= ws[i]; let x, a;
+                heads.forEach((h, i) => {
+                    xp -= ws[i];
+                    doc.text(h, xp + ws[i] - 2, y + 5, { align: 'right' });
+                });
+                y += hH;
+                rows.forEach((r, idx) => {
+                    checkPage(rH);
+                    if (idx % 2 === 0) {
+                        doc.setFillColor(255, 251, 235);
+                        doc.rect(sx, y, tW, rH, 'F');
+                    }
+                    doc.setDrawColor(226, 232, 240);
+                    doc.setLineWidth(0.2);
+                    doc.rect(sx, y, tW, rH);
+                    setFont(8, 'normal', [30, 41, 59]);
+                    xp = PW - M;
+                    r.forEach((c, i) => {
+                        xp -= ws[i];
+                        let x, a;
                         if (i === 0) { a = 'center'; x = xp + ws[i] / 2; }
                         else if (i === r.length - 1) { a = 'left'; x = xp + 3; }
                         else { a = 'right'; x = xp + ws[i] - 2; }
-                        doc.text(String(c), x, y + 4.5, { align: a }); }); y += rH; }); y += 4; };
-            const drawKpi = (x, yy, w, h, t, v, m, col) => { doc.setDrawColor(226, 232, 240); doc.setFillColor(255, 255, 255);
+                        doc.text(String(c), x, y + 4.5, { align: a });
+                    });
+                    y += rH;
+                });
+                y += 4;
+            };
+            const drawKpi = (x, yy, w, h, t, v, m, col) => {
+                doc.setDrawColor(226, 232, 240);
+                doc.setFillColor(255, 255, 255);
                 doc.roundedRect(x, yy, w, h, 1.5, 1.5, 'FD');
-                doc.setFillColor(col[0], col[1], col[2]); doc.rect(x, yy, w, 1.5, 'F');
-                setFont(7, 'normal', [100, 116, 139]); doc.text(t, x + w - 3, yy + 5, { align: 'right' });
-                setFont(12.5, 'bold', col); doc.text(v, x + w - 3, yy + 12, { align: 'right' });
-                setFont(6, 'normal', [148, 163, 184]); if (m) doc.text(m, x + w - 3, yy + 17.5, { align: 'right' }); };
+                doc.setFillColor(col[0], col[1], col[2]);
+                doc.rect(x, yy, w, 1.5, 'F');
+                setFont(7, 'normal', [100, 116, 139]);
+                doc.text(t, x + w - 3, yy + 5, { align: 'right' });
+                setFont(12.5, 'bold', col);
+                doc.text(v, x + w - 3, yy + 12, { align: 'right' });
+                setFont(6, 'normal', [148, 163, 184]);
+                if (m) doc.text(m, x + w - 3, yy + 17.5, { align: 'right' });
+            };
 
-            doc.setFillColor(245, 158, 11); doc.rect(0, 0, PW, 32, 'F');
-            doc.setFillColor(251, 191, 36); doc.circle(PW - 15, 16, 22, 'F');
-            setFont(18, 'bold', [255, 255, 255]); doc.text('راپور مرجوعی و ضایعات', PW - M, 12, { align: 'right' });
-            setFont(9, 'normal', [255, 255, 255]); doc.text('شرکت نرم‌افزاری پویافر — تحلیل مرجوعی‌ها و ضایعات', PW - M, 19, { align: 'right' });
+            doc.setFillColor(245, 158, 11);
+            doc.rect(0, 0, PW, 32, 'F');
+            doc.setFillColor(251, 191, 36);
+            doc.circle(PW - 15, 16, 22, 'F');
+            setFont(18, 'bold', [255, 255, 255]);
+            doc.text('راپور مرجوعی و ضایعات', PW - M, 12, { align: 'right' });
+            setFont(9, 'normal', [255, 255, 255]);
+            doc.text('شرکت نرم‌افزاری پویافر — تحلیل مرجوعی‌ها و ضایعات', PW - M, 19, { align: 'right' });
             setFont(8, 'normal', [255, 255, 255]);
             doc.text('دوره: ' + data.periodLabel, PW - M, 27, { align: 'right' });
             doc.text('از: ' + data.periodStart + '  تا: ' + data.periodEnd, M + 2, 27, { align: 'left' });
@@ -389,38 +406,50 @@
             if (customerReturns.length > 0) {
                 drawSection('مرجوعی مشتریان');
                 drawTable(['#', 'شماره', 'تاریخ', 'مشتری', 'اقلام', 'بازپرداخت'],
-                    customerReturns.map(c => [c.rank, c.number, c.date, c.customer, c.items, c.amount]), [10, 25, 22, 60, 18, 45]);
+                    customerReturns.map(c => [c.rank, c.number, c.date, c.customer, c.items, c.amount]),
+                    [10, 25, 22, 60, 18, 45]);
             }
 
             if (supplierReturns.length > 0) {
                 drawSection('مرجوعی تأمین‌کنندگان');
                 drawTable(['#', 'شماره', 'تاریخ', 'تأمین‌کننده', 'اقلام', 'دریافتی'],
-                    supplierReturns.map(s => [s.rank, s.number, s.date, s.supplier, s.items, s.amount]), [10, 25, 22, 60, 18, 45]);
+                    supplierReturns.map(s => [s.rank, s.number, s.date, s.supplier, s.items, s.amount]),
+                    [10, 25, 22, 60, 18, 45]);
             }
 
             if (wastes.length > 0) {
                 drawSection('ضایعات');
                 drawTable(['#', 'شماره', 'تاریخ', 'دلیل', 'اقلام'],
-                    wastes.map(w => [w.rank, w.number, w.date, w.reason, w.items]), [12, 30, 25, 90, 23]);
+                    wastes.map(w => [w.rank, w.number, w.date, w.reason, w.items]),
+                    [12, 30, 25, 90, 23]);
             }
 
-            checkPage(35); y += 8;
+            checkPage(35);
+            y += 8;
             const sw = (CW - 20) / 3;
             ['امضای تهیه‌کننده', 'امضای مدیر', 'مهر شرکت'].forEach((l, i) => {
                 const x = PW - M - i * (sw + 10) - sw;
-                doc.setDrawColor(148, 163, 184); doc.setLineWidth(0.3);
+                doc.setDrawColor(148, 163, 184);
+                doc.setLineWidth(0.3);
                 doc.line(x + 10, y + 12, x + sw - 10, y + 12);
-                setFont(8, 'normal', [100, 116, 139]); doc.text(l, x + sw / 2, y + 17, { align: 'center' });
+                setFont(8, 'normal', [100, 116, 139]);
+                doc.text(l, x + sw / 2, y + 17, { align: 'center' });
             });
             y += 24;
 
             checkPage(20);
-            doc.setFillColor(255, 251, 235); doc.roundedRect(M, y, CW, 15, 2, 2, 'F');
-            setFont(9, 'bold', [217, 119, 6]); doc.text('شرکت نرم‌افزاری پویافر', PW / 2, y + 5.5, { align: 'center' });
-            setFont(7.5, 'normal', [100, 116, 139]); doc.text('کابل، افغانستان | poyafar@yahoo.com | +93794483138', PW / 2, y + 11, { align: 'center' });
+            doc.setFillColor(255, 251, 235);
+            doc.roundedRect(M, y, CW, 15, 2, 2, 'F');
+            setFont(9, 'bold', [217, 119, 6]);
+            doc.text('شرکت نرم‌افزاری پویافر', PW / 2, y + 5.5, { align: 'center' });
+            setFont(7.5, 'normal', [100, 116, 139]);
+            doc.text('کابل، افغانستان | poyafar@yahoo.com | +93794483138', PW / 2, y + 11, { align: 'center' });
 
             const tp = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= tp; i++) { doc.setPage(i); drawFooter(); }
+            for (let i = 1; i <= tp; i++) {
+                doc.setPage(i);
+                drawFooter();
+            }
 
             doc.save('Poyafar_Returns_Report_' + new Date().toISOString().slice(0, 10) + '.pdf');
             hideLoading();
@@ -435,4 +464,87 @@
         }
     }
 </script>
+{% endblock %}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE STYLES — in extra_head block                           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_head %}
+<style>
+    :root { --primary: #450C98; --dark: #1e293b; --muted: #64748b; --bg-soft: #f8fafc; }
+    .rt-wrapper { font-family: 'Vazirmatn', Tahoma, sans-serif; color: var(--dark); }
+    .rt-header {
+        background: linear-gradient(135deg, #f59e0b 0%, #f6a821 55%, #fbbf24 100%);
+        border-radius: 24px; padding: 32px 36px; color: #fff;
+        box-shadow: 0 15px 45px rgba(245, 158, 11, 0.3);
+        position: relative; overflow: hidden; margin-bottom: 22px;
+    }
+    .rt-header::before { content: ''; position: absolute; top: -80px; left: -80px; width: 260px; height: 260px; background: rgba(255,255,255,0.08); border-radius: 50%; }
+    .rt-header::after { content: ''; position: absolute; bottom: -100px; right: -60px; width: 300px; height: 300px; background: rgba(255,255,255,0.06); border-radius: 50%; }
+    .rt-header .content { position: relative; z-index: 2; }
+    .rt-header h1 { font-weight: 800; font-size: 1.8rem; margin: 0; }
+    .rt-header .sub { opacity: 0.92; font-size: 0.95rem; margin-top: 6px; }
+    .rt-header .meta-badges { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .rt-header .meta-badge { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.28); padding: 6px 16px; border-radius: 50px; font-size: 0.82rem; font-weight: 600; backdrop-filter: blur(8px); }
+    .pdf-action-bar { background: linear-gradient(135deg, #fff 0%, #fffbeb 100%); border-radius: 18px; padding: 18px 24px; box-shadow: 0 6px 22px rgba(245, 158, 11, 0.08); border: 1px solid #eef2f7; margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .pdf-action-text h5 { margin: 0; font-weight: 800; color: #d97706; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+    .pdf-action-text p { margin: 4px 0 0; font-size: 0.82rem; color: var(--muted); }
+    .pdf-download-btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; border-radius: 50px; border: none; background: linear-gradient(135deg, #f59e0b, #f6a821); color: #fff; font-size: 0.92rem; font-weight: 800; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35); font-family: 'Vazirmatn', Tahoma, sans-serif; white-space: nowrap; }
+    .pdf-download-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(245, 158, 11, 0.45); }
+    .pdf-download-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+    .pdf-loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(30, 41, 59, 0.88); backdrop-filter: blur(8px); z-index: 99999; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 22px; }
+    .pdf-loading-overlay.active { display: flex; }
+    .pdf-loading-spinner { width: 70px; height: 70px; border: 5px solid rgba(255,255,255,0.15); border-top-color: #f6a821; border-radius: 50%; animation: pdfSpin 0.9s linear infinite; }
+    @keyframes pdfSpin { to { transform: rotate(360deg); } }
+    .pdf-loading-text { color: #fff; font-weight: 800; font-size: 1.05rem; font-family: 'Vazirmatn', Tahoma, sans-serif; }
+    .pdf-loading-sub { color: rgba(255,255,255,0.7); font-size: 0.85rem; font-family: 'Vazirmatn', Tahoma, sans-serif; }
+    .report-nav { background: #fff; border-radius: 18px; padding: 14px 18px; box-shadow: 0 6px 20px rgba(0,0,0,0.06); border: 1px solid #eef2f7; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .report-nav .nav-label { font-weight: 800; font-size: 0.85rem; color: var(--primary); margin-left: 8px; display: flex; align-items: center; gap: 6px; }
+    .nav-pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 50px; background: #f8fafc; color: #475569; font-size: 0.82rem; font-weight: 700; text-decoration: none; border: 1px solid #eef2f7; transition: all 0.25s ease; white-space: nowrap; }
+    .nav-pill:hover { background: #fff; color: var(--primary); border-color: #e9d5ff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(69, 12, 152, 0.15); }
+    .nav-pill.active-returns { background: linear-gradient(135deg, #f59e0b, #f6a821); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35); }
+    .sec-title { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.05rem; color: #d97706; margin: 28px 0 16px; }
+    .sec-title .bar { width: 5px; height: 22px; background: linear-gradient(180deg, #f59e0b, #f6a821); border-radius: 50px; }
+    .kpi-card { background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 6px 22px rgba(0,0,0,0.07); border: 1px solid #eef2f7; height: 100%; transition: all 0.35s ease; position: relative; overflow: hidden; }
+    .kpi-card::before { content: ''; position: absolute; top: 0; right: 0; width: 5px; height: 100%; }
+    .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(0,0,0,0.12); }
+    .kpi-card .kpi-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; margin-bottom: 14px; }
+    .kpi-card .kpi-value { font-size: 1.45rem; font-weight: 800; line-height: 1.2; margin: 0; }
+    .kpi-card .kpi-label { font-size: 0.82rem; color: var(--muted); margin-top: 4px; }
+    .kpi-card .kpi-sub { font-size: 0.75rem; color: #94a3b8; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+    .kpi-cr .kpi-icon { background: #dbeafe; color: #2563eb; }
+    .kpi-cr::before { background: linear-gradient(180deg, #4facfe, #00f2fe); }
+    .kpi-sr .kpi-icon { background: #e0e7ff; color: #4f46e5; }
+    .kpi-sr::before { background: linear-gradient(180deg, #4f46e5, #818cf8); }
+    .kpi-cr-amt .kpi-icon { background: #fee2e2; color: #dc2626; }
+    .kpi-cr-amt::before { background: linear-gradient(180deg, #f093fb, #f5576c); }
+    .kpi-sr-amt .kpi-icon { background: #dcfce7; color: #16a34a; }
+    .kpi-sr-amt::before { background: linear-gradient(180deg, #11998e, #38ef7d); }
+    .kpi-waste .kpi-icon { background: #fef3c7; color: #d97706; }
+    .kpi-waste::before { background: linear-gradient(180deg, #f59e0b, #fbbf24); }
+    .kpi-items .kpi-icon { background: #f3e8ff; color: #7c3aed; }
+    .kpi-items::before { background: linear-gradient(180deg, #450C98, #9550fc); }
+    .table-card { background: #fff; border-radius: 20px; box-shadow: 0 6px 24px rgba(0,0,0,0.07); border: 1px solid #eef2f7; overflow: hidden; height: 100%; }
+    .table-card .table-head { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eef2f7; }
+    .table-card .table-head h6 { margin: 0; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+    .table-card .table-head .tag { font-size: 0.72rem; color: var(--muted); background: var(--bg-soft); padding: 3px 10px; border-radius: 50px; font-weight: 700; }
+    .table-card table { margin: 0; font-size: 0.85rem; }
+    .table-card table thead th { background: #fffbeb; color: #d97706; font-weight: 700; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid #fde68a; padding: 12px 14px; white-space: nowrap; }
+    .table-card table tbody td { padding: 11px 14px; border-bottom: 1px solid #f5f7fa; vertical-align: middle; }
+    .table-card table tbody tr:last-child td { border-bottom: none; }
+    .table-card table tbody tr:hover { background: #fffbeb; }
+    .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; background: #f1f5f9; color: #64748b; }
+    .empty-state { text-align: center; padding: 30px 12px; color: #94a3b8; font-size: 0.85rem; }
+    .empty-state i { font-size: 1.8rem; margin-bottom: 8px; display: block; opacity: 0.5; }
+    .soft-divider { height: 1px; background: linear-gradient(90deg, transparent, #e2e8f0, transparent); margin: 30px 0; }
+    @media (max-width: 768px) {
+        .rt-header { padding: 22px; }
+        .rt-header h1 { font-size: 1.4rem; }
+        .kpi-card .kpi-value { font-size: 1.2rem; }
+        .report-nav { padding: 12px; }
+        .nav-pill { font-size: 0.75rem; padding: 6px 12px; }
+        .pdf-action-bar { flex-direction: column; align-items: stretch; }
+        .pdf-download-btn { justify-content: center; }
+    }
+</style>
 {% endblock %}

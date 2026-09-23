@@ -176,7 +176,6 @@
                             </td>
                         </tr>
 
-                        <!-- Hidden Delete Form -->
                         <form id="deleteForm-{{ debt.id }}"
                               method="POST"
                               action="{% url 'delete_sale_debt' debt.id %}"
@@ -316,7 +315,7 @@
     </div>
 </div>
 
-<!-- ==================== BILL MODAL ==================== -->
+<!-- BILL MODAL -->
 <div class="modal fade" id="billModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -327,9 +326,8 @@
                 </h5>
             </div>
 
-            <!-- PDF Download Button -->
             <div style="display: flex; justify-content: center; margin: 10px 0;">
-                <button onclick="downloadBillPDF()" style="
+                <button onclick="downloadBillPDF(this)" style="
                     background: linear-gradient(135deg, #0d6efd, #0dcaf0);
                     color: white;
                     border: none;
@@ -353,18 +351,16 @@
                 </button>
             </div>
 
-            <!-- BILL CONTENT -->
             <div class="modal-body" id="debt-bill-content" style="padding: 8px;">
                 <div style="font-family: 'Vazirmatn', Tahoma, Arial, sans-serif; direction: rtl; background: #fff; padding: 20px;">
 
-                    <!-- Header -->
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #0d6efd; padding-bottom: 12px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <div style="width: 45px; height: 45px; background: #0d6efd; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
                                 <i class="fas fa-file-invoice-dollar" style="color: white; font-size: 1.2rem;"></i>
                             </div>
                             <div>
-                                <h5 style="margin: 0; color: #0d6efd; font-size: 1rem; font-weight: 800;">شرکت پویافر تجارت</h5>
+                                <h5 style="margin: 0; color: #0d6efd; font-size: 1rem; font-weight: 800;">خدمات مرغداری ترکمن لقمان  </h5>
                                 <small style="color: #888; font-size: 0.7rem;">بل بدهی و سابقه دریافت</small>
                             </div>
                         </div>
@@ -375,7 +371,6 @@
                         </div>
                     </div>
 
-                    <!-- Customer Info -->
                     <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding: 12px; background: #f8fafd; border-radius: 6px; flex-wrap: wrap; gap: 10px;">
                         <div>
                             <small style="color: #999; font-size: 0.7rem; display: block;">مشتری</small>
@@ -391,10 +386,7 @@
                         </div>
                     </div>
 
-                    <!-- SUMMARY -->
                     <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
-
-                        <!-- Total -->
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f8fafd; border: 1px solid #e2e8f0; border-radius: 8px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div style="width: 32px; height: 32px; background: #e2e8f0; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
@@ -407,7 +399,6 @@
                             </span>
                         </div>
 
-                        <!-- Received -->
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #e7f9ee; border: 1px solid #28a745; border-radius: 8px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div style="width: 32px; height: 32px; background: #28a745; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
@@ -420,7 +411,6 @@
                             </span>
                         </div>
 
-                        <!-- Remaining -->
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #fef2f2; border: 1.5px solid #dc3545; border-radius: 8px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div style="width: 32px; height: 32px; background: #dc3545; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
@@ -432,10 +422,8 @@
                                 {{ sale.remaining_amount|floatformat:2 }} <small style="color: #d98080; font-size: 0.75rem;">افغانی</small>
                             </span>
                         </div>
-
                     </div>
 
-                    <!-- PAYMENT BREAKDOWN -->
                     <div style="margin-bottom: 15px;">
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                             <div style="width: 4px; height: 20px; background: #0d6efd; border-radius: 2px;"></div>
@@ -478,7 +466,6 @@
                         </div>
                     </div>
 
-                    <!-- TOTALS -->
                     {% if debts %}
                     <div style="padding: 14px 16px; background: linear-gradient(135deg, #e7f5ff, #f0faff); border: 1.5px solid #0d6efd; border-radius: 8px; margin-bottom: 15px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px dashed #b8dcf5;">
@@ -494,7 +481,6 @@
                     </div>
                     {% endif %}
 
-                    <!-- Status -->
                     {% if sale.remaining_amount <= 0 %}
                     <div style="padding: 12px; background: #e7f9ee; border: 1px solid #28a745; border-radius: 6px; text-align: center; margin-bottom: 15px;">
                         <i class="fas fa-check-circle" style="color: #28a745; font-size: 1.2rem;"></i>
@@ -507,7 +493,6 @@
                     </div>
                     {% endif %}
 
-                    <!-- Signatures -->
                     <div style="display: flex; justify-content: space-between; margin-top: 30px; padding: 0 30px;">
                         <div style="text-align: center;">
                             <div style="border-top: 1px solid #ccc; width: 140px; margin-bottom: 3px;"></div>
@@ -516,24 +501,6 @@
                         <div style="text-align: center;">
                             <div style="border-top: 1px solid #ccc; width: 140px; margin-bottom: 3px;"></div>
                             <small style="color: #888; font-size: 0.7rem;">امضای فروشنده</small>
-                        </div>
-                    </div>
-
-                    <!-- Footer -->
-                    <div style="background: #f8fafc; border-radius: 8px; padding: 8px; border: 1px solid #e2e8f0; margin-top: 25px;">
-                        <div style="display: flex; flex-direction: column; gap: 3px;">
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <i class="fas fa-envelope" style="color: #4361ee; font-size: 0.6rem;"></i>
-                                <span style="font-size: 0.6rem;">poyafar@yahoo.com</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <i class="fas fa-phone" style="color: #10b981; font-size: 0.6rem;"></i>
-                                <span style="font-size: 0.6rem;">+93794483138</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <i class="fas fa-map-marker-alt" style="color: #f97316; font-size: 0.6rem;"></i>
-                                <span style="font-size: 0.6rem;">کابل، افغانستان</span>
-                            </div>
                         </div>
                     </div>
 
@@ -547,9 +514,13 @@
     </div>
 </div>
 
-<!-- html2pdf -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+{% endblock %}
 
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- PAGE SCRIPTS — moved OUTSIDE content block                  -->
+<!-- Runs AFTER base.html's deferred scripts are loaded          -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+{% block extra_scripts %}
 <script>
     let deleteDebtId = null;
 
@@ -585,7 +556,7 @@
         modal.show();
     }
 
-    function downloadBillPDF() {
+    function downloadBillPDF(btn) {
         const element = document.getElementById('debt-bill-content');
 
         if (!element) {
@@ -593,7 +564,6 @@
             return;
         }
 
-        const btn = event?.target;
         let originalText = '';
         if (btn) {
             originalText = btn.innerHTML;
@@ -603,11 +573,29 @@
 
         const clone = element.cloneNode(true);
 
+        // Convert gradients to solid colors for PDF
         clone.querySelectorAll('*').forEach(el => {
             const bg = window.getComputedStyle(el).backgroundImage;
-            if (bg && bg.includes('gradient')) {
-                el.style.background = '#0d6efd';
-                el.style.color = '#ffffff';
+            const bgStr = bg || '';
+            if (bgStr && bgStr.includes('gradient')) {
+                // Green gradient → solid green (for received amount and payment history)
+                if (bgStr.includes('40, 167, 69') || bgStr.includes('#28a745') ||
+                    bgStr.includes('56, 239, 125') || bgStr.includes('#38ef7d') ||
+                    bgStr.includes('17, 153, 142') || bgStr.includes('#11998e')) {
+                    el.style.background = '#28a745';
+                    el.style.color = '#ffffff';
+                }
+                // Blue gradient → solid blue (brand color for sales)
+                else if (bgStr.includes('13, 110, 253') || bgStr.includes('#0d6efd') ||
+                         bgStr.includes('13, 202, 240') || bgStr.includes('#0dcaf0')) {
+                    el.style.background = '#0d6efd';
+                    el.style.color = '#ffffff';
+                }
+                // Default purple gradient → solid purple
+                else {
+                    el.style.background = '#450C98';
+                    el.style.color = '#ffffff';
+                }
             }
         });
 
@@ -667,5 +655,4 @@
         });
     }
 </script>
-
 {% endblock %}

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}تغییر دسته‌بندی {% endblock %}
+{% block title %}ایجاد دسته‌بندی جدید{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -10,13 +10,13 @@
         <div>
             <h2 class="fw-bold mb-1" style="color:  #9550fc; font-size: 2rem;">
                 <i class="fas fa-plus-circle me-2"></i>
-                تغییر دسته‌بندی 
+                ایجاد دسته‌بندی جدید
             </h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 fs-6">
                     <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">داشبورد</a></li>
                     <li class="breadcrumb-item"><a href="{% url 'category_list' %}" class="text-decoration-none text-muted">دسته‌بندی‌ها</a></li>
-                    <li class="breadcrumb-item active" style="color: #014f86 ;">تغییر دسته بندی</li>
+                    <li class="breadcrumb-item active" style="color: #014f86 ;">ایجاد جدید</li>
                 </ol>
             </nav>
         </div>
@@ -41,7 +41,7 @@
         <div class="card-header text-white py-3" style="background: linear-gradient(135deg,#450C98 0%, #9550fc 100%);">
             <h5 class="mb-0 fw-bold fs-4">
                 <i class="fas fa-tags me-2"></i>
-                فرم تغییر دسته‌بندی
+                فرم ایجاد دسته‌بندی
             </h5>
         </div>
         <div class="card-body p-4 p-md-5 ">
